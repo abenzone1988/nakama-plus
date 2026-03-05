@@ -28,7 +28,7 @@ runtime:
   #js_entrypoint: "anys.js"
 
 socket:
-  server_key: "server_key"
+  server_key: "sparkgame"
   port: 7350
   max_message_size_bytes: 4096 # bytes
   read_timeout_ms: 30000
@@ -53,8 +53,6 @@ social:
 
 console:
   port: 7351
-  username: "admin"
-  password: "12345678"
   signing_key: "signing_key"
 
 matchmaker:
@@ -78,7 +76,7 @@ cluster:
   gossip_bindport: 7335
   etcd:
     endpoints:
-      - "127.0.0.1:2379"
+      - "0.0.0.0:2379"
 
 
   grpc:

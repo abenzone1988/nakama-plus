@@ -113,7 +113,7 @@ export class {{(index .Tags 0).Name}}Service {
   {{- $body := false -}}
   {{- range $index, $parameter := $operation.Parameters}}
     {{- if and (eq $index 0) (eq $hasSecurity true) -}}{{- ", " -}}{{- else if ne $index 0 -}}{{- ", " -}}{{- end -}}
-    {{- $parameter.Name }}{{- if not $parameter.Required }}?{{- end -}}{{": "}}
+    {{- $parameter.Name | dotToUnderscore }}{{- if not $parameter.Required }}?{{- end -}}{{": "}}
           {{- if eq $parameter.In "path" -}}
     {{ $parameter.Type }}
           {{- else if eq $parameter.In "body" -}}
@@ -153,11 +153,11 @@ export class {{(index .Tags 0).Name}}Service {
     let params = new HttpParams({ encoder: new CustomHttpParamEncoder() });
       {{- range $argument := $operation.Parameters -}}
         {{if eq $argument.In "query"}}
-    if ({{$argument.Name}}{{if eq $argument.Type "boolean"}} || {{$argument.Name}} === false{{end}}) {
+    if ({{$argument.Name | dotToUnderscore}}{{if eq $argument.Type "boolean"}} || {{$argument.Name | dotToUnderscore}} === false{{end}}) {
       {{if eq $argument.Type "array" -}}
-      {{$argument.Name}}.forEach(e => params = params.append('{{$argument.Name}}', String(e)))
+      {{$argument.Name | dotToUnderscore}}.forEach(e => params = params.append('{{$argument.Name}}', String(e)))
       {{- else -}}
-      params = params.set('{{$argument.Name}}', {{if eq $argument.Type "string" -}} {{$argument.Name}}{{else}}String({{$argument.Name}}){{- end}});
+      params = params.set('{{$argument.Name}}', {{if eq $argument.Type "string" -}} {{$argument.Name | dotToUnderscore}}{{else}}String({{$argument.Name | dotToUnderscore}}){{- end}});
       {{- end}}
     }{{ end }}
   {{- end }}
@@ -236,6 +236,12 @@ func enumDescriptions(def Definition) (output []string) {
 func convertRefToClassName(prefixesToRemove []string) func(string) string {
 	return func(input string) string {
 		cleanRef := strings.TrimPrefix(input, "#/definitions/")
+		// Rename swagger body-only aliases: Console*Body -> *Request
+		// (protoc-gen-openapiv2 extracts path params and creates Console{Op}Body types)
+		if strings.HasPrefix(cleanRef, "Console") && strings.HasSuffix(cleanRef, "Body") {
+			cleanRef = strings.TrimSuffix(strings.TrimPrefix(cleanRef, "Console"), "Body") + "Request"
+			return strings.Title(cleanRef)
+		}
 		for _, prefix := range prefixesToRemove {
 			if strings.HasPrefix(cleanRef, prefix) {
 				cleanRef = strings.TrimPrefix(cleanRef, prefix)
@@ -275,7 +281,7 @@ func pascalToCamel(input string) (camelCase string) {
 
 	camelCase = strings.ToLower(string(input[0]))
 	camelCase += string(input[1:])
-	return camelCase
+	return
 }
 
 func main() {
@@ -301,6 +307,7 @@ func main() {
 		"enumSummary":      enumSummary,
 		"snakeToCamel":     snakeToCamel,
 		"cleanRef":         convertRefToClassNameFunc,
+		"dotToUnderscore":  dotToUnderscore,
 		"isRefToEnum": func(ref string) bool {
 			// swagger schema definition keys have inconsistent casing
 			var camelOk bool
@@ -397,15 +404,20 @@ func convertType(prefixesToRemove []string, convertRefToClassName func(string) s
 				return "Array<" + convertRefToClassName(prop.Items.Ref) + ">"
 			}
 		case "object":
+			// Proto map<string, V> fields are plain JSON objects, use Record not Map.
+			valueRef := convertRefToClassName(prop.AdditionalProperties.Ref)
 			switch prop.AdditionalProperties.Type {
 			case "string":
-				return "Map<string, string>"
+				return "Record<string, string>"
 			case "integer", "number":
-				return "Map<string, number>"
+				return "Record<string, number>"
 			case "boolean":
-				return "Map<string, boolean>"
+				return "Record<string, boolean>"
 			default:
-				return "Map<string, " + convertRefToClassName(prop.AdditionalProperties.Ref) + ">"
+				if valueRef == "" {
+					return "Record<string, any>"
+				}
+				return "Record<string, " + valueRef + ">"
 			}
 		default:
 			return convertRefToClassName(prop.Ref)
@@ -449,6 +461,12 @@ func createBodyTypes(schema *Swagger) {
 	}
 }
 
+// dotToUnderscore replaces dots in a parameter name with underscores so it is
+// a valid TypeScript/JavaScript identifier (e.g. "search.name.or" -> "search_name_or").
+func dotToUnderscore(s string) string {
+	return strings.ReplaceAll(s, ".", "_")
+}
+
 func adjustSchemaData(schema *Swagger, prefixesToRemove []string, interfacesToRemove []string) {
 	adjustProps := func(props map[string]*Property) {
 		for _, prop := range props {
@@ -473,6 +491,14 @@ func adjustSchemaData(schema *Swagger, prefixesToRemove []string, interfacesToRe
 
 	for name, def := range schema.Definitions {
 		adjustProps(def.Properties)
+		// Rename Console*Body definitions to *Request so frontend types match proto names.
+		// protoc-gen-openapiv2 creates Console{Op}Body when a message has both path and body fields.
+		if strings.HasPrefix(name, "Console") && strings.HasSuffix(name, "Body") {
+			newName := strings.TrimSuffix(strings.TrimPrefix(name, "Console"), "Body") + "Request"
+			delete(schema.Definitions, name)
+			schema.Definitions[newName] = def
+			continue
+		}
 		for _, prefix := range prefixesToRemove {
 			// check interface/enum name
 			if strings.HasPrefix(name, prefix) {

@@ -280,10 +280,8 @@ func CheckACL(path string, userPermissions Permission) bool {
 		requiredPermissions = NewPermission(console.AclResources_ACCOUNT_WALLET, PermissionRead)
 	case "/nakama.console.Console/ListAccounts":
 		requiredPermissions = NewPermission(console.AclResources_ACCOUNT, PermissionRead)
-	case "/nakama.console.Console/ListAccounts/ListAclTemplates":
-		requiredPermissions = None()
-	case "/nakama.console.Console/ListAccounts/ListAuditLogs":
-		requiredPermissions = NewPermission(console.AclResources_AUDIT_LOG, PermissionRead)
+	case "/nakama.console.Console/ListAclTemplates":
+		requiredPermissions = NewPermission(console.AclResources_ACL_TEMPLATE, PermissionRead)
 	case "/nakama.console.Console/ListApiEndpoints":
 		requiredPermissions = NewPermission(console.AclResources_API_EXPLORER, PermissionRead)
 	case "/nakama.console.Console/ListChannelMessages":
@@ -368,7 +366,7 @@ func CheckACL(path string, userPermissions Permission) bool {
 	return userPermissions.HasAccess(requiredPermissions)
 }
 
-func New(acl map[string]*console.Permissions) Permission {
+func New(acl map[string]*console.UserAcl) Permission {
 	acc := None()
 
 	resourceBitCount := len(console.AclResources_value) * 3
@@ -415,12 +413,12 @@ func NewFromBytes(b []byte) Permission {
 	return Permission{Bitmap: b}
 }
 
-func (p Permission) ACL() map[string]*console.Permissions {
-	acl := map[string]*console.Permissions{}
+func (p Permission) ACL() map[string]*console.UserAcl {
+	acl := map[string]*console.UserAcl{}
 	curr := p
 
 	for i, resource := range console.AclResources_name {
-		p := &console.Permissions{}
+		p := &console.UserAcl{}
 		if curr.HasAccess(NewPermission(ConsoleResource(i), PermissionRead)) {
 			p.Read = true
 		}
@@ -458,10 +456,10 @@ func NewFromJson(s string) (Permission, error) {
 		return Admin(), nil
 	}
 
-	out := make(map[string]*console.Permissions, len(console.AclResources_value))
+	out := make(map[string]*console.UserAcl, len(console.AclResources_value))
 	for resource := range console.AclResources_value {
 		p := dbAcl.Acl[resource]
-		out[resource] = &console.Permissions{
+		out[resource] = &console.UserAcl{
 			Read:   p.Read,
 			Write:  p.Write,
 			Delete: p.Delete,

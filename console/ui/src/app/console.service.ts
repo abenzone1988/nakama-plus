@@ -33,6 +33,14 @@ export interface AccountExport {
   wallet_ledgers?:Array<WalletLedger>
 }
 
+/** Request to import user account data. */
+export interface AccountImport {
+  // The export data snapshot to import.
+  data?:AccountExport
+  // The user ID to overwrite data for, or blank if the account should be freshly created.
+  id?:string
+}
+
 /** A list of users. */
 export interface AccountList {
   // Next cursor.
@@ -43,6 +51,101 @@ export interface AccountList {
   users?:Array<ApiUser>
 }
 
+/** A user note. */
+export interface AccountNote {
+  // Console user identifier that created this note.
+  create_id?:string
+  // Timestamp of note creation.
+  create_time?:string
+  // Console username that created this note.
+  create_username?:string
+  // Identifier of the note.
+  id?:string
+  // The content of the note.
+  note?:string
+  // Console user identifier that last updated this note.
+  update_id?:string
+  // Timestamp of note update.
+  update_time?:string
+  // Console username that last updated this note.
+  update_username?:string
+  // Owner of this note.
+  user_id?:string
+}
+
+/** ATTENTION: Do not modify the order of this enum. */
+export enum AclResources {
+  ACCOUNT = 0,
+  ACCOUNT_WALLET = 1,
+  ACCOUNT_EXPORT = 2,
+  ACCOUNT_FRIENDS = 3,
+  ACCOUNT_GROUPS = 4,
+  ACCOUNT_NOTES = 5,
+  ACL_TEMPLATE = 6,
+  ALL_ACCOUNTS = 7,
+  ALL_DATA = 8,
+  ALL_STORAGE = 9,
+  API_EXPLORER = 10,
+  AUDIT_LOG = 11,
+  CONFIGURATION = 12,
+  CHANNEL_MESSAGE = 13,
+  USER = 14,
+  GROUP = 15,
+  IN_APP_PURCHASE = 16,
+  LEADERBOARD = 17,
+  LEADERBOARD_RECORD = 18,
+  MATCH = 19,
+  NOTIFICATION = 20,
+  SATORI_MESSAGE = 21,
+  SETTINGS = 22,
+  STORAGE_DATA = 23,
+  STORAGE_DATA_IMPORT = 24,
+  HIRO_INVENTORY = 25,
+  HIRO_PROGRESSION = 26,
+  HIRO_ECONOMY = 27,
+  HIRO_STATS = 28,
+  HIRO_ENERGY = 29,
+}
+
+export interface AclTemplate {
+  // The ACL template permissions.
+  acl?:Record<string, UserAcl>
+  // The template Create time.
+  create_time?:string
+  // The ACL template description.
+  description?:string
+  // The identifier of the ACL template.
+  id?:string
+  // The name of the ACL template.
+  name?:string
+  // The template Update time.
+  update_time?:string
+}
+
+export interface AclTemplateList {
+  // A list of ACL templates.
+  templates?:Array<AclTemplate>
+}
+
+/** Add a new note for the user. */
+export interface AddAccountNoteRequest {
+  // Identifier of the note. Empty to update existing note.
+  id?:string
+  // The content of the note.
+  note?:string
+}
+
+/** Add a new ACL template. */
+export interface AddAclTemplateRequest {
+  // The ACL template permissions.
+  acl?:Record<string, UserAcl>
+  // The ACL template description.
+  description?:string
+  // The name of the ACL template.
+  name?:string
+}
+
+/** Add/join users to a group. */
 export interface AddGroupUsersRequest {
   // Users to add/join.
   ids?:string
@@ -51,6 +154,8 @@ export interface AddGroupUsersRequest {
 }
 
 export interface AddUserRequest {
+  // ACL.
+  acl?:Record<string, UserAcl>
   // Email address of the user.
   email?:string
   // Require MFA
@@ -59,16 +164,18 @@ export interface AddUserRequest {
   newsletter_subscription?:boolean
   // The password of the user.
   password?:string
-  // Role of this user;
-  acl?:Record<string, UserAcl>
+  // Role of this user.
+  role?:UserRole
   // The username of the user.
   username?:string
 }
 
-export interface AddPermissionsTemplateRequest {
-  name?: string
-  description?: string
-  acl?:Record<string, UserAcl>
+/** Response to create/invite a new user. */
+export interface AddUserResponse {
+  // A one-time token required to update the user for the first time
+  token?:string
+  // The user recently created.
+  user?:User
 }
 
 export interface ApiEndpointDescriptor {
@@ -79,6 +186,52 @@ export interface ApiEndpointDescriptor {
 export interface ApiEndpointList {
   endpoints?:Array<ApiEndpointDescriptor>
   rpc_endpoints?:Array<ApiEndpointDescriptor>
+}
+
+export enum AuditLogAction {
+  UNKNOWN = 0,
+  CREATE = 1,
+  UPDATE = 2,
+  DELETE = 3,
+  INVOKE = 4,
+  IMPORT = 5,
+  EXPORT = 6,
+}
+
+/** Audit log entries. */
+export interface AuditLogList {
+  // A list of audit log entries.
+  entries?:Array<AuditLogListAuditLog>
+  // Cursor to fetch next page of results.
+  next_cursor?:string
+  // Cursor to fetch prev page of results.
+  prev_cursor?:string
+}
+
+export interface AuditLogListAuditLog {
+  // The action that was performed.
+  action?:AuditLogAction
+  // The console user email that performed the action.
+  email?:string
+  // Id of the entry.
+  id?:string
+  // Log message.
+  message?:string
+  // Additional details about the action.
+  metadata?:string
+  // The resource the action was performed on.
+  resource?:AclResources
+  // The time the action occurred.
+  timestamp?:string
+  // The console user id that performed the action.
+  user_id?:string
+  // The console user username that performed the action.
+  username?:string
+}
+
+/** List of users that can be filtered in the audit logs. */
+export interface AuditLogUsersList {
+  usernames?:Array<string>
 }
 
 /** Log out a session and invalidate a session token. */
@@ -113,7 +266,7 @@ export interface AuthenticateRequest {
 
 export interface CallApiEndpointRequest {
   body?:string
-  session_vars?:Map<string, string>
+  session_vars?:Record<string, string>
   user_id?:string
 }
 
@@ -124,8 +277,18 @@ export interface CallApiEndpointResponse {
 
 export interface CallRpcEndpointRequest {
   body?:string
-  session_vars?:Map<string, string>
+  session_vars?:Record<string, string>
   user_id?:string
+}
+
+/** A summary of a Category. */
+export interface CategoryView {
+  // Color hex for the label.
+  color?:string
+  // Identifier.
+  id?:string
+  // Name.
+  name?:string
 }
 
 /** The current server configuration and any associated warnings. */
@@ -148,17 +311,53 @@ export interface ConfigWarning {
 
 /** A console user session. */
 export interface ConsoleSession {
+  // ACL permissions for the session user.
+  acl?:Record<string, UserAcl>
   // MFA code required to setup the MFA mechanism.
   mfa_code?:string
   // A session token (JWT) for the console user.
   token?:string
-
-  acl?: Record<string, UserAcl>
 }
 
 export interface DeleteChannelMessagesResponse {
   // Total number of messages deleted.
   total?:string
+}
+
+/** The outcome of using a specific integration. */
+export interface DeliveryResultIntegrationResult {
+  // The channel type used for the message delivery.
+  channel_type?:MessageChannelType
+  // An error message, if the delivery failed.
+  error_message?:string
+  // The integration type used for the message delivery.
+  integration_type?:MessageIntegrationType
+  // Whether the message was successfully delivered using this integration.
+  success?:boolean
+}
+
+/** Which Console extensions are registered and available. */
+export interface Extensions {
+  // Is Hiro registered.
+  hiro?:boolean
+  // Hiro registered systems, if hiro is available.
+  hiro_systems?:ExtensionsHiroSystems
+  // Is Satori registered.
+  satori?:boolean
+}
+
+/** Hiro available systems. */
+export interface ExtensionsHiroSystems {
+  // Is Economy system registered.
+  economy_system?:boolean
+  // Is Energy system registered.
+  energy_system?:boolean
+  // Is Inventory system registered.
+  inventory_system?:boolean
+  // Is Progression system registered.
+  progression_system?:boolean
+  // Is Stats system registered.
+  stats_system?:boolean
 }
 
 /** An export of all information stored for a group. */
@@ -185,6 +384,12 @@ export interface GroupUserListGroupUser {
   state?:number
   // User.
   user?:ApiUser
+}
+
+/** Request to import user account data. */
+export interface ImportAccountRequest {
+  // The export data snapshot to import.
+  data?:AccountExport
 }
 
 /** A leaderboard. */
@@ -247,11 +452,42 @@ export interface LeaderboardList {
   total?:number
 }
 
+/** Response to list user notes. */
+export interface ListAccountNotesResponse {
+  // Cursor for retrieving the next page, if any.
+  cursor?:string
+  // The list of notes.
+  notes?:Array<AccountNote>
+}
+
 export enum ListChannelMessagesRequestType {
   UNKNOWN = 0,
   ROOM = 1,
   GROUP = 2,
   DIRECT = 3,
+}
+
+/** The MultiTextValueFilterOption specifies the operation to apply to multi-value text fields.
+Only a single operation can be used at one time. */
+export interface ListRequestMultiTextValueFilterOption {
+  // Filter by elements matching all parameters.
+  and?:Array<string>
+  // Filter by elements matching one of the parameters.
+  or?:Array<string>
+}
+
+export interface ListRequestPaginationOptions {
+  // Cursor to the next page.
+  cursor?:string
+  // Limit of results to return.
+  limit?:number
+}
+
+export interface ListRequestSearchOptions {
+  // Filter by Label name.
+  label_name?:ListRequestMultiTextValueFilterOption
+  // Filter by Name.
+  name?:TemplateSingleTextValueFilterOption
 }
 
 /** A list of realtime matches, with their node names. */
@@ -273,6 +509,23 @@ export interface MatchState {
   state?:string
   // Current tick number.
   tick?:string
+}
+
+/** Message channel types. */
+export enum MessageChannelType {
+  DEFAULT = 0,
+  PUSH = 1,
+  EMAIL = 2,
+}
+
+/** Message integration's names. */
+export enum MessageIntegrationType {
+  UNKNOWN_MESSAGE_TYPE = 0,
+  FCM = 1,
+  APNS = 2,
+  FACEBOOK_NOTIFICATION = 3,
+  ONESIGNAL_NOTIFICATION = 4,
+  WEBHOOK_NOTIFICATION = 5,
 }
 
 export interface Notification {
@@ -303,9 +556,16 @@ export interface NotificationList {
   prev_cursor?:string
 }
 
+/** Make a user's mfa required or not. */
 export interface RequireUserMfaRequest {
   // Required.
   required?:boolean
+}
+
+/** Request to reset a user's credentials, password or MFA. */
+export interface ResetUserResponse {
+  // An one-time code to be used when re-configuring the password.
+  code?:string
 }
 
 export interface RuntimeInfo {
@@ -330,6 +590,70 @@ export interface RuntimeInfoModuleInfo {
   path?:string
 }
 
+/** The request to send direct messages. */
+export interface SendDirectMessageRequest {
+  // If applicable, channels to send this message through, per integration.
+  channels?:Record<string, SendDirectMessageRequestMessageChannels>
+  // A list of recipient identity IDs.
+  identity_ids?:Array<string>
+  // A list of integrations to use for sending the message.
+  integrations?:Array<MessageIntegrationType>
+  // Whether the message should be stored in the recipient's inbox.
+  persist?:boolean
+  // The identifier of the template used to render the message content.
+  template_id?:string
+  // A template for the message. If this value is provided then the 'template_id' will be ignored.
+  template_override?:SendDirectMessageRequestTemplateOverride
+}
+
+export interface SendDirectMessageRequestMessageChannels {
+  channels?:Array<MessageChannelType>
+}
+
+/** An template override. */
+export interface SendDirectMessageRequestTemplateOverride {
+  // The image_url for the message.
+  image_url?:string
+  // The json_metadata for the message
+  json_metadata?:string
+  // The title to generate the message's title.
+  title?:string
+  // The template value to generate the message's content.
+  value?:string
+  // Language-specific template overrides. The key is the language code.
+  variants?:Record<string, SendDirectMessageRequestTemplateOverride>
+}
+
+/** The response for the SendDirectMessageRequest. */
+export interface SendDirectMessageResponse {
+  // Results for each attempted message delivery.
+  delivery_results?:Array<SendDirectMessageResponseDeliveryResult>
+}
+
+/** Details of each delivery attempt. */
+export interface SendDirectMessageResponseDeliveryResult {
+  // Results for each valid integration used in the delivery.
+  integration_results?:Array<DeliveryResultIntegrationResult>
+  // The identity ID of the recipient.
+  recipient_id?:string
+}
+
+/** Request to send a notification. */
+export interface SendNotificationRequest {
+  // Code.
+  code?:number
+  // Arbitrary content.
+  content?:Record<string, any>
+  // Persistent flag.
+  persistent?:boolean
+  // Sender identifier.
+  sender_id?:string
+  // Subject for the notification.
+  subject?:string
+  // One or more users to send the notification to, or empty to send to all users.
+  user_ids?:Array<string>
+}
+
 /** A single setting. */
 export interface Setting {
   // Name identifier.
@@ -342,6 +666,8 @@ export interface Setting {
 
 /** A list of settings. */
 export interface SettingList {
+  // This field is only used to allow the swagger generator to output the enum values.
+  acl_resources?:Array<AclResources>
   // A list of settings.
   settings?:Array<Setting>
 }
@@ -371,7 +697,7 @@ export interface StatusListServiceStatus {
   port?:number
   role?:string
   status?:number
-  vars?:Map<string, string>
+  vars?:Record<string, string>
   weight?:number
 }
 
@@ -385,6 +711,8 @@ export interface StatusListStatus {
   avg_output_kbs?:number
   // Average number of requests per second.
   avg_rate_sec?:number
+  // Time when the node was created and started up.
+  create_time?:string
   // Current number of running goroutines.
   goroutine_count?:number
   // Health score.
@@ -395,6 +723,8 @@ export interface StatusListStatus {
   match_count?:number
   // Node name.
   name?:string
+  // Current number of active parties.
+  party_count?:number
   // Currently registered live presences.
   presence_count?:number
   // Currently connected sessions.
@@ -436,18 +766,70 @@ export interface StorageListObject {
   version?:string
 }
 
+/** A list of templates. */
+export interface TemplateListResponse {
+  // The pagination options, if there are more pages.
+  page_options?:TemplatePageOptions
+  // A list of templates.
+  templates?:Array<TemplateView>
+}
+
+export interface TemplatePageOptions {
+  // Cursor, if there are next pages.
+  next_cursor?:string
+  // Cursor, if there are prev pages.
+  prev_cursor?:string
+}
+
+/** The SingleTextValueFilterOption specifies the operation to apply to single value text fields.
+Only a single operation can be used at one time. */
+export interface TemplateSingleTextValueFilterOption {
+  // Filter by elements matching exactly the value.
+  exact?:string
+  // Filter by elements matching the pattern.
+  like?:string
+  // Filter by elements matching one of the parameters.
+  or?:Array<string>
+}
+
+/** A template view. */
+export interface TemplateView {
+  // Category label identifiers.
+  categories?:Array<CategoryView>
+  // Create time.
+  create_time_sec?:string
+  // The identifier.
+  id?:string
+  // The image_url for the message.
+  image_url?:string
+  // The json_metadata for the message
+  json_metadata?:string
+  // The display name.
+  name?:string
+  // The title to generate the message's title.
+  title?:string
+  // Update time.
+  update_time_sec?:string
+  // The template value to generate the message's content.
+  value?:string
+  // The value_type for the message's content
+  value_type?:string
+}
+
+/** Unlink a particular device ID from a user's account. */
 export interface UnlinkDeviceRequest {
   // Device ID to unlink.
   device_id?:string
 }
 
+/** Update user account information. */
 export interface UpdateAccountRequest {
   // Avatar URL.
   avatar_url?:string
   // Custom ID.
   custom_id?:string
   // Device ID modifications.
-  device_ids?:Map<string, string>
+  device_ids?:Record<string, string>
   // Display name.
   display_name?:string
   // Email.
@@ -468,6 +850,16 @@ export interface UpdateAccountRequest {
   wallet?:string
 }
 
+export interface UpdateAclTemplateRequest {
+  // The ACL template permissions.
+  acl?:Record<string, UserAcl>
+  // The ACL template description.
+  description?:string
+  // The name of the ACL template.
+  name?:string
+}
+
+/** Update group information. */
 export interface UpdateGroupRequest {
   // Avatar URL.
   avatar_url?:string
@@ -485,9 +877,47 @@ export interface UpdateGroupRequest {
   open?:boolean
 }
 
+/** Request to update an existing setting. */
 export interface UpdateSettingRequest {
   // Setting value.
   value?:string
+}
+
+/** Request to update an existing user. */
+export interface UpdateUserRequest {
+  // ACL.
+  acl?:Record<string, UserAcl>
+}
+
+export interface User {
+  // ACL.
+  acl?:Record<string, UserAcl>
+  // User's create time
+  create_time?:string
+  // Email of the user
+  email?:string
+  // User identifier.
+  id?:string
+  // Whether the user has MFA enabled.
+  mfa_enabled?:boolean
+  // Whether the user is required to setup MFA.
+  mfa_required?:boolean
+  // Role of the user.
+  role?:UserRole
+  // User's update time
+  update_time?:string
+  // Username of the user
+  username?:string
+}
+
+/** The possible actions that can done over a resource. */
+export interface UserAcl {
+  // Delete a resource.
+  delete?:boolean
+  // Read a resource.
+  read?:boolean
+  // Create and/or modify a resource.
+  write?:boolean
 }
 
 /** A single group-role pair. */
@@ -501,44 +931,7 @@ export interface UserGroupListUserGroup {
 /** A list of console users. */
 export interface UserList {
   // A list of users.
-  users?:Array<UserListUser>
-}
-
-export interface UserListUser {
-  id?: string
-  // Email of the user
-  email?:string
-  // Whether the user has MFA enabled.
-  mfa_enabled?:boolean
-  // Whether the user is required to setup MFA.
-  mfa_required?:boolean
-  // Role of the user;
-  acl?:Record<string, UserAcl>
-  aclName?: string
-  // Username of the user
-  username?:string
-  create_time?: string
-  update_time?: string
-}
-
-export interface UserAcl {
-  read?: boolean
-  write?: boolean
-  delete?: boolean
-}
-
-export interface PermissionTemplateList {
-  // A list of users.
-  templates?:Array<PermissionTemplate>
-}
-
-export interface PermissionTemplate {
-  id?: string
-  name?: string
-  description?: string
-  acl?:Record<string, UserAcl>
-  create_time?: string
-  update_time?: string
+  users?:Array<User>
 }
 
 /** - USER_ROLE_ADMIN: All access
@@ -579,6 +972,7 @@ export interface WalletLedgerList {
   prev_cursor?:string
 }
 
+/** Write a new storage object or update an existing one. */
 export interface WriteStorageObjectRequest {
   // Read permission value.
   permission_read?:number
@@ -613,7 +1007,7 @@ export interface ApiAccountDevice {
   // A device identifier. Should be obtained by a platform-specific device API.
   id?:string
   // Extra information that will be bundled in the session token.
-  vars?:Map<string, string>
+  vars?:Record<string, string>
 }
 
 /** A message sent on a channel. */
@@ -966,6 +1360,11 @@ export interface ApiValidatedSubscription {
   user_id?:string
 }
 
+/** `NullValue` is a singleton enumeration to represent the null value for the */
+export enum ProtobufNullValue {
+  NULL_VALUE = 0,
+}
+
 /** A user session associated to a stream, usually through a list operation or a join/leave event. */
 export interface RealtimeUserPresence {
   // Whether this presence generates persistent data/messages, if applicable for the stream type.
@@ -978,28 +1377,6 @@ export interface RealtimeUserPresence {
   user_id?:string
   // The username for display purposes.
   username?:string
-}
-
-export interface ApiAuditLog {
-  id?: string
-  user_id?: string
-  action?: number
-  email?: string
-  username?: string
-  message?: string
-  metadata?: string
-  resource?: number
-  timestamp?: string
-}
-
-export interface AuditLogList {
-  entries?: Array<ApiAuditLog>
-  next_cursor?: string
-  prev_cursor?: string
-}
-
-export interface ApiUsernames {
-  usernames?: string[]
 }
 
 const DEFAULT_HOST = 'http://127.0.0.1:7120';
@@ -1020,6 +1397,14 @@ export class ConsoleService {
       timeoutMs: DEFAULT_TIMEOUT_MS,
     };
     this.config = config || defaultConfig;
+  }
+
+  /** Reset a user's password. */
+  resetUserPassword(auth_token: string, username: string): Observable<ResetUserResponse> {
+    username = encodeURIComponent(String(username))
+    const urlPath = `/v1/console/user/${username}/reset/password`;
+    let params = new HttpParams({ encoder: new CustomHttpParamEncoder() });
+    return this.httpClient.post<ResetUserResponse>(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
   }
 
   /** Delete (non-recorded) all user accounts. */
@@ -1045,8 +1430,46 @@ export class ConsoleService {
     return this.httpClient.get<AccountList>(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
   }
 
+  /** Import given account export data, creating a new account that fully matches the data. */
+  importAccountFull(auth_token: string, body: AccountImport): Observable<Account> {
+    const urlPath = `/v2/console/account`;
+    let params = new HttpParams({ encoder: new CustomHttpParamEncoder() });
+    return this.httpClient.post<Account>(this.config.host + urlPath, body, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
+  }
+
+  /**  */
+  listAccountNotes(auth_token: string, account_id: string, limit?: number, cursor?: string): Observable<ListAccountNotesResponse> {
+    account_id = encodeURIComponent(String(account_id))
+    const urlPath = `/v2/console/account/${account_id}/note`;
+    let params = new HttpParams({ encoder: new CustomHttpParamEncoder() });
+    if (limit) {
+      params = params.set('limit', String(limit));
+    }
+    if (cursor) {
+      params = params.set('cursor', cursor);
+    }
+    return this.httpClient.get<ListAccountNotesResponse>(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
+  }
+
+  /**  */
+  addAccountNote(auth_token: string, account_id: string, body: AddAccountNoteRequest): Observable<AccountNote> {
+    account_id = encodeURIComponent(String(account_id))
+    const urlPath = `/v2/console/account/${account_id}/note`;
+    let params = new HttpParams({ encoder: new CustomHttpParamEncoder() });
+    return this.httpClient.post<AccountNote>(this.config.host + urlPath, body, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
+  }
+
+  /**  */
+  deleteAccountNote(auth_token: string, account_id: string, note_id: string): Observable<any> {
+    account_id = encodeURIComponent(String(account_id))
+    note_id = encodeURIComponent(String(note_id))
+    const urlPath = `/v2/console/account/${account_id}/note/${note_id}`;
+    let params = new HttpParams({ encoder: new CustomHttpParamEncoder() });
+    return this.httpClient.delete(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
+  }
+
   /** Get a list of the user's wallet transactions. */
-  getWalletLedger(auth_token: string, account_id: string, limit?: number, cursor?: string): Observable<WalletLedgerList> {
+  getWalletLedger(auth_token: string, account_id: string, limit?: number, cursor?: string, after?: string, before?: string): Observable<WalletLedgerList> {
     account_id = encodeURIComponent(String(account_id))
     const urlPath = `/v2/console/account/${account_id}/wallet`;
     let params = new HttpParams({ encoder: new CustomHttpParamEncoder() });
@@ -1055,6 +1478,12 @@ export class ConsoleService {
     }
     if (cursor) {
       params = params.set('cursor', cursor);
+    }
+    if (after) {
+      params = params.set('after', after);
+    }
+    if (before) {
+      params = params.set('before', before);
     }
     return this.httpClient.get<WalletLedgerList>(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
   }
@@ -1134,6 +1563,14 @@ export class ConsoleService {
     const urlPath = `/v2/console/account/${id}/group/${group_id}`;
     let params = new HttpParams({ encoder: new CustomHttpParamEncoder() });
     return this.httpClient.delete(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
+  }
+
+  /** Import given account export data, overwriting the user account's current state. */
+  importAccount(auth_token: string, id: string, body: ImportAccountRequest): Observable<any> {
+    id = encodeURIComponent(String(id))
+    const urlPath = `/v2/console/account/${id}/import`;
+    let params = new HttpParams({ encoder: new CustomHttpParamEncoder() });
+    return this.httpClient.put(this.config.host + urlPath, body, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
   }
 
   /** Unban a user. */
@@ -1225,6 +1662,36 @@ export class ConsoleService {
     return this.httpClient.delete(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
   }
 
+  /**  */
+  listAclTemplates(auth_token: string): Observable<AclTemplateList> {
+    const urlPath = `/v2/console/acl/template`;
+    let params = new HttpParams({ encoder: new CustomHttpParamEncoder() });
+    return this.httpClient.get<AclTemplateList>(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
+  }
+
+  /**  */
+  addAclTemplate(auth_token: string, body: AddAclTemplateRequest): Observable<AclTemplate> {
+    const urlPath = `/v2/console/acl/template`;
+    let params = new HttpParams({ encoder: new CustomHttpParamEncoder() });
+    return this.httpClient.post<AclTemplate>(this.config.host + urlPath, body, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
+  }
+
+  /**  */
+  deleteAclTemplate(auth_token: string, id: string): Observable<any> {
+    id = encodeURIComponent(String(id))
+    const urlPath = `/v2/console/acl/template/${id}`;
+    let params = new HttpParams({ encoder: new CustomHttpParamEncoder() });
+    return this.httpClient.delete(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
+  }
+
+  /**  */
+  updateAclTemplate(auth_token: string, id: string, body: UpdateAclTemplateRequest): Observable<AclTemplate> {
+    id = encodeURIComponent(String(id))
+    const urlPath = `/v2/console/acl/template/${id}`;
+    let params = new HttpParams({ encoder: new CustomHttpParamEncoder() });
+    return this.httpClient.put<AclTemplate>(this.config.host + urlPath, body, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
+  }
+
   /** Deletes all data */
   deleteAllData(auth_token: string): Observable<any> {
     const urlPath = `/v2/console/all`;
@@ -1253,6 +1720,41 @@ export class ConsoleService {
     const urlPath = `/v2/console/api/endpoints/${method}`;
     let params = new HttpParams({ encoder: new CustomHttpParamEncoder() });
     return this.httpClient.post<CallApiEndpointResponse>(this.config.host + urlPath, body, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
+  }
+
+  /** List audit log entries with the selected filter */
+  listAuditLogs(auth_token: string, limit?: number, username?: string, resource?: number, action?: string, after?: string, before?: string, cursor?: string): Observable<AuditLogList> {
+    const urlPath = `/v2/console/audit/log`;
+    let params = new HttpParams({ encoder: new CustomHttpParamEncoder() });
+    if (limit) {
+      params = params.set('limit', String(limit));
+    }
+    if (username) {
+      params = params.set('username', username);
+    }
+    if (resource) {
+      params = params.set('resource', String(resource));
+    }
+    if (action) {
+      params = params.set('action', action);
+    }
+    if (after) {
+      params = params.set('after', after);
+    }
+    if (before) {
+      params = params.set('before', before);
+    }
+    if (cursor) {
+      params = params.set('cursor', cursor);
+    }
+    return this.httpClient.get<AuditLogList>(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
+  }
+
+  /** List console usernames that can be used to filter the audit logs */
+  listAuditLogsUsers(auth_token: string): Observable<AuditLogUsersList> {
+    const urlPath = `/v2/console/audit/log/users`;
+    let params = new HttpParams({ encoder: new CustomHttpParamEncoder() });
+    return this.httpClient.get<AuditLogUsersList>(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
   }
 
   /** Authenticate a console user with username and password. */
@@ -1306,6 +1808,13 @@ export class ConsoleService {
     const urlPath = `/v2/console/config`;
     let params = new HttpParams({ encoder: new CustomHttpParamEncoder() });
     return this.httpClient.get<Config>(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
+  }
+
+  /**  */
+  registeredExtensions(auth_token: string): Observable<Extensions> {
+    const urlPath = `/v2/console/extensions`;
+    let params = new HttpParams({ encoder: new CustomHttpParamEncoder() });
+    return this.httpClient.get<Extensions>(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
   }
 
   /** List (and optionally filter) groups. */
@@ -1526,6 +2035,13 @@ export class ConsoleService {
     return this.httpClient.get<NotificationList>(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
   }
 
+  /** Send a notification. */
+  sendNotification(auth_token: string, body: SendNotificationRequest): Observable<any> {
+    const urlPath = `/v2/console/notification`;
+    let params = new HttpParams({ encoder: new CustomHttpParamEncoder() });
+    return this.httpClient.post(this.config.host + urlPath, body, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
+  }
+
   /** Delete notification */
   deleteNotification(auth_token: string, id: string): Observable<any> {
     id = encodeURIComponent(String(id))
@@ -1543,7 +2059,7 @@ export class ConsoleService {
   }
 
   /** List validated purchases */
-  listPurchases(auth_token: string, user_id?: string, limit?: number, cursor?: string): Observable<ApiPurchaseList> {
+  listPurchases(auth_token: string, user_id?: string, limit?: number, cursor?: string, after?: string, before?: string, filter?: string): Observable<ApiPurchaseList> {
     const urlPath = `/v2/console/purchase`;
     let params = new HttpParams({ encoder: new CustomHttpParamEncoder() });
     if (user_id) {
@@ -1555,6 +2071,15 @@ export class ConsoleService {
     if (cursor) {
       params = params.set('cursor', cursor);
     }
+    if (after) {
+      params = params.set('after', after);
+    }
+    if (before) {
+      params = params.set('before', before);
+    }
+    if (filter) {
+      params = params.set('filter', filter);
+    }
     return this.httpClient.get<ApiPurchaseList>(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
   }
 
@@ -1563,6 +2088,41 @@ export class ConsoleService {
     const urlPath = `/v2/console/runtime`;
     let params = new HttpParams({ encoder: new CustomHttpParamEncoder() });
     return this.httpClient.get<RuntimeInfo>(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
+  }
+
+  /**  */
+  satoriSendDirectMessage(auth_token: string, body: SendDirectMessageRequest): Observable<SendDirectMessageResponse> {
+    const urlPath = `/v2/console/satori/direct-message`;
+    let params = new HttpParams({ encoder: new CustomHttpParamEncoder() });
+    return this.httpClient.post<SendDirectMessageResponse>(this.config.host + urlPath, body, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
+  }
+
+  /**  */
+  satoriListTemplates(auth_token: string, search_name_or?: Array<string>, search_name_exact?: string, search_name_like?: string, search_label_name_or?: Array<string>, search_label_name_and?: Array<string>, pagination_limit?: number, pagination_cursor?: string): Observable<TemplateListResponse> {
+    const urlPath = `/v2/console/satori/template`;
+    let params = new HttpParams({ encoder: new CustomHttpParamEncoder() });
+    if (search_name_or) {
+      search_name_or.forEach(e => params = params.append('search.name.or', String(e)))
+    }
+    if (search_name_exact) {
+      params = params.set('search.name.exact', search_name_exact);
+    }
+    if (search_name_like) {
+      params = params.set('search.name.like', search_name_like);
+    }
+    if (search_label_name_or) {
+      search_label_name_or.forEach(e => params = params.append('search.label_name.or', String(e)))
+    }
+    if (search_label_name_and) {
+      search_label_name_and.forEach(e => params = params.append('search.label_name.and', String(e)))
+    }
+    if (pagination_limit) {
+      params = params.set('pagination.limit', String(pagination_limit));
+    }
+    if (pagination_cursor) {
+      params = params.set('pagination.cursor', pagination_cursor);
+    }
+    return this.httpClient.get<TemplateListResponse>(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
   }
 
   /** List settings */
@@ -1676,7 +2236,7 @@ export class ConsoleService {
   }
 
   /** List validated subscriptions */
-  listSubscriptions(auth_token: string, user_id?: string, limit?: number, cursor?: string): Observable<ApiSubscriptionList> {
+  listSubscriptions(auth_token: string, user_id?: string, limit?: number, cursor?: string, after?: string, before?: string, filter?: string): Observable<ApiSubscriptionList> {
     const urlPath = `/v2/console/subscription`;
     let params = new HttpParams({ encoder: new CustomHttpParamEncoder() });
     if (user_id) {
@@ -1687,6 +2247,15 @@ export class ConsoleService {
     }
     if (cursor) {
       params = params.set('cursor', cursor);
+    }
+    if (after) {
+      params = params.set('after', after);
+    }
+    if (before) {
+      params = params.set('before', before);
+    }
+    if (filter) {
+      params = params.set('filter', filter);
     }
     return this.httpClient.get<ApiSubscriptionList>(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
   }
@@ -1709,40 +2278,26 @@ export class ConsoleService {
   }
 
   /** Add a new console user. */
-  addUser(auth_token: string, body: AddUserRequest): Observable<any> {
+  addUser(auth_token: string, body: AddUserRequest): Observable<AddUserResponse> {
     const urlPath = `/v2/console/user`;
     let params = new HttpParams({ encoder: new CustomHttpParamEncoder() });
-    return this.httpClient.post(this.config.host + urlPath, body, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
+    return this.httpClient.post<AddUserResponse>(this.config.host + urlPath, body, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
   }
 
-  updateUser(auth_token: string, username:string, body: AddUserRequest): Observable<any> {
+  /**  */
+  getUser(auth_token: string, username: string): Observable<User> {
+    username = encodeURIComponent(String(username))
     const urlPath = `/v2/console/user/${username}`;
     let params = new HttpParams({ encoder: new CustomHttpParamEncoder() });
-    return this.httpClient.put(this.config.host + urlPath, body, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
+    return this.httpClient.get<User>(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
   }
 
-  getUser(auth_token: string, username:string):Observable<UserListUser> {
+  /** Update a console user. */
+  updateUser(auth_token: string, username: string, body: UpdateUserRequest): Observable<User> {
+    username = encodeURIComponent(String(username))
     const urlPath = `/v2/console/user/${username}`;
     let params = new HttpParams({ encoder: new CustomHttpParamEncoder() });
-    return this.httpClient.get<UserListUser>(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
-  }
-
-  addPermissionsTemplate(auth_token: string, body: AddPermissionsTemplateRequest): Observable<any> {
-    const urlPath = `/v2/console/acl/template`;
-    let params = new HttpParams({ encoder: new CustomHttpParamEncoder() });
-    return this.httpClient.post(this.config.host + urlPath, body, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
-  }
-
-  updatePermissionsTemplate(auth_token: string,id: string, body: AddPermissionsTemplateRequest): Observable<any> {
-    const urlPath = `/v2/console/acl/template/${id}`;
-    let params = new HttpParams({ encoder: new CustomHttpParamEncoder() });
-    return this.httpClient.put(this.config.host + urlPath, body, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
-  }
-
-  deletePermissionsTemplate(auth_token: string, id: string): Observable<any> {
-    const urlPath = `/v2/console/acl/template/${id}`;
-    let params = new HttpParams({ encoder: new CustomHttpParamEncoder() });
-    return this.httpClient.delete(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
+    return this.httpClient.put<User>(this.config.host + urlPath, body, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
   }
 
   /** Sets the user's MFA as required or not required. */
@@ -1759,35 +2314,6 @@ export class ConsoleService {
     const urlPath = `/v2/console/user/${username}/mfa/reset`;
     let params = new HttpParams({ encoder: new CustomHttpParamEncoder() });
     return this.httpClient.post(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
-  }
-
-  getPermissionsTemplates(auth_token: string):Observable<any> {
-    const urlPath = `/v2/console/acl/template`;
-    let params = new HttpParams({ encoder: new CustomHttpParamEncoder() });
-    return this.httpClient.get<PermissionTemplateList>(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
-  }
-
-  // auditlogList()
-  listAuditLog(auth_token: string, limit:number = 20, filter?: Record<string, string>, cursor?: string): Observable<AuditLogList> {
-    const urlPath = `/v2/console/audit/log`;
-    let params = new HttpParams({ encoder: new CustomHttpParamEncoder() });
-    params = params.set('limit', limit)
-    if (filter) {
-      Object.keys(filter).forEach((key) => {
-        params = params.set(key, filter[key])
-      })
-    }
-
-    if (cursor) {
-      params = params.set('cursor', cursor);
-    }
-    return this.httpClient.get<AuditLogList>(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
-  }
-
-  getUsernames(auth_token: string):Observable<ApiUsernames> {
-    const urlPath = `/v2/console/audit/log/users`;
-    let params = new HttpParams({ encoder: new CustomHttpParamEncoder() });
-    return this.httpClient.get<ApiUsernames>(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
   }
 
   private getTokenAuthHeaders(token: string): HttpHeaders {

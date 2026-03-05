@@ -48,10 +48,10 @@ export class BaseComponent implements OnInit, OnDestroy {
     {navItem: 'status', routerLink: ['/status'], label: 'Status', minRole: '', icon: 'status'},
     {navItem: 'users', routerLink: ['/users'], label: 'User Management', minRole: 'USER', icon: 'user-management'},
     {navItem: 'config', routerLink: ['/config'], label: 'Configuration', minRole: 'CONFIGURATION', icon: 'configuration'},
-    {navItem: 'modules', routerLink: ['/modules'], label: 'Runtime Modules', minRole: 'SETTINGS', separator: true, icon: 'runtime-modules'},
-    {navItem: 'accounts', routerLink: ['/accounts'], label: 'Accounts', minRole: 'ALL_ACCOUNTS', icon: 'accounts'},
+    {navItem: 'modules', routerLink: ['/modules'], label: 'Runtime Modules', minRole: 'CONFIGURATION', separator: true, icon: 'runtime-modules'},
+    {navItem: 'accounts', routerLink: ['/accounts'], label: 'Accounts', minRole: 'ACCOUNT', icon: 'accounts'},
     {navItem: 'groups', routerLink: ['/groups'], label: 'Groups', minRole: 'GROUP', icon: 'groups'},
-    {navItem: 'storage', routerLink: ['/storage'], label: 'Storage', minRole: 'ALL_STORAGE', icon: 'storage'},
+    {navItem: 'storage', routerLink: ['/storage'], label: 'Storage', minRole: 'STORAGE_DATA', icon: 'storage'},
     {navItem: 'leaderboards', routerLink: ['/leaderboards'], label: 'Leaderboards', minRole: 'LEADERBOARD', icon: 'leaderboard'},
     {navItem: 'chat', routerLink: ['/chat'], label: 'Chat Messages', minRole: 'CHANNEL_MESSAGE', icon: 'chat'},
     {navItem: 'notifications', routerLink: ['/notifications'], label: 'Notifications', minRole: 'NOTIFICATION', icon: 'notification'},
@@ -88,7 +88,14 @@ export class BaseComponent implements OnInit, OnDestroy {
       }
       if (event instanceof NavigationError) {
         this.loading = false;
-        this.error = event.error;
+        const err = event.error;
+        if (err && typeof err === 'object' && err.status === 403) {
+          this.error = 'You do not have permission to access this page.';
+        } else if (err && typeof err === 'object' && err.message) {
+          this.error = err.message;
+        } else {
+          this.error = String(err);
+        }
       }
     });
 
@@ -151,11 +158,23 @@ export class PageviewGuard implements CanActivate, CanActivateChild {
   }
 
   canActivateChild(next: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
-    const role = this.globals.restrictedPages.get(next.url[0].path);
+    const path = next.url[0]?.path;
+
+    // Legacy role-based check
+    const role = this.globals.restrictedPages.get(path);
     if (role !== null && role < this.authService.sessionRole) {
-      // if the page has restriction, and role doesn't match it, navigate to home
       const _ = this.router.navigate(['/']);
       return false;
+    }
+
+    // ACL-based check: skip for admin user
+    const minRole: string = next.data?.minRole;
+    if (minRole && this.authService.username !== 'admin') {
+      const userAcl = this.authService.acl?.[minRole];
+      if (!userAcl || !userAcl.read) {
+        const _ = this.router.navigate(['/status']);
+        return false;
+      }
     }
 
     return true;

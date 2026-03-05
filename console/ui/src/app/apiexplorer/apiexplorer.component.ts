@@ -135,7 +135,7 @@ export class ApiExplorerComponent implements OnInit {
     const req: CallApiEndpointRequest = {
       user_id: this.f.user_id.value,
       body: value,
-      session_vars: vars as Map<string, string>,
+      session_vars: vars as Record<string, string>,
     };
 
     let endpointCall = null;

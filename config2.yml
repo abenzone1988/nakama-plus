@@ -1,4 +1,4 @@
-name: node1
+name: node2
 data_dir: "./data/"
 
 logger:
@@ -28,8 +28,8 @@ runtime:
   #js_entrypoint: "anys.js"
 
 socket:
-  server_key: "server_key"
-  port: 7350
+  server_key: "sparkgame"
+  port: 7450
   max_message_size_bytes: 4096 # bytes
   read_timeout_ms: 30000
   write_timeout_ms: 30000
@@ -52,9 +52,7 @@ social:
   app_id: 0
 
 console:
-  port: 7351
-  username: "admin"
-  password: "12345678"
+  port: 7451
   signing_key: "signing_key"
 
 matchmaker:
@@ -75,10 +73,10 @@ iap:
 
 cluster:
   gossip_bindaddr: "0.0.0.0"
-  gossip_bindport: 7335
+  gossip_bindport: 7435
   etcd:
     endpoints:
-      - "127.0.0.1:2379"
+      - "0.0.0.0:2379"
 
 
   grpc:

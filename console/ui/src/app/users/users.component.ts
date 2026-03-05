@@ -14,7 +14,10 @@
 
 import {Component, Injectable, OnInit, TemplateRef} from '@angular/core';
 import {ActivatedRoute, ActivatedRouteSnapshot, Resolve, RouterStateSnapshot} from '@angular/router';
-import {AddUserRequest, ConsoleService, PermissionTemplate, UserList, UserListUser, UserAcl, AddPermissionsTemplateRequest} from '../console.service';
+import {AddUserRequest, ConsoleService, AclTemplate, UserList, User, UserAcl, AddAclTemplateRequest} from '../console.service';
+
+// ConsoleUser 由生成器生成，不含前端显示字段，用此扩展类型补充 aclName
+type ConsoleUserDisplay = User & { aclName?: string };
 import {UntypedFormBuilder, UntypedFormGroup, Validators} from '@angular/forms';
 import {mergeMap, map} from 'rxjs/operators';
 import {Observable} from 'rxjs';
@@ -63,12 +66,12 @@ export class UsersComponent implements OnInit {
   public error = '';
   public userCreateError = '';
   public successMessage = '';
-  public users: Array<UserListUser> = [];
-  public permissionsTemplates: Array<PermissionTemplate> = [];
+  public users: Array<ConsoleUserDisplay> = [];
+  public permissionsTemplates: Array<AclTemplate> = [];
   public createUserForm: UntypedFormGroup;
   public createPermissionsTemplateForm: UntypedFormGroup
   public createPermissionsTemplateError= ''
-  public editUserPermissions?: UserListUser 
+  public editUserPermissions?: ConsoleUserDisplay
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -96,22 +99,22 @@ export class UsersComponent implements OnInit {
     this.route.data.subscribe(data => {
       const users = data[0] as UserList;
       this.users.length = 0;
-      
+
       this.permissionsTemplates = []
-      this.consoleService.getPermissionsTemplates('').subscribe((templateList) => {
+      this.consoleService.listAclTemplates('').subscribe((templateList) => {
         this.permissionsTemplates.push(...templateList.templates)
         users.users.forEach((user, index) => {
-          users.users[index].aclName = this.getAclName(user.acl, templateList.templates)
+          (users.users[index] as ConsoleUserDisplay).aclName = this.getAclName(user.acl, templateList.templates)
         })
       })
-     
-      this.users.push(...users.users);
+
+      this.users.push(...(users.users as ConsoleUserDisplay[]));
     }, err => {
       this.error = err;
     });
   }
 
-  public getAclName(acls: Record<string, UserAcl>, templates:Array<PermissionTemplate>):string {
+  public getAclName(acls: Record<string, UserAcl>, templates:Array<AclTemplate>):string {
     let fullAccess = true;
     for (const acl of Object.values(acls)) {
       if (acl.read !== true || acl.delete !== true || acl.write !== true) {
@@ -123,7 +126,7 @@ export class UsersComponent implements OnInit {
       return 'Full Access'
     }
 
-    const matchedTemplate = templates.find(t => 
+    const matchedTemplate = templates.find(t =>
       JSON.stringify(t.acl) === JSON.stringify(acls)
     );
 
@@ -141,7 +144,7 @@ export class UsersComponent implements OnInit {
     })).subscribe((userList) => {
       this.error = '';
       this.users.length = 0;
-      this.users.push(...userList.users);
+      this.users.push(...(userList.users as ConsoleUserDisplay[]));
       this.successMessage = `User ${username} Multi-factor authentication is now required`;
       setTimeout(() => {
         this.successMessage = '';
@@ -159,7 +162,7 @@ export class UsersComponent implements OnInit {
     })).subscribe((userList) => {
       this.error = '';
       this.users.length = 0;
-      this.users.push(...userList.users);
+      this.users.push(...(userList.users as ConsoleUserDisplay[]));
       this.successMessage = `User ${username} Multi-factor authentication was reset successfully`;
       setTimeout(() => {
         this.successMessage = '';
@@ -179,9 +182,9 @@ export class UsersComponent implements OnInit {
         this.error = '';
         this.users.length = 0;
         userList.users.forEach((user, index) => {
-          userList.users[index].aclName = this.getAclName(user.acl, this.permissionsTemplates)
+          (userList.users[index] as ConsoleUserDisplay).aclName = this.getAclName(user.acl, this.permissionsTemplates)
         })
-        this.users.push(...userList.users);
+        this.users.push(...(userList.users as ConsoleUserDisplay[]));
       }, error => {
         this.error = error;
       });
@@ -211,9 +214,9 @@ export class UsersComponent implements OnInit {
       this.users.length = 0;
 
       userList.users.forEach((user, index) => {
-        userList.users[index].aclName = this.getAclName(user.acl, this.permissionsTemplates)
+        (userList.users[index] as ConsoleUserDisplay).aclName = this.getAclName(user.acl, this.permissionsTemplates)
       })
-      this.users.push(...userList.users);
+      this.users.push(...(userList.users as ConsoleUserDisplay[]));
       this.closeOffcanvas(null)
   }, error => {
       this.userCreateError = error;
@@ -224,7 +227,7 @@ export class UsersComponent implements OnInit {
   public addPermissionsTemplate():void {
     this.createPermissionsTemplateError = '';
     this.createPermissionsTemplateForm.disable();
-    const req: AddPermissionsTemplateRequest = {
+    const req: AddAclTemplateRequest = {
       name: this.fp.templateName.value,
       description: this.fp.description.value,
       acl: this.editUserPermissions.acl
@@ -232,7 +235,7 @@ export class UsersComponent implements OnInit {
 
     const id = this.fp.id.value
     if (id === '') {
-      this.consoleService.addPermissionsTemplate('', req)
+      this.consoleService.addAclTemplate('', req)
       .subscribe(tm => {
         this.createPermissionsTemplateError = '';
         this.createPermissionsTemplateForm.enable();
@@ -244,7 +247,7 @@ export class UsersComponent implements OnInit {
         this.createPermissionsTemplateForm.enable();
       });
     } else {
-      this.consoleService.updatePermissionsTemplate('', id, req)
+      this.consoleService.updateAclTemplate('', id, req)
       .subscribe(tm => {
         this.createPermissionsTemplateError = '';
         this.createPermissionsTemplateForm.enable();
@@ -264,7 +267,7 @@ export class UsersComponent implements OnInit {
     }
   }
 
-  public updatePermissionsTemplate(content: TemplateRef<any>, template: PermissionTemplate): void {
+  public updatePermissionsTemplate(content: TemplateRef<any>, template: AclTemplate): void {
     this.createPermissionsTemplateError = '';
     this.createPermissionsTemplateForm.reset();
     this.createPermissionsTemplateForm.setValue(
@@ -275,19 +278,19 @@ export class UsersComponent implements OnInit {
     this.openOffcanvas(content, {acl: template.acl})
   }
 
-  public deletePermissionsTemplate(template: PermissionTemplate):void {
-     this.consoleService.deletePermissionsTemplate('', template.id).subscribe({
+  public deletePermissionsTemplate(template: AclTemplate):void {
+     this.consoleService.deleteAclTemplate('', template.id).subscribe({
       next: () => {
         this.permissionsTemplates = this.permissionsTemplates.filter((v) => v.id !== template.id)
       }
      })
   }
 
-  public openOffcanvas(content: TemplateRef<any>, user:UserListUser):void {
+  public openOffcanvas(content: TemplateRef<any>, user: ConsoleUserDisplay):void {
     this.editUserPermissions = user
-    this.offcanvasService.open(content, { 
-      ariaLabelledBy: 'offcanvas-basic-title', 
-      position: 'end', 
+    this.offcanvasService.open(content, {
+      ariaLabelledBy: 'offcanvas-basic-title',
+      position: 'end',
       backdrop: false,
       animation: true,
       panelClass: 'wide-offcanvas'
@@ -331,7 +334,7 @@ export class UsersComponent implements OnInit {
         mergeMap(() => this.consoleService.listUsers('')),
         mergeMap(userList => {
           // 重新计算 aclName（复用 ngOnInit 中的逻辑）
-          return this.consoleService.getPermissionsTemplates('').pipe(
+          return this.consoleService.listAclTemplates('').pipe(
             map(templateList => ({ userList, templates: templateList.templates }))
           );
         })
@@ -357,7 +360,7 @@ export class UsersComponent implements OnInit {
       .join(' ');
   }
 
-  public updatePermissionByTemplate(template:PermissionTemplate | 'CLEAR' | 'ALL'):void {
+  public updatePermissionByTemplate(template:AclTemplate | 'CLEAR' | 'ALL'):void {
     switch (template) {
       case 'CLEAR':
         if(!this.editUserPermissions.acl) {
@@ -391,8 +394,8 @@ export class UsersComponent implements OnInit {
     }
   }
 
-  public preTemplate():PermissionTemplate {
-    const template:PermissionTemplate = {
+  public preTemplate():AclTemplate {
+    const template:AclTemplate = {
       acl:{}
     }
 

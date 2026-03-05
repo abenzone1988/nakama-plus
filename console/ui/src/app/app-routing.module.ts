@@ -59,32 +59,32 @@ const routes: Routes = [
     children: [
       {path: '', redirectTo: 'status', pathMatch: 'full'},
       {path: 'status', component: StatusComponent, resolve: [GraphInitNodesResolver]},
-      {path: 'config', component: ConfigComponent, resolve: [ConfigResolver]},
-      {path: 'users', component: UsersComponent, resolve: [UsersResolver]},
-      {path: 'modules', component: RuntimeComponent, resolve: [RuntimeResolver]},
-      {path: 'storage', component: StorageListComponent, resolve: [StorageCollectionResolver, StorageSearchResolver], pathMatch: 'full'},
-      {path: 'storage/:collection/:key/:user_id', component: StorageObjectComponent, resolve: [StorageObjectResolver], pathMatch: 'full'},
-      {path: 'leaderboards', component: LeaderboardsComponent, resolve: [LeaderboardListResolver]},
-      {path: 'leaderboards/:id', component: LeaderboardComponent, resolve: [LeaderboardResolver],
+      {path: 'config', component: ConfigComponent, resolve: [ConfigResolver], data: {minRole: 'CONFIGURATION'}},
+      {path: 'users', component: UsersComponent, resolve: [UsersResolver], data: {minRole: 'USER'}},
+      {path: 'modules', component: RuntimeComponent, resolve: [RuntimeResolver], data: {minRole: 'CONFIGURATION'}},
+      {path: 'storage', component: StorageListComponent, resolve: [StorageCollectionResolver, StorageSearchResolver], pathMatch: 'full', data: {minRole: 'STORAGE_DATA'}},
+      {path: 'storage/:collection/:key/:user_id', component: StorageObjectComponent, resolve: [StorageObjectResolver], pathMatch: 'full', data: {minRole: 'STORAGE_DATA'}},
+      {path: 'leaderboards', component: LeaderboardsComponent, resolve: [LeaderboardListResolver], data: {minRole: 'LEADERBOARD'}},
+      {path: 'leaderboards/:id', component: LeaderboardComponent, resolve: [LeaderboardResolver], data: {minRole: 'LEADERBOARD'},
         children: [
           {path: '', redirectTo: 'details', pathMatch: 'full'},
           {path: 'details', component: LeaderboardDetailsComponent, resolve: []},
           {path: 'records', component: LeaderboardRecordsComponent, resolve: [LeaderboardRecordsResolver]},
         ]
       },
-      {path: 'matches', component: MatchesComponent, resolve: [MatchesResolver, NodesResolver]},
-      {path: 'groups', component: GroupListComponent, resolve: [GroupSearchResolver]},
+      {path: 'matches', component: MatchesComponent, resolve: [MatchesResolver, NodesResolver], data: {minRole: 'MATCH'}},
+      {path: 'groups', component: GroupListComponent, resolve: [GroupSearchResolver], data: {minRole: 'GROUP'}},
       {
-        path: 'groups/:id', component: GroupComponent, resolve: [GroupResolver],
+        path: 'groups/:id', component: GroupComponent, resolve: [GroupResolver], data: {minRole: 'GROUP'},
         children: [
           {path: '', redirectTo: 'details', pathMatch: 'full'},
           {path: 'details', component: GroupDetailsComponent, resolve: []},
           {path: 'members', component: GroupMembersComponent, resolve: [GroupMembersResolver], runGuardsAndResolvers: 'always'},
         ]
       },
-      {path: 'accounts', component: AccountListComponent, resolve: [AccountSearchResolver]},
+      {path: 'accounts', component: AccountListComponent, resolve: [AccountSearchResolver], data: {minRole: 'ACCOUNT'}},
       {
-        path: 'accounts/:id', component: AccountComponent, resolve: [AccountResolver],
+        path: 'accounts/:id', component: AccountComponent, resolve: [AccountResolver], data: {minRole: 'ACCOUNT'},
         children: [
           {path: '', redirectTo: 'profile', pathMatch: 'full'},
           {path: 'profile', component: ProfileComponent, resolve: []},
@@ -97,13 +97,13 @@ const routes: Routes = [
           {path: 'subscriptions', component: SubscriptionsComponent, resolve: [SubscriptionsResolver]}
         ]
       },
-      {path: 'apiexplorer', component: ApiExplorerComponent, resolve: [ApiExplorerEndpointsResolver]},
-      {path: 'chat', component: ChatListComponent, resolve: [ChatSearchResolver]},
-      {path: 'notifications', component: NotificationsListComponent, resolve: [NotificationsResolver]},
-      {path: 'purchases', component: PurchasesListComponent, resolve: [PurchasesResolver]},
-      {path: 'subscriptions', component: SubscriptionsListComponent, resolve: [SubscriptionsResolver]},
+      {path: 'apiexplorer', component: ApiExplorerComponent, resolve: [ApiExplorerEndpointsResolver], data: {minRole: 'API_EXPLORER'}},
+      {path: 'chat', component: ChatListComponent, resolve: [ChatSearchResolver], data: {minRole: 'CHANNEL_MESSAGE'}},
+      {path: 'notifications', component: NotificationsListComponent, resolve: [NotificationsResolver], data: {minRole: 'NOTIFICATION'}},
+      {path: 'purchases', component: PurchasesListComponent, resolve: [PurchasesResolver], data: {minRole: 'IN_APP_PURCHASE'}},
+      {path: 'subscriptions', component: SubscriptionsListComponent, resolve: [SubscriptionsResolver], data: {minRole: 'IN_APP_PURCHASE'}},
       {path: 'settings/mfa', component: MfaSetupComponent, resolve: []},
-      {path: 'audit/log', component: AuditLogComponent, resolve: [AuditLogResolver]}
+      {path: 'audit/log', component: AuditLogComponent, resolve: [AuditLogResolver], data: {minRole: 'AUDIT_LOG'}}
     ]},
   {
     path: 'login', component: LoginComponent, canActivate: [LoginGuard],

@@ -1,8 +1,8 @@
 import {Component, OnInit, Injectable} from '@angular/core';
 import {ActivatedRoute, ActivatedRouteSnapshot, Resolve, RouterStateSnapshot} from '@angular/router';
-import {ConsoleService, AuditLogList, ApiAuditLog} from '../console.service';
+import {ConsoleService, AuditLogList, AuditLogListAuditLog} from '../console.service';
 import {Observable} from 'rxjs';
-import {NgbDateStruct,NgbDate} from '@ng-bootstrap/ng-bootstrap';
+import {NgbDateStruct, NgbDate} from '@ng-bootstrap/ng-bootstrap';
 
 const actions = new Map<number, string>([
     [1, 'Create'],
@@ -56,12 +56,12 @@ interface selectType {
     styleUrls: ['./audit-log.component.scss']
   })
 export class AuditLogComponent implements OnInit {
-    public auditLogList: Array<ApiAuditLog> = []
+    public auditLogList: Array<AuditLogListAuditLog> = []
     public nextCursor = '';
     public prevCursor = '';
     public error = '';
     public limit = 20;
-    public filter?: Record<string, string> = {};
+    public filter: Record<string, string> = {};
     public usernames?: string[];
     public modelDatepicker:NgbDateStruct
 
@@ -84,17 +84,21 @@ export class AuditLogComponent implements OnInit {
               this.error = err;
         });
 
-        this.consoleService.getUsernames('').subscribe(it => {
+        this.consoleService.listAuditLogsUsers('').subscribe(it => {
             this.usernames = it.usernames
         })
     }
 
     public loadData(cursor: string): void {
         this.error = '';
-        this.consoleService.listAuditLog(
+        this.consoleService.listAuditLogs(
           '',
           this.limit,
-          this.filter,
+          this.filter['username'],
+          this.filter['resource'] ? Number(this.filter['resource']) : undefined,
+          this.filter['action'],
+          this.filter['after'],
+          this.filter['before'],
           cursor,
         ).subscribe(res => {
           this.auditLogList.length = 0;
@@ -142,7 +146,7 @@ export class AuditLogComponent implements OnInit {
             items.push({id: k, value: v})
         }
         return items
-    } 
+    }
 
     public getActions():selectType[] {
         const items:selectType[] = []
@@ -150,7 +154,7 @@ export class AuditLogComponent implements OnInit {
             items.push({id: k, value: v})
         }
         return items
-    } 
+    }
 }
 
 @Injectable({providedIn: 'root'})
@@ -158,6 +162,6 @@ export class AuditLogResolver implements Resolve<AuditLogList> {
   constructor(private readonly consoleService: ConsoleService) {}
 
   resolve(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<AuditLogList> {
-    return this.consoleService.listAuditLog('', 20);
+    return this.consoleService.listAuditLogs('', 20);
   }
 }

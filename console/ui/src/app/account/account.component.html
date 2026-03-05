@@ -24,12 +24,14 @@
 </ngb-alert>
 
 <nav ngbNav #accountNav="ngbNav" class="navbar-expand-sm p-0 mb-3">
-  <div *ngFor="let v of views">
-    <ng-container [ngbNavItem]="v.path">
-      <a ngbNavLink routerLinkActive="account-link-active" [routerLink]="['/accounts', account.user.id, v.path]">{{v.label}}</a>
-    </ng-container>
-  </div>
-  <div>
+  <ng-container *ngFor="let v of views">
+    <div *ngIf="isAllowed(v.minRole)">
+      <ng-container [ngbNavItem]="v.path">
+        <a ngbNavLink routerLinkActive="account-link-active" [routerLink]="['/accounts', account.user.id, v.path]">{{v.label}}</a>
+      </ng-container>
+    </div>
+  </ng-container>
+  <div *ngIf="storageAllowed()">
     <ng-container ngbNavItem="storage">
       <a ngbNavLink [routerLink]="['/storage']" [queryParams]="{'user_id': this.account.user.id}">
         Storage

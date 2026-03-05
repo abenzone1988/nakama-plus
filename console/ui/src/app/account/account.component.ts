@@ -31,14 +31,14 @@ export class AccountComponent implements OnInit {
   public error = '';
 
   public views = [
-    {label: 'Profile', path: 'profile'},
-    {label: 'Authentication', path: 'authentication'},
-    {label: 'Friends', path: 'friends'},
-    {label: 'Groups', path: 'groups'},
-    {label: 'Notifications', path: 'notifications'},
-    {label: 'Wallet', path: 'wallet'},
-    {label: 'Purchases', path: 'purchases'},
-    {label: 'Subscriptions', path: 'subscriptions'},
+    {label: 'Profile', path: 'profile', minRole: ''},
+    {label: 'Authentication', path: 'authentication', minRole: ''},
+    {label: 'Friends', path: 'friends', minRole: 'ACCOUNT_FRIENDS'},
+    {label: 'Groups', path: 'groups', minRole: 'ACCOUNT_GROUPS'},
+    {label: 'Notifications', path: 'notifications', minRole: 'NOTIFICATION'},
+    {label: 'Wallet', path: 'wallet', minRole: 'ACCOUNT_WALLET'},
+    {label: 'Purchases', path: 'purchases', minRole: 'IN_APP_PURCHASE'},
+    {label: 'Subscriptions', path: 'subscriptions', minRole: 'IN_APP_PURCHASE'},
   ];
 
   constructor(
@@ -149,6 +149,18 @@ export class AccountComponent implements OnInit {
   deleteAllowed(): boolean {
     // only admin and developers are allowed.
     return this.authService.sessionRole <= UserRole.USER_ROLE_MAINTAINER;
+  }
+
+  isAllowed(aclResource: string): boolean {
+    if (!aclResource || this.authService.username === 'admin') {
+      return true;
+    }
+    const userAcl = this.authService.acl?.[aclResource];
+    return userAcl != null && userAcl.read === true;
+  }
+
+  storageAllowed(): boolean {
+    return this.isAllowed('STORAGE_DATA');
   }
 }
 

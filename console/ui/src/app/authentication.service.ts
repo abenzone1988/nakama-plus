@@ -23,7 +23,7 @@ import {
   ConsoleService,
   ConsoleSession,
   UserRole,
-  UserListUser,
+  User,
   UserAcl
 } from './console.service';
 import { WINDOW } from './window.provider';
@@ -143,7 +143,8 @@ export class AuthenticationService {
     // tslint:disable-next-line:max-line-length
     return this.http.post<ConsoleSession>(this.config.host + '/v2/console/authenticate', req, { observe: 'response' }).pipe(
       mergeMap(authResponse => {
-        return this.consoleService.getUser('', username).pipe(
+        const token = authResponse.body?.token || '';
+        return this.consoleService.getUser(token, username).pipe(
           map(user => {
             const session: ConsoleSession = {
               ...authResponse.body,
