@@ -16,8 +16,12 @@ package server
 
 import (
 	"context"
+	"encoding/json"
+	"strings"
 
 	"github.com/doublemo/nakama-common/api"
+	"github.com/doublemo/nakama-plus/v3/console"
+	"github.com/doublemo/nakama-plus/v3/game"
 	"github.com/gofrs/uuid/v5"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -50,6 +54,11 @@ func (s *ApiServer) ListNotifications(ctx context.Context, in *api.ListNotificat
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	//同步系统通知
+	if err := SyncSystemNotifications(ctx, s.logger, s.db, s.statusRegistry, userID); err != nil {
+		s.logger.Error("Sync System Notice error ", zap.Error(err))
 	}
 
 	limit := 1
@@ -124,4 +133,103 @@ func (s *ApiServer) DeleteNotifications(ctx context.Context, in *api.DeleteNotif
 	}
 
 	return &emptypb.Empty{}, nil
+}
+
+func (s *ApiServer) MarkNotificationsRead(ctx context.Context, in *game.MarkNotificationsReadRequest) (*game.MarkNotificationsReadResponse, error) {
+	userID := ctx.Value(ctxUserIDKey{}).(uuid.UUID)
+
+	if len(in.GetIds()) == 0 {
+		return &game.MarkNotificationsReadResponse{Markedcount: 0}, nil
+	}
+
+	markedCount, err := NotificationMarkRead(ctx, s.logger, s.db, userID, in.GetIds())
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Error while marking notifications as read.")
+	}
+
+	return &game.MarkNotificationsReadResponse{Markedcount: markedCount}, nil
+}
+
+func (s *ApiServer) ClaimNotificationAttachments(ctx context.Context, in *game.ClaimNotificationAttachmentsRequest) (*game.ClaimNotificationAttachmentsResponse, error) {
+	userID := ctx.Value(ctxUserIDKey{}).(uuid.UUID)
+	if len(in.GetIds()) == 0 {
+		return &game.ClaimNotificationAttachmentsResponse{Claimedcount: 0}, nil
+	}
+
+	contents, claimedCount, err := NotificationClaimAttachments(ctx, s.logger, s.db, userID, in.GetIds())
+	if err != nil {
+		if st, ok := status.FromError(err); ok && st.Code() == codes.FailedPrecondition {
+			// Pass through business errors such as already-claimed or expired notifications.
+			return nil, err
+		}
+		return nil, status.Error(codes.Internal, "Error while claiming notification attachments.")
+	}
+
+	// 收集所有通知的奖励
+	var allRewards []*game.Reward
+	for id, contentStr := range contents {
+		if contentStr == "" {
+			continue
+		}
+		var noticeContent console.NoticeContent
+		if err := json.Unmarshal([]byte(contentStr), &noticeContent); err != nil {
+			s.logger.Error("Failed to parse notification content.", zap.String("notification_id", id), zap.Error(err))
+			return nil, status.Error(codes.Internal, "Error while parsing notification attachments.")
+		}
+
+		for _, reward := range noticeContent.GetRewards() {
+			if reward != nil {
+				allRewards = append(allRewards, reward)
+			}
+		}
+	}
+
+	// If there are no rewards, return directly.
+	if len(allRewards) == 0 {
+		return &game.ClaimNotificationAttachmentsResponse{
+			Claimedcount:     claimedCount,
+			WalletUpdated:    nil,
+			InventoryUpdated: nil,
+		}, nil
+	}
+
+	// Merge all rewards.
+	mergedReward := MergeRewards(allRewards)
+
+	// Grant merged rewards.
+	source := "notification_merged:" + strings.Join(in.GetIds(), ",")
+	walletResult, inventoryResult, err := GrantReward(ctx, s.logger, s.db, s.templateManager, s.metrics, s.storageIndex, mergedReward, source)
+	if err != nil {
+		s.logger.Error("Failed to grant notification rewards.", zap.Error(err))
+		return nil, status.Error(codes.Internal, "Error while claiming notification attachments.")
+	}
+
+	var walletSnapshot *game.Wallet
+	if walletResult != nil && walletResult.Updated != nil {
+		walletSnapshot = convertGameWalletToAPI(walletResult.Updated)
+	}
+
+	var inventoryUpdated []*game.Item
+	if inventoryResult != nil && len(inventoryResult.Updated) > 0 {
+		inventoryUpdated = inventoryResult.Updated
+	}
+
+	return &game.ClaimNotificationAttachmentsResponse{
+		Claimedcount:     claimedCount,
+		Reward:           mergedReward,
+		WalletUpdated:    walletSnapshot,
+		InventoryUpdated: inventoryUpdated,
+	}, nil
+}
+
+func convertGameWalletToAPI(wallet *game.Wallet) *game.Wallet {
+	if wallet == nil {
+		return nil
+	}
+	return &game.Wallet{
+		Coin:    wallet.Coin,
+		Gem:     wallet.Gem,
+		Ad:      wallet.Ad,
+		Stamina: wallet.Stamina,
+	}
 }

@@ -175,3 +175,9 @@ func (s *ConsoleServer) DeleteAclTemplate(ctx context.Context, in *console.Delet
 
 	return &emptypb.Empty{}, nil
 }
+
+func (s *ConsoleServer) ReloadTemplate(ctx context.Context, in *emptypb.Empty) (*emptypb.Empty, error) {
+	s.templateManager.LoadData()
+	s.logger.Info("Reload template data.")
+	return &emptypb.Empty{}, nil
+}

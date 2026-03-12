@@ -191,6 +191,7 @@ func main() {
 	tracker.SetMatchLeaveListener(matchRegistry.Leave)
 	streamManager := server.NewLocalStreamManager(config, sessionRegistry, tracker)
 	fmCallbackHandler := server.NewLocalFmCallbackHandler(config)
+	templateManager := server.NewLocalTemplateManager(logger, db, config)
 
 	storageIndex, err := server.NewLocalStorageIndex(logger, db, config.GetStorage(), metrics)
 	if err != nil {
@@ -235,9 +236,9 @@ func main() {
 	console.UIFS.Nt = !telemetryEnabled
 	cookie := newOrLoadCookie(telemetryEnabled, config)
 
-	apiServer := server.StartApiServer(logger, startupLogger, db, jsonpbMarshaler, jsonpbUnmarshaler, config, version, socialClient, storageIndex, leaderboardCache, leaderboardRankCache, sessionRegistry, sessionCache, statusRegistry, matchRegistry, partyRegistry, matchmaker, tracker, router, streamManager, metrics, pipeline, runtime)
+	apiServer := server.StartApiServer(logger, startupLogger, db, jsonpbMarshaler, jsonpbUnmarshaler, config, version, socialClient, storageIndex, leaderboardCache, leaderboardRankCache, sessionRegistry, sessionCache, statusRegistry, matchRegistry, partyRegistry, matchmaker, tracker, router, streamManager, metrics, pipeline, runtime, templateManager)
 	socketServer := server.StartSocketServer(logger, config, sessionRegistry, sessionCache, statusRegistry, matchmaker, tracker, metrics, runtime, jsonpbMarshaler, jsonpbUnmarshaler, pipeline)
-	consoleServer := server.StartConsoleServer(logger, startupLogger, db, config, tracker, router, streamManager, metrics, sessionRegistry, sessionCache, consoleSessionCache, loginAttemptCache, statusRegistry, statusHandler, runtimeInfo, matchRegistry, configWarnings, semver, leaderboardCache, leaderboardRankCache, leaderboardScheduler, storageIndex, apiServer, runtime, cookie)
+	consoleServer := server.StartConsoleServer(logger, startupLogger, db, config, tracker, router, streamManager, metrics, sessionRegistry, sessionCache, consoleSessionCache, loginAttemptCache, statusRegistry, statusHandler, runtimeInfo, matchRegistry, configWarnings, semver, leaderboardCache, leaderboardRankCache, leaderboardScheduler, storageIndex, apiServer, runtime, templateManager, cookie)
 
 	if telemetryEnabled {
 		const telemetryKey = "YU1bIKUhjQA9WC0O6ouIRIWTaPlJ5kFs"

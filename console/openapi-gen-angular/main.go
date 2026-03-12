@@ -115,7 +115,11 @@ export class {{(index .Tags 0).Name}}Service {
     {{- if and (eq $index 0) (eq $hasSecurity true) -}}{{- ", " -}}{{- else if ne $index 0 -}}{{- ", " -}}{{- end -}}
     {{- $parameter.Name | dotToUnderscore }}{{- if not $parameter.Required }}?{{- end -}}{{": "}}
           {{- if eq $parameter.In "path" -}}
+            {{- if eq $parameter.Type "integer" -}}
+    number
+            {{- else -}}
     {{ $parameter.Type }}
+            {{- end -}}
           {{- else if eq $parameter.In "body" -}}
         {{- $body = true -}}
         {{- if eq $parameter.Schema.Type "string" -}}
@@ -146,7 +150,7 @@ export class {{(index .Tags 0).Name}}Service {
 
         {{- range $parameter := $operation.Parameters}}
       {{- if eq $parameter.In "path"}}
-    {{ $parameter.Name }} = encodeURIComponent(String({{- $parameter.Name}}))
+    const encoded{{ $parameter.Name | title }} = encodeURIComponent(String({{- $parameter.Name}}))
       {{- end}}
         {{- end}}
     const urlPath = {{ $url | convertPathToJs -}};

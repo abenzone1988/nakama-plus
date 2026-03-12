@@ -38,6 +38,7 @@ import (
 )
 
 const (
+	NotificationSystemNotice         int32 = 0
 	NotificationCodeDmRequest        int32 = -1
 	NotificationCodeFriendRequest    int32 = -2
 	NotificationCodeFriendAccept     int32 = -3
@@ -233,7 +234,7 @@ func NotificationList(ctx context.Context, logger *zap.Logger, db *sql.DB, userI
 	}
 
 	query := `
-SELECT id, subject, content, code, sender_id, create_time
+SELECT id, subject, content, code, sender_id, status, create_time, expiry_time
 FROM notification
 WHERE user_id = $1` + cursorQuery + `
 ORDER BY create_time ASC, id ASC` + limitQuery
@@ -254,9 +255,10 @@ ORDER BY create_time ASC, id ASC` + limitQuery
 			hasNextPage = true
 			break
 		}
-		no := &api.Notification{Persistent: true, CreateTime: &timestamppb.Timestamp{}}
+		no := &api.Notification{Persistent: true, CreateTime: &timestamppb.Timestamp{}, ExpiryTime: &timestamppb.Timestamp{}}
 		var createTime pgtype.Timestamptz
-		if err := rows.Scan(&no.Id, &no.Subject, &no.Content, &no.Code, &no.SenderId, &createTime); err != nil {
+		var expiryTime pgtype.Timestamptz
+		if err := rows.Scan(&no.Id, &no.Subject, &no.Content, &no.Code, &no.SenderId, &no.Status, &createTime, &expiryTime); err != nil {
 			_ = rows.Close()
 			logger.Error("Could not scan notification from database.", zap.Error(err))
 			return nil, err
@@ -264,6 +266,9 @@ ORDER BY create_time ASC, id ASC` + limitQuery
 
 		lastCreateTime = createTime.Time.UnixNano()
 		no.CreateTime.Seconds = createTime.Time.Unix()
+		if expiryTime.Valid {
+			no.ExpiryTime.Seconds = expiryTime.Time.Unix()
+		}
 		if no.SenderId == uuid.Nil.String() {
 			no.SenderId = ""
 		}
@@ -327,16 +332,18 @@ func NotificationSave(ctx context.Context, logger *zap.Logger, db *sql.DB, notif
 	contents := make([]string, 0, len(notifications))
 	codes := make([]int32, 0, len(notifications))
 	senderIds := make([]string, 0, len(notifications))
+	expiryTimes := make([]interface{}, 0, len(notifications))
 	query := `
 INSERT INTO
-	notification (id, user_id, subject, content, code, sender_id)
+	notification (id, user_id, subject, content, code, sender_id, expiry_time)
 SELECT
 	unnest($1::uuid[]),
 	unnest($2::uuid[]),
 	unnest($3::text[]),
 	unnest($4::jsonb[]),
 	unnest($5::smallint[]),
-	unnest($6::uuid[]);
+	unnest($6::uuid[]),
+	unnest($7::timestamptz[]);
 `
 	for userID, no := range notifications {
 		for _, un := range no {
@@ -346,10 +353,15 @@ SELECT
 			contents = append(contents, un.Content)
 			codes = append(codes, un.Code)
 			senderIds = append(senderIds, un.SenderId)
+			if un.ExpiryTime != nil && un.ExpiryTime.Seconds > 0 {
+				expiryTimes = append(expiryTimes, time.Unix(un.ExpiryTime.Seconds, 0).UTC())
+			} else {
+				expiryTimes = append(expiryTimes, nil)
+			}
 		}
 	}
 
-	if _, err := db.ExecContext(ctx, query, ids, userIds, subjects, contents, codes, senderIds); err != nil {
+	if _, err := db.ExecContext(ctx, query, ids, userIds, subjects, contents, codes, senderIds, expiryTimes); err != nil {
 		logger.Error("Could not save notifications.", zap.Error(err))
 		return err
 	}
@@ -473,4 +485,122 @@ func NotificationsUpdate(ctx context.Context, logger *zap.Logger, db *sql.DB, up
 	}
 
 	return nil
+}
+
+// NotificationMarkRead marks notifications as read for a user
+func NotificationMarkRead(ctx context.Context, logger *zap.Logger, db *sql.DB, userID uuid.UUID, notificationIDs []string) (int32, error) {
+	if len(notificationIDs) == 0 {
+		return 0, nil
+	}
+
+	query := "UPDATE notification SET status = 1 WHERE user_id = $1 AND id = ANY($2::uuid[]) AND status = 0"
+	result, err := db.ExecContext(ctx, query, userID, notificationIDs)
+	if err != nil {
+		logger.Error("Could not mark notifications as read.", zap.Error(err))
+		return 0, err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		logger.Error("Could not get affected rows count.", zap.Error(err))
+		return 0, err
+	}
+
+	return int32(rowsAffected), nil
+}
+
+// NotificationClaimAttachments claims attachments from notifications for a user
+func NotificationClaimAttachments(ctx context.Context, logger *zap.Logger, db *sql.DB, userID uuid.UUID, notificationIDs []string) (map[string]string, int32, error) {
+	if len(notificationIDs) == 0 {
+		return map[string]string{}, 0, nil
+	}
+
+	query := `
+SELECT id, content, status, expiry_time
+FROM notification
+WHERE user_id = $1
+  AND id = ANY($2::uuid[])
+`
+	rows, err := db.QueryContext(ctx, query, userID, notificationIDs)
+	if err != nil {
+		logger.Error("Failed to query notification contents.", zap.Error(err))
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	now := time.Now().UTC()
+	contents := make(map[string]string, len(notificationIDs))
+	expiredIDs := make([]string, 0)
+	for rows.Next() {
+		var (
+			id          string
+			contentStr  string
+			notifStatus int32
+			expiryTime  pgtype.Timestamptz
+		)
+		if err := rows.Scan(&id, &contentStr, &notifStatus, &expiryTime); err != nil {
+			logger.Error("Failed to scan notification contents.", zap.Error(err))
+			return nil, 0, err
+		}
+
+		if notifStatus == 2 {
+			logger.Warn("Notification already claimed. Skipping.", zap.String("notification_id", id))
+			return nil, 0, status.Error(codes.FailedPrecondition, "Some notifications are already claimed.")
+		}
+
+		if expiryTime.Valid && expiryTime.Time.Before(now) {
+			logger.Warn("Notification expired. Will be deleted.", zap.String("notification_id", id), zap.Time("expiry_time", expiryTime.Time))
+			expiredIDs = append(expiredIDs, id)
+			continue
+		}
+
+		contents[id] = contentStr
+	}
+
+	if err := rows.Err(); err != nil {
+		logger.Error("Failed to iterate over notification contents.", zap.Error(err))
+		return nil, 0, err
+	}
+
+	if len(expiredIDs) > 0 {
+		deleteQuery := "DELETE FROM notification WHERE user_id = $1 AND id = ANY($2::uuid[])"
+		_, err := db.ExecContext(ctx, deleteQuery, userID, expiredIDs)
+		if err != nil {
+			logger.Error("Failed to delete expired notifications.", zap.Error(err), zap.Strings("expired_ids", expiredIDs))
+		} else {
+			logger.Info("Deleted expired notifications.", zap.Int("count", len(expiredIDs)), zap.Strings("expired_ids", expiredIDs))
+		}
+	}
+
+	if len(contents) == 0 {
+		if len(expiredIDs) > 0 {
+			return nil, 0, status.Error(codes.FailedPrecondition, "Some notifications are expired.")
+		}
+		return map[string]string{}, 0, nil
+	}
+
+	claimedIDs := make([]string, 0, len(contents))
+	for id := range contents {
+		claimedIDs = append(claimedIDs, id)
+	}
+
+	updateQuery := "UPDATE notification SET status = 2 WHERE user_id = $1 AND id = ANY($2::uuid[]) AND status < 2"
+	result, err := db.ExecContext(ctx, updateQuery, userID, claimedIDs)
+	if err != nil {
+		logger.Error("Failed to update notification statuses.", zap.Error(err))
+		return nil, 0, err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		logger.Error("Failed to get number of updated notifications.", zap.Error(err))
+		return nil, 0, err
+	}
+
+	if int(rowsAffected) != len(contents) {
+		logger.Warn("Some notifications were already claimed when updating statuses.")
+		return nil, 0, status.Error(codes.FailedPrecondition, "Some notifications are already claimed.")
+	}
+
+	return contents, int32(rowsAffected), nil
 }

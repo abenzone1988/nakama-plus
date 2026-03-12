@@ -90,7 +90,9 @@ nk.register_rpc(print_env, "clientrpc.print_env")
 local function create_leaderboard(context, payload)
   local decoded = nk.json_decode(payload)
   local id = nk.uuid_v4()
-  local status, result = pcall(nk.leaderboard_create, id, false, "desc", decoded.operator)
+  local operator = (decoded and decoded.operator) or "best"
+  -- resetSchedule="", metadata={}, enableRanks=true（支持 ListLeaderboardRecordsAroundOwner）
+  local status, result = pcall(nk.leaderboard_create, id, false, "desc", operator, "", {}, true)
   if (not status) then
     nk.logger_error(result)
   end
@@ -101,3 +103,12 @@ local function create_leaderboard(context, payload)
   return nk.json_encode(response)
 end
 nk.register_rpc(create_leaderboard, "clientrpc.create_leaderboard")
+
+-- 用于集群测试：按指定 id 创建排行榜
+local function create_leaderboard_for_test(context, payload)
+  local decoded = nk.json_decode(payload)
+  local id = (decoded and decoded.id) or nk.uuid_v4()
+  nk.leaderboard_create(id, false, "desc", "best", "", {}, true)
+  return nk.json_encode({ success = true, id = id })
+end
+nk.register_rpc(create_leaderboard_for_test, "clientrpc.create_leaderboard_for_test")

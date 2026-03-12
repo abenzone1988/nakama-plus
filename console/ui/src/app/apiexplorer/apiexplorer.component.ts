@@ -133,7 +133,7 @@ export class ApiExplorerComponent implements OnInit {
     }
 
     const req: CallApiEndpointRequest = {
-      user_id: this.f.user_id.value,
+      user_id: this.f.user_id.value || "00000000-0000-0000-0000-000000000000",
       body: value,
       session_vars: vars as Record<string, string>,
     };

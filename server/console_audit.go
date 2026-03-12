@@ -446,6 +446,51 @@ func consoleAuditLogInterceptor(logger *zap.Logger, db *sql.DB) func(context.Con
 				resource = console.AclResources_SATORI_MESSAGE
 				metadata, mErr = auditLogMarshaller.Marshal(msg)
 				log = "satori message sent"
+			case "/nakama.console.Console/CreateAnnouncement":
+				action = console.AuditLogAction_CREATE
+				resource = console.AclResources_ANNOUNCEMENT
+				metadata, mErr = auditLogMarshaller.Marshal(msg)
+				log = "announcement created"
+			case "/nakama.console.Console/UpdateAnnouncement":
+				action = console.AuditLogAction_UPDATE
+				resource = console.AclResources_ANNOUNCEMENT
+				metadata, mErr = auditLogMarshaller.Marshal(msg)
+				log = "announcement updated"
+			case "/nakama.console.Console/DeleteAnnouncement":
+				action = console.AuditLogAction_DELETE
+				resource = console.AclResources_ANNOUNCEMENT
+				metadata, mErr = auditLogMarshaller.Marshal(msg)
+				log = "announcement deleted"
+			case "/nakama.console.Console/CreateSystemNotification":
+				action = console.AuditLogAction_CREATE
+				resource = console.AclResources_SYSTEM_NOTIFICATION
+				metadata, mErr = auditLogMarshaller.Marshal(msg)
+				log = "system notification created"
+			case "/nakama.console.Console/UpdateSystemNotification":
+				action = console.AuditLogAction_UPDATE
+				resource = console.AclResources_SYSTEM_NOTIFICATION
+				metadata, mErr = auditLogMarshaller.Marshal(msg)
+				log = "system notification updated"
+			case "/nakama.console.Console/DeleteSystemNotification":
+				action = console.AuditLogAction_DELETE
+				resource = console.AclResources_SYSTEM_NOTIFICATION
+				metadata, mErr = auditLogMarshaller.Marshal(msg)
+				log = "system notification deleted"
+			case "/nakama.console.Console/CreatePersonalNotification":
+				action = console.AuditLogAction_CREATE
+				resource = console.AclResources_PERSONAL_NOTIFICATION
+				metadata, mErr = auditLogMarshaller.Marshal(msg)
+				log = "personal notification created"
+			case "/nakama.console.Console/AddVipAccount":
+				action = console.AuditLogAction_UPDATE
+				resource = console.AclResources_VIP_MANAGER
+				metadata, mErr = auditLogMarshaller.Marshal(msg)
+				log = "vip account added"
+			case "/nakama.console.Console/RemoveVipAccount":
+				action = console.AuditLogAction_DELETE
+				resource = console.AclResources_VIP_MANAGER
+				metadata, mErr = auditLogMarshaller.Marshal(msg)
+				log = "vip account removed"
 			}
 
 			if mErr != nil {

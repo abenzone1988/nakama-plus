@@ -1114,6 +1114,9 @@ func (s *LocalPeer) processBinaryLogBroadcast() {
 	}
 }
 
+// onServiceUpdate 在 etcd 服务列表变更时更新 serviceRegistry 并尝试建立 gRPC 连接。
+// 注意：不会对 memberlist 再次调用 Join()。若某节点曾被 memberlist 判死（NotifyLeave），
+// 仅靠 etcd 的 Watch 不会自动将其重新加入 memberlist，需该节点重启后重新 Join 或由运维触发重连。
 func (s *LocalPeer) onServiceUpdate() {
 	if s.etcdClient == nil {
 		return

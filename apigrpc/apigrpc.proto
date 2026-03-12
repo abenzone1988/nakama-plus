@@ -24,6 +24,7 @@ import "api/api_any.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
+import "msg.proto";
 
 option go_package = "github.com/doublemo/nakama-plus/v3/apigrpc";
 
@@ -756,6 +757,548 @@ service Nakama {
         post: "/v2/tournament/{tournament_id}",
         body: "record",
       }
+    };
+  }
+
+  //Redeem a Gift by code
+  rpc RedeemGift(game.RedeemGiftRequest) returns(game.RedeemGiftResponse){
+    option (google.api.http) = {
+      post: "/v2/game/redeem_gift",
+      body: "*"
+    };
+  }
+
+  //User Feedback
+  rpc Feedback(game.FeedbackRequest) returns(google.protobuf.Empty){
+    option (google.api.http) = {
+      post: "/v2/game/feedback",
+      body: "*"
+    };
+  }
+
+  // Submit an invitation request.
+  rpc SubmitBeInvited (game.SubmitBeInvitedRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/v2/invite/submit"
+      body: "*"
+    };
+  }
+
+  // List invitee information for a user.
+  rpc ListInvitee (google.protobuf.Empty) returns (game.ListInviteeResponse) {
+    option (google.api.http).get = "/v2/invitee/list";
+  }
+
+  // Claim invite reward for a user.
+  rpc ClaimInviteReward (game.ClaimInviteRewardRequest) returns (game.ClaimInviteRewardResponse) {
+    option (google.api.http) = {
+      post: "/v2/invite/claim"
+      body: "*"
+    };
+  }
+
+  // Claim byte reward for a user (抖音奖励)
+  rpc ClaimByteReward (game.ClaimByteRewardRequest) returns (game.ClaimByteRewardResponse) {
+    option (google.api.http) = {
+      post: "/v2/byte/reward/claim"
+      body: "*"
+    };
+  }
+
+  // Get Server Time
+  rpc GetGameTime (google.protobuf.Empty) returns (game.GetGameTimeResponse) {
+    option (google.api.http).get = "/v2/game/time";
+  }
+
+  // List published announcements
+  rpc ListPublishedAnnouncements (game.ListPublishedAnnouncementsRequest) returns (game.ListPublishedAnnouncementsResponse) {
+    option (google.api.http).get = "/v2/game/announcements";
+  }
+
+  // Mark notifications as read
+  rpc MarkNotificationsRead(game.MarkNotificationsReadRequest) returns (game.MarkNotificationsReadResponse) {
+    option (google.api.http) = {
+      post: "/v2/notification/read"
+      body: "*"
+    };
+  }
+
+  // Claim notification attachments
+  rpc ClaimNotificationAttachments(game.ClaimNotificationAttachmentsRequest) returns (game.ClaimNotificationAttachmentsResponse) {
+    option (google.api.http) = {
+      post: "/v2/notification/claim"
+      body: "*"
+    };
+  }
+
+  //Get current stamina
+  rpc GetCurrentStamina(google.protobuf.Empty) returns (game.StaminaData) {
+    option (google.api.http).get = "/v2/game/stamina";
+  }
+
+  //Get equip data
+  rpc GetEquipData(google.protobuf.Empty) returns (game.EquipData) {
+    option (google.api.http).get = "/v2/game/equip";
+  }
+
+  //Operate Wallet
+  rpc OperateWallet(game.OperateWalletRequest) returns (game.OperateWalletResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/wallet/operate"
+      body: "*"
+    };
+  }
+
+  //Get wallet data
+  rpc GetWalletData(game.GetWalletDataRequest) returns (game.GetWalletDataResponse) {
+    option (google.api.http).get = "/v2/game/wallet";
+  }
+
+  //Operate Inventory
+  rpc OperateInventory(game.OperateInventoryRequest) returns (game.OperateInventoryResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/inventory/operate"
+      body: "*"
+    };
+  }
+
+  //Get inventory data
+  rpc GetInventoryData(game.GetInventoryDataRequest) returns (game.GetInventoryDataResponse) {
+    option (google.api.http).get = "/v2/game/inventory";
+  }
+
+  // Get common shop data (only TplShop based: daily, coin, strength)
+  rpc GetShopData(google.protobuf.Empty) returns (game.ShopData) {
+    option (google.api.http).get = "/v2/game/shop";
+  }
+
+  // Buy item from common shop (daily, coin, strength)
+  rpc BuyShopItem(game.BuyShopItemRequest) returns (game.BuyShopItemResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/shop/buy"
+      body: "*"
+    };
+  }
+
+  // Manually refresh shop (for shops that support manual refresh like daily shop)
+  rpc RefreshShop(game.RefreshShopRequest) returns (game.RefreshShopResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/shop/refresh"
+      body: "*"
+    };
+  }
+
+  // ==================== Box Shop (独立) ====================
+  // Get box shop data
+  rpc GetBoxShop(google.protobuf.Empty) returns (game.BoxShopData) {
+    option (google.api.http).get = "/v2/game/shop/box";
+  }
+
+  // Buy item from box shop
+  rpc BuyBoxItem(game.BuyBoxItemRequest) returns (game.BuyBoxItemResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/shop/box/buy"
+      body: "*"
+    };
+  }
+
+  // ==================== Chapter Shop (独立, IAP) ====================
+  // Get chapter shop data
+  rpc GetChapterShop(google.protobuf.Empty) returns (game.ChapterShopData) {
+    option (google.api.http).get = "/v2/game/shop/chapter";
+  }
+
+  // Claim chapter item from chapter shop
+  rpc ClaimChapterItem(game.ClaimChapterItemRequest) returns (game.ClaimChapterItemResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/shop/chapter/claim"
+      body: "*"
+    };
+  }
+
+  // ==================== Gem Shop (独立, IAP) ====================
+  // Get gem shop data
+  rpc GetGemShop(google.protobuf.Empty) returns (game.GemShopData) {
+    option (google.api.http).get = "/v2/game/shop/gem";
+  }
+
+  // Claim gem item from gem shop
+  rpc ClaimGemItem(game.ClaimGemItemRequest) returns (game.ClaimGemItemResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/shop/gem/claim"
+      body: "*"
+    };
+  }
+
+  // ==================== Battle & AFK ====================
+  rpc EndBattle(game.EndBattleRequest) returns (game.EndBattleResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/battle/end"
+      body: "*"
+    };
+  }
+
+  rpc StartBattle(game.StartBattleRequest) returns (game.StartBattleResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/battle/start"
+      body: "*"
+    };
+  }
+
+  rpc QuickBattle(game.QuickBattleRequest) returns (game.QuickBattleResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/battle/quick"
+      body: "*"
+    };
+  }
+
+  rpc ClaimBattleRewardByShare(game.ClaimBattleRewardByShareRequest) returns (game.ClaimBattleRewardByShareResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/battle/reward/share"
+      body: "*"
+    };
+  }
+
+  rpc ClaimMoppingReward(game.ClaimMoppingRewardRequest) returns (game.ClaimMoppingRewardResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/mopping/claim"
+      body: "*"
+    };
+  }
+
+  rpc ClaimOnHookReward(game.ClaimOnHookRewardRequest) returns (game.ClaimOnHookRewardResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/onhook/claim"
+      body: "*"
+    };
+  }
+
+  // ==================== Equip ====================
+  rpc UpgradeEquip(game.UpgradeEquipRequest) returns (game.UpgradeEquipResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/equip/upgrade"
+      body: "*"
+    };
+  }
+
+  rpc UpgradeCrystalTech(game.UpgradeCrystalTechRequest) returns (game.UpgradeCrystalTechResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/equip/crystaltech/upgrade"
+      body: "*"
+    };
+  }
+
+  // ==================== Crystal Slot ====================
+  rpc UpgradeCrystalSlot(game.UpgradeCrystalSlotRequest) returns (game.UpgradeCrystalSlotResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/crystal/slot/upgrade"
+      body: "*"
+    };
+  }
+
+  // ==================== Level ====================
+  rpc ClaimLevelBox(game.ClaimLevelBoxRequest) returns (game.ClaimLevelBoxResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/level/box/claim"
+      body: "*"
+    };
+  }
+
+  rpc GetLevelBox(game.GetLevelBoxRequest) returns (game.GetLevelBoxResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/level/box/get"
+      body: "*"
+    };
+  }
+
+  // ==================== Sign In ====================
+  rpc ClaimSignInReward(game.ClaimSignInRewardRequest) returns (game.ClaimSignInRewardResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/signin/claim"
+      body: "*"
+    };
+  }
+
+  rpc GetSignInReward(google.protobuf.Empty) returns (game.GetSignInRewardResponse) {
+    option (google.api.http).get = "/v2/game/signin";
+  }
+
+  // ==================== Seven Day Sign In ====================
+  rpc GetSevenDaySignIn(game.GetSevenDaySignInRequest) returns (game.GetSevenDaySignInResponse) {
+    option (google.api.http).get = "/v2/game/sevendaysignin";
+  }
+
+  rpc ClaimSevenDaySignIn(game.ClaimSevenDaySignInRequest) returns (game.ClaimSevenDaySignInResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/sevendaysignin/claim"
+      body: "*"
+    };
+  }
+
+  // ==================== First Charge ====================
+  rpc GetFirstChargeStatus(game.GetFirstChargeStatusRequest) returns (game.GetFirstChargeStatusResponse) {
+    option (google.api.http).get = "/v2/game/firstcharge/status";
+  }
+
+  rpc ClaimFirstChargeReward(game.ClaimFirstChargeRewardRequest) returns (game.ClaimFirstChargeRewardResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/firstcharge/claim"
+      body: "*"
+    };
+  }
+
+  // ==================== Task ====================
+  rpc GetTask(game.GetTaskRequest) returns (game.GetTaskResponse) {
+    option (google.api.http).get = "/v2/game/task";
+  }
+
+  rpc ClaimTaskReward(game.ClaimTaskRewardRequest) returns (game.ClaimTaskRewardResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/task/claim"
+      body: "*"
+    };
+  }
+
+  rpc ClaimLivenessReward(game.ClaimLivenessRewardRequest) returns (game.ClaimLivenessRewardResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/task/liveness/claim"
+      body: "*"
+    };
+  }
+
+  // ==================== VIP ====================
+  rpc ClaimVipReward(game.ClaimVipRewardRequest) returns (game.ClaimVipRewardResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/activity/claim"
+      body: "*"
+    };
+  }
+
+  // Check if current user is VIP
+  rpc CheckVipStatus(google.protobuf.Empty) returns (game.CheckVipStatusResponse) {
+    option (google.api.http).get = "/v2/game/activity/status";
+  }
+
+  // ==================== Seven Day Event ====================
+  rpc GetSevenDayStatus(game.GetSevenDayStatusRequest) returns (game.GetSevenDayStatusResponse) {
+    option (google.api.http).get = "/v2/game/sevenday/status";
+  }
+
+  rpc ClaimSevenDayReward(game.ClaimSevenDayRewardRequest) returns (game.ClaimSevenDayRewardResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/sevenday/claim"
+      body: "*"
+
+    };
+  }
+
+  // ==================== Equip Exchange ====================
+  rpc ExchangeEquip(game.ExchangeEquipRequest) returns (game.ExchangeEquipResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/equip/exchange"
+      body: "*"
+    };
+  }
+
+  rpc GetEquipExchange(game.GetEquipExchangeRequest) returns (game.GetEquipExchangeResponse) {
+    option (google.api.http) = {
+      get: "/v2/game/equip/exchange"
+    };
+  }
+
+  // ==================== Monthly Card ====================
+  rpc GetMonthlyCardStatus(game.GetMonthlyCardStatusRequest) returns (game.GetMonthlyCardStatusResponse) {
+    option (google.api.http).get = "/v2/game/monthlycard/status";
+  }
+
+  rpc ClaimMonthlyCardReward(game.ClaimMonthlyCardRewardRequest) returns (game.ClaimMonthlyCardRewardResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/monthlycard/claim"
+      body: "*"
+    };
+  }
+
+  //====================PurchaseTest====================
+
+  rpc PurchaseTest(game.PurchaseRequest) returns (game.PurchaseResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/purchase/test"
+      body: "*"
+    };
+  }
+
+  // ==================== Player Level ====================
+  // Get player level data
+  rpc GetPlayerLevelData(google.protobuf.Empty) returns (game.PlayerLevelData) {
+    option (google.api.http).get = "/v2/game/player/level";
+  }
+
+  // Upgrade player level
+  rpc UpgradePlayerLevel(game.UpgradePlayerLevelRequest) returns (game.UpgradePlayerLevelResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/player/level/upgrade"
+      body: "*"
+    };
+  }
+
+  // ==================== Mine ====================
+  // Get mine data
+  rpc GetMineData(game.GetMineDataRequest) returns (game.GetMineDataResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/mine/data"
+      body: "*"
+    };
+  }
+
+  // Do mine
+  rpc DoMine(game.DoMineRequest) returns (game.DoMineResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/mine/do"
+      body: "*"
+    };
+  }
+
+  // Upgrade mine
+  rpc UpgradeMine(game.UpgradeMineRequest) returns (game.UpgradeMineResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/mine/upgrade"
+      body: "*"
+    };
+  }
+
+  // Buy mine count
+  rpc BuyMineCount(game.BuyMineCountRequest) returns (game.BuyMineCountResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/mine/buy"
+      body: "*"
+    };
+  }
+
+  // ==================== Rest Station ====================
+  // Get rest station status
+  rpc GetRestStation(google.protobuf.Empty) returns (game.GetRestStationResponse) {
+    option (google.api.http).get = "/v2/game/reststation";
+  }
+
+  // Claim rest station stamina
+  rpc ClaimRestStationStamina(game.ClaimRestStationStaminaRequest) returns (game.ClaimRestStationStaminaResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/reststation/claim"
+      body: "*"
+    };
+  }
+
+  // Test grant reward
+  rpc TestGrantReward(game.TestGrantRewardRequest) returns (game.TestGrantRewardResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/test/grant_reward"
+      body: "*"
+    };
+  }
+
+  // ==================== Crystal Equipment ====================
+  // Refine crystal equipment
+  rpc RefineCrystalEquipment(game.RefineCrystalEquipmentRequest) returns (game.RefineCrystalEquipmentResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/crystal/equipment/refine"
+      body: "*"
+    };
+  }
+
+  // Lock crystal affix
+  rpc LockCrystalAffix(game.LockCrystalAffixRequest) returns (game.LockCrystalAffixResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/crystal/equipment/affix/lock"
+      body: "*"
+    };
+  }
+
+  // Activate pending affixes
+  rpc ActivatePendingAffixes(game.ActivatePendingAffixesRequest) returns (game.ActivatePendingAffixesResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/crystal/equipment/affix/activate"
+      body: "*"
+    };
+  }
+
+  // Get all crystal equipments
+  rpc GetCrystalEquipments(game.GetCrystalEquipmentsRequest) returns (game.GetCrystalEquipmentsResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/crystal/equipments/list"
+      body: "*"
+    };
+  }
+
+  // Salvage crystal equipment
+  rpc SalvageCrystalEquipment(game.SalvageCrystalEquipmentRequest) returns (game.SalvageCrystalEquipmentResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/crystal/equipment/salvage"
+      body: "*"
+    };
+  }
+
+  // ==================== Crystal Skin ====================
+  // Unlock crystal skin
+  rpc UnlockCrystalSkin(game.UnlockCrystalSkinRequest) returns (game.UnlockCrystalSkinResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/crystal/skin/unlock"
+      body: "*"
+    };
+  }
+
+  // Upgrade crystal skin
+  rpc UpgradeCrystalSkin(game.UpgradeCrystalSkinRequest) returns (game.UpgradeCrystalSkinResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/crystal/skin/upgrade"
+      body: "*"
+    };
+  }
+
+  // Get all crystal skins
+  rpc GetCrystalSkins(game.GetCrystalSkinsRequest) returns (game.GetCrystalSkinsResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/crystal/skins/list"
+      body: "*"
+    };
+  }
+
+  // ==================== Challenge ====================
+  // Get Challenge
+  rpc GetChallenge(google.protobuf.Empty) returns (game.GetChallengeResponse) {
+    option (google.api.http).get = "/v2/game/challenges";
+  }
+
+  // Join Challenge
+  rpc JoinChallenge(game.JoinChallengeRequest) returns (game.JoinChallengeResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/challenges/join"
+      body: "*"
+    };
+  }
+
+  // Gain Challenge Reward
+  rpc GainChallengeReward(game.GainChallengeRewardRequest) returns (game.GainChallengeRewardResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/challenges/gain"
+      body: "*"
+    };
+  }
+
+  // Get Top Three Stats
+  rpc GetChallengeTopStats(google.protobuf.Empty) returns (game.GetChallengeTopStatsResponse) {
+    option (google.api.http).get = "/v2/game/challenges/top-three-stats";
+  }
+
+  // Get Challenge Battle Times
+  rpc GetChallengeBattleTimes(game.GetChallengeBattleTimesRequest) returns (game.GetChallengeBattleTimesResponse) {
+    option (google.api.http).get = "/v2/game/challenges/battle-times";
+  }
+
+  // Buy Challenge Battle Times
+  rpc BuyChallengeBattleTimes(game.BuyChallengeBattleTimesRequest) returns (game.BuyChallengeBattleTimesResponse) {
+    option (google.api.http) = {
+      post: "/v2/game/challenges/battle-times/buy"
+      body: "*"
     };
   }
 

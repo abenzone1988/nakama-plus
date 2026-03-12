@@ -1,0 +1,479 @@
+package server
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"math/rand"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/doublemo/nakama-plus/v3/game"
+	. "github.com/doublemo/nakama-plus/v3/template"
+	"github.com/gofrs/uuid/v5"
+	"go.uber.org/zap"
+	"google.golang.org/protobuf/types/known/emptypb"
+)
+
+// BuyBoxItem 购买宝箱商品（独立接口）
+func (s *ApiServer) BuyBoxItem(ctx context.Context, in *game.BuyBoxItemRequest) (*game.BuyBoxItemResponse, error) {
+	userID := ctx.Value(ctxUserIDKey{}).(uuid.UUID)
+
+	// 验证购买数量
+	if in.Count < 1 {
+		return &game.BuyBoxItemResponse{Code: 1, Msg: "购买数量必须大于0"}, nil
+	}
+
+	// 如果使用货币购买，数量只能是1或10
+	if !in.UseKey && in.Count != 1 && in.Count != 10 {
+		return &game.BuyBoxItemResponse{Code: 1, Msg: "货币购买数量只能是1或10"}, nil
+	}
+
+	boxShopData := &BoxShopData{}
+	if err := LoadUserData(ctx, s.logger, s.db, boxShopData); err != nil {
+		s.logger.Error("加载宝箱商店数据失败", zap.Error(err))
+		// 首次初始化
+		boxShopData.Init()
+	}
+
+	// 初始化宝箱商店
+	s.initBoxShopStandalone(boxShopData)
+	boxShopData.RefreshFreeAdState()
+
+	if boxShopData.BoxItemID == "" {
+		return &game.BuyBoxItemResponse{Code: 2, Msg: "宝箱商店未初始化"}, nil
+	}
+
+	if in.UseFreeAd {
+		if boxShopData.FreeAdUsed {
+			return &game.BuyBoxItemResponse{Code: 3, Msg: "当日广告免费购买已用完"}, nil
+		}
+		if in.Count != 1 {
+			return &game.BuyBoxItemResponse{Code: 1, Msg: "广告免费购买仅支持单次开启"}, nil
+		}
+		boxShopData.FreeAdUsed = true
+	}
+
+	// 处理新手宝箱逻辑
+	var boxItemID string
+	if in.RookieBox == "Rookie" {
+		// 如果传入的是新手宝箱ID，使用该ID查找宝箱配置
+		boxItemID = in.RookieBox
+	} else {
+		// 否则使用当前宝箱商店的ID
+		boxItemID = boxShopData.BoxItemID
+	}
+
+	// 处理宝箱购买逻辑（包含钥匙扣除）
+	cost, rewards, boxLevelUp, keyInventoryResult, err := s.processBuyBoxItemStandalone(ctx, userID, boxShopData, boxItemID, in.UseKey, in.Count, in.UseFreeAd, in.AdWatched)
+	if err != nil {
+		return &game.BuyBoxItemResponse{Code: 4, Msg: err.Error()}, nil
+	}
+
+	// 扣除货币并发放奖励
+	var walletUpdateResult *game.WalletUpdateResult
+
+	// 收集所有背包更新（从扣除钥匙开始）
+	allInventoryUpdates := make(map[string]int64)
+
+	// 如果使用钥匙，先记录钥匙扣除的更新
+	if keyInventoryResult != nil && keyInventoryResult.Updated != nil {
+		for _, item := range keyInventoryResult.Updated {
+			allInventoryUpdates[item.Id] = int64(item.Num)
+		}
+	}
+
+	if cost != nil && (cost.Coin > 0 || cost.Gem > 0 || cost.Ad > 0) {
+		// 扣除货币
+		walletChangeset := make(map[string]int64)
+		if cost.Coin > 0 {
+			walletChangeset["coin"] = -int64(cost.Coin)
+		}
+		if cost.Gem > 0 {
+			walletChangeset["gem"] = -int64(cost.Gem)
+		}
+		if cost.Ad > 0 {
+			walletChangeset["ad"] = -int64(cost.Ad)
+		}
+
+		metaSource := map[string]interface{}{"source": "box_shop"}
+		metadata, _ := json.Marshal(metaSource)
+		walletUpdates := []*walletUpdate{{
+			UserID:    userID,
+			Changeset: walletChangeset,
+			Metadata:  string(metadata),
+		}}
+
+		results, err := UpdateWallets(ctx, s.logger, s.db, walletUpdates, true)
+		if err != nil {
+			return &game.BuyBoxItemResponse{Code: 5, Msg: "货币不足"}, nil
+		}
+
+		if len(results) > 0 {
+			walletUpdateResult = &game.WalletUpdateResult{
+				Previous: convertMapInt64ToWallet(results[0].Previous),
+				Updated:  convertMapInt64ToWallet(results[0].Updated),
+			}
+		}
+	}
+
+	// 收集所有发放后的奖励（转换后的）
+	var processedRewards []*game.Reward
+
+	// 发放所有奖励并累加背包更新
+	for _, reward := range rewards {
+		// 复制奖励，避免修改原始奖励
+		rewardCopy := &game.Reward{}
+		if reward.Wallet != nil {
+			rewardCopy.Wallet = &game.Wallet{
+				Coin:    reward.Wallet.Coin,
+				Gem:     reward.Wallet.Gem,
+				Ad:      reward.Wallet.Ad,
+				Stamina: reward.Wallet.Stamina,
+			}
+		}
+		if len(reward.Items) > 0 {
+			rewardCopy.Items = make([]*game.Item, len(reward.Items))
+			for i, item := range reward.Items {
+				rewardCopy.Items[i] = &game.Item{
+					Id:  item.Id,
+					Num: item.Num,
+				}
+			}
+		}
+
+		walletResult, invResult, err := GrantReward(ctx, s.logger, s.db, s.templateManager, s.metrics, s.storageIndex, rewardCopy, "box_shop")
+		if err != nil {
+			s.logger.Error("发放宝箱奖励失败", zap.Error(err))
+			return &game.BuyBoxItemResponse{Code: 6, Msg: "发放奖励失败: " + err.Error()}, nil
+		}
+
+		// 合并钱包更新结果（使用最后一次的结果，因为 GrantReward 会返回最终状态）
+		if walletResult != nil {
+			walletUpdateResult = walletResult
+		}
+
+		// 使用最新的背包更新
+		if invResult != nil && invResult.Updated != nil {
+			for _, item := range invResult.Updated {
+				allInventoryUpdates[item.Id] = int64(item.Num)
+			}
+		}
+
+		// 收集转换后的奖励（GrantReward 会修改 rewardCopy.Items 来反映转换结果）
+		if rewardCopy != nil {
+			// 记录转换后的奖励内容，用于调试
+			if len(rewardCopy.Items) > 0 {
+				for _, item := range rewardCopy.Items {
+					s.logger.Info("转换后的奖励项", zap.String("item_id", item.Id), zap.Int32("item_num", item.Num))
+				}
+			}
+			processedRewards = append(processedRewards, rewardCopy)
+		}
+	}
+
+	// 保存商店数据
+	if err := SaveUserData(ctx, s.logger, s.db, s.metrics, s.storageIndex, boxShopData); err != nil {
+		s.logger.Error("保存宝箱商店数据失败", zap.Error(err))
+		return &game.BuyBoxItemResponse{Code: 6, Msg: "保存商店数据失败"}, nil
+	}
+
+	// 合并所有发放后的奖励（转换后的奖励）
+	mergedReward := MergeRewards(processedRewards)
+	if mergedReward != nil && len(mergedReward.Items) > 0 {
+		s.logger.Info("合并后的奖励", zap.Int("reward_count", len(processedRewards)))
+		for _, item := range mergedReward.Items {
+			s.logger.Info("合并后的奖励项", zap.String("item_id", item.Id), zap.Int32("item_num", item.Num))
+		}
+	}
+
+	response := &game.BuyBoxItemResponse{
+		Code:        0,
+		Msg:         "购买成功",
+		Reward:      mergedReward,
+		BoxShopData: convertToProtoBoxShop(boxShopData),
+		BoxLevelUp:  boxLevelUp,
+	}
+
+	if walletUpdateResult != nil {
+		response.WalletUpdated = walletUpdateResult.Updated
+	}
+
+	// 返回合并后的背包更新（包含钥匙扣除和奖励）
+	if len(allInventoryUpdates) > 0 {
+		response.InventoryUpdated = convertMapInt64ToItems(allInventoryUpdates)
+		s.logger.Info("合并后的背包更新", zap.Any("inventory_updated", response.InventoryUpdated))
+	}
+
+	return response, nil
+}
+
+// GetBoxShop RPC获取宝箱商店数据（独立）
+func (s *ApiServer) GetBoxShop(ctx context.Context, in *emptypb.Empty) (*game.BoxShopData, error) {
+	boxShopData := &BoxShopData{}
+	if err := LoadUserData(ctx, s.logger, s.db, boxShopData); err != nil {
+		s.logger.Error("加载宝箱商店数据失败", zap.Error(err))
+		// 首次初始化
+		boxShopData.Init()
+	}
+
+	// 初始化宝箱商店
+	s.initBoxShopStandalone(boxShopData)
+	boxShopData.RefreshFreeAdState()
+
+	if err := SaveUserData(ctx, s.logger, s.db, s.metrics, s.storageIndex, boxShopData); err != nil {
+		s.logger.Error("保存宝箱商店数据失败", zap.Error(err))
+		return nil, err
+	}
+
+	return convertToProtoBoxShop(boxShopData), nil
+}
+
+// 处理宝箱购买（独立版本）
+func (s *ApiServer) processBuyBoxItemStandalone(ctx context.Context, userID uuid.UUID, boxShopData *BoxShopData, boxItemID string, useKey bool, count int32, freeAd bool, adWatched bool) (*game.Wallet, []*game.Reward, bool, *game.InventoryUpdateResult, error) {
+	var cost *game.Wallet
+	boxLevelUp := false
+	var keyInventoryResult *game.InventoryUpdateResult
+
+	tplBoxItem, ok := s.templateManager.GetTplBoxShopItem().FindByKey(boxItemID)
+	if !ok {
+		return nil, nil, false, nil, fmt.Errorf("未找到宝箱配置")
+	}
+
+	if freeAd {
+		if adWatched {
+			cost = nil
+		} else {
+			cost = &game.Wallet{Ad: 1}
+		}
+	} else {
+		if useKey {
+			// 使用宝箱钥匙（itemId: 20001）
+			// 检查并扣除背包中的钥匙
+			inventory, err := GetInventory(ctx, s.logger, s.db, userID)
+			if err != nil {
+				return nil, nil, false, nil, fmt.Errorf("加载玩家背包失败")
+			}
+
+			keyCount := inventory["20001"]
+			if keyCount < int64(count) {
+				return nil, nil, false, nil, fmt.Errorf("宝箱钥匙不足")
+			}
+
+			// 直接扣除钥匙并保存更新结果
+			results, err := UpdateInventories(ctx, s.logger, s.db, []*inventoryUpdate{
+				{
+					UserID:    userID,
+					Changeset: map[string]int64{"20001": -int64(count)},
+					Metadata:  `{"reason": "box_shop_use_key"}`,
+				},
+			}, true)
+			if err != nil {
+				return nil, nil, false, nil, fmt.Errorf("扣除宝箱钥匙失败")
+			}
+
+			// 保存钥匙扣除的背包更新结果
+			if len(results) > 0 {
+				keyInventoryResult = &game.InventoryUpdateResult{
+					Previous: convertMapInt64ToItems(results[0].Previous),
+					Updated:  convertMapInt64ToItems(results[0].Updated),
+				}
+			}
+
+			cost = &game.Wallet{} // 使用钥匙不扣除货币
+		} else {
+			// 使用货币购买
+			payType := parsePayType(tplBoxItem.PayType)
+			if count == 10 {
+				cost = calculateCost(payType, tplBoxItem.WholesalePrice)
+			} else {
+				cost = calculateCost(payType, tplBoxItem.RetailPrice)
+			}
+		}
+	}
+
+	// 每次打开宝箱都抽取奖励
+	rewards := make([]*game.Reward, 0, count)
+	for i := int32(0); i < count; i++ {
+
+		randomReward := s.rollBoxReward(userID, &tplBoxItem)
+		if randomReward != nil {
+			rewards = append(rewards, randomReward)
+		}
+
+		fixedReward := s.getFixedReward(&tplBoxItem)
+		if fixedReward != nil {
+			rewards = append(rewards, fixedReward)
+		}
+
+		// 增加经验
+		boxShopData.BoxExp += tplBoxItem.BoxExp
+
+		// 检查是否可以升级
+		nextLevel := boxShopData.BoxLevel + 1
+		tplNextBoxShops := s.templateManager.GetTplBoxShop().FindByFilter(func(bs TplBoxShop) bool {
+			return bs.Level == nextLevel
+		}).ToSlice()
+
+		if len(tplNextBoxShops) > 0 {
+			tplNextBoxShop := tplNextBoxShops[0]
+			if boxShopData.BoxExp >= tplNextBoxShop.RequiredExp {
+				// 升级
+				boxShopData.BoxLevel = nextLevel
+				boxShopData.BoxExp = 0
+				boxLevelUp = true
+
+				// 更新宝箱商品ID
+				boxShopData.BoxItemID = tplNextBoxShop.Box1
+				// 更新模板引用，下次开宝箱使用新等级
+				if tplNewBoxItem, ok := s.templateManager.GetTplBoxShopItem().FindByKey(tplNextBoxShop.Box1); ok {
+					tplBoxItem = tplNewBoxItem
+				}
+			}
+
+		}
+	}
+
+	return cost, rewards, boxLevelUp, keyInventoryResult, nil
+}
+
+// 初始化宝箱商店（独立）
+func (s *ApiServer) initBoxShopStandalone(boxShopData *BoxShopData) {
+	// 根据当前等级查找对应的宝箱配置
+	tplBoxShops := s.templateManager.GetTplBoxShop().FindByFilter(func(bs TplBoxShop) bool {
+		return bs.Level == boxShopData.BoxLevel
+	}).ToSlice()
+
+	if len(tplBoxShops) == 0 {
+		s.logger.Warn("未找到对应等级的宝箱配置", zap.Int32("level", boxShopData.BoxLevel))
+		return
+	}
+
+	tplBoxShop := tplBoxShops[0]
+	boxShopData.BoxItemID = tplBoxShop.Box1
+}
+
+// 转换宝箱商店数据
+func convertToProtoBoxShop(data *BoxShopData) *game.BoxShopData {
+	protoData := &game.BoxShopData{
+		BoxItemId: data.BoxItemID,
+		BoxLevel:  data.BoxLevel,
+		BoxExp:    data.BoxExp,
+	}
+
+	protoData.FreeAdUsed = data.FreeAdUsed
+	if !data.NextFreeRefreshTime.IsZero() {
+		protoData.NextFreeRefreshTime = data.NextFreeRefreshTime.Format(time.RFC3339)
+	}
+
+	return protoData
+}
+
+// 抽取宝箱奖励
+func (s *ApiServer) rollBoxReward(userID uuid.UUID, tplBoxItem *TplBoxShopItem) *game.Reward {
+	// 解析 rewardInfo 格式：itemid_count_weight
+	rewardInfo := tplBoxItem.RandomReward
+	if rewardInfo == "" {
+		return nil
+	}
+
+	items := strings.Split(rewardInfo, ",")
+	type RewardOption struct {
+		ItemID string
+		Count  int32
+		Weight int32
+	}
+
+	options := make([]RewardOption, 0)
+	totalWeight := int32(0)
+
+	for _, item := range items {
+		parts := strings.Split(strings.TrimSpace(item), "_")
+		if len(parts) < 3 {
+			continue
+		}
+
+		itemID := parts[0]
+		count, _ := strconv.ParseInt(parts[1], 10, 32)
+		weight, _ := strconv.ParseFloat(parts[2], 32)
+
+		weightInt := int32(weight * 10) // 将浮点权重转换为整数
+		options = append(options, RewardOption{
+			ItemID: itemID,
+			Count:  int32(count),
+			Weight: weightInt,
+		})
+		totalWeight += weightInt
+	}
+
+	if len(options) == 0 || totalWeight == 0 {
+		return nil
+	}
+
+	// 根据权重随机抽取
+	roll := rand.Int31n(totalWeight)
+	currentWeight := int32(0)
+
+	var selectedOption *RewardOption
+	for i := range options {
+		currentWeight += options[i].Weight
+		if roll < currentWeight {
+			selectedOption = &options[i]
+			break
+		}
+	}
+
+	if selectedOption == nil {
+		s.logger.Error("宝箱奖励抽取失败", zap.String("user_id", userID.String()), zap.String("reward_info", rewardInfo))
+		return nil
+	}
+	// 返回奖励
+	return &game.Reward{
+		Items: []*game.Item{{
+			Id:  selectedOption.ItemID,
+			Num: selectedOption.Count,
+		}},
+	}
+}
+
+// 获取固定奖励
+func (s *ApiServer) getFixedReward(tplBoxItem *TplBoxShopItem) *game.Reward {
+	// 解析 FixedReward 格式：id_num（多个用逗号分隔）
+	fixedRewardStr := tplBoxItem.FixedReward
+	if fixedRewardStr == "" {
+		return nil
+	}
+
+	items := strings.Split(fixedRewardStr, ",")
+	rewardItems := make([]*game.Item, 0)
+
+	for _, item := range items {
+		parts := strings.Split(strings.TrimSpace(item), "_")
+		if len(parts) < 2 {
+			continue
+		}
+
+		itemID := strings.TrimSpace(parts[0])
+		count, err := strconv.ParseInt(parts[1], 10, 32)
+		if err != nil {
+			s.logger.Error("解析固定奖励数量失败", zap.String("item", item), zap.Error(err))
+			continue
+		}
+
+		if itemID != "" && count > 0 {
+			rewardItems = append(rewardItems, &game.Item{
+				Id:  itemID,
+				Num: int32(count),
+			})
+		}
+	}
+
+	if len(rewardItems) == 0 {
+		return nil
+	}
+
+	return &game.Reward{
+		Items: rewardItems,
+	}
+}

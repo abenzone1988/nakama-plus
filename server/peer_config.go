@@ -14,6 +14,8 @@ type (
 	PeerConfig struct {
 		Addr                string                  `yaml:"gossip_bindaddr" json:"gossip_bindaddr" usage:"Interface address to bind Nakama to for discovery. By default listening on all interfaces."`
 		Port                int                     `yaml:"gossip_bindport" json:"gossip_bindport" usage:"Port number to bind Nakama to for discovery. Default value is 7352."`
+		AdvertiseAddr       string                  `yaml:"gossip_advertise_addr" json:"gossip_advertise_addr" usage:"IP to advertise to other cluster members. Required when running in Docker/WSL where auto-detected IP (e.g. 172.29.x.x) is not reachable from other hosts. Use the host's LAN IP that peers can reach."`
+		AdvertisePort       int                     `yaml:"gossip_advertise_port" json:"gossip_advertise_port" usage:"Port to advertise. If 0, uses gossip_bindport."`
 		PushPullInterval    int                     `yaml:"push_pull_interval" json:"push_pull_interval" usage:"push_pull_interval is the interval between complete state syncs, Default value is 60 Second"`
 		GossipInterval      int                     `yaml:"gossip_interval" json:"gossip_interval" usage:"gossip_interval is the interval after which a node has died that, Default value is 200 Millisecond"`
 		TCPTimeout          int                     `yaml:"tcp_timeout" json:"tcp_timeout" usage:"tcp_timeout is the timeout for establishing a stream connection with a remote node for a full state sync, and for stream read and writeoperations, Default value is 10 Second"`
@@ -46,6 +48,8 @@ func (c *PeerConfig) Clone() *PeerConfig {
 	newConfig := &PeerConfig{
 		Addr:                c.Addr,
 		Port:                c.Port,
+		AdvertiseAddr:       c.AdvertiseAddr,
+		AdvertisePort:       c.AdvertisePort,
 		PushPullInterval:    c.PushPullInterval,
 		GossipInterval:      c.GossipInterval,
 		TCPTimeout:          c.TCPTimeout,
@@ -83,9 +87,22 @@ func toMemberlistConfig(s Peer, name string, c *PeerConfig) *memberlist.Config {
 	cfg := memberlist.DefaultLANConfig()
 	cfg.BindAddr = c.Addr
 	cfg.BindPort = c.Port
+	if c.AdvertiseAddr != "" {
+		cfg.AdvertiseAddr = c.AdvertiseAddr
+	}
+	// AdvertisePort 必须与 BindPort 一致，否则 memberlist 会使用默认 7946，导致对端连接错误端口
+	if c.AdvertisePort > 0 {
+		cfg.AdvertisePort = c.AdvertisePort
+	} else if c.Port > 0 {
+		cfg.AdvertisePort = c.Port
+	}
 
+	// PushPullInterval: 全量状态同步间隔；ProbeInterval: 探活间隔（失败检测）
 	if c.PushPullInterval > 0 {
-		cfg.ProbeInterval = time.Duration(c.PushPullInterval) * time.Second
+		cfg.PushPullInterval = time.Duration(c.PushPullInterval) * time.Second
+	}
+	if c.ProbeInterval > 0 {
+		cfg.ProbeInterval = time.Duration(c.ProbeInterval) * time.Second
 	}
 
 	if c.GossipInterval > 0 {
@@ -98,10 +115,6 @@ func toMemberlistConfig(s Peer, name string, c *PeerConfig) *memberlist.Config {
 
 	if c.ProbeTimeout > 0 {
 		cfg.ProbeTimeout = time.Duration(c.ProbeTimeout) * time.Second
-	}
-
-	if c.ProbeInterval > 0 {
-		cfg.ProbeInterval = time.Duration(c.ProbeInterval) * time.Second
 	}
 
 	if c.RetransmitMult > 0 {

@@ -22,17 +22,17 @@ if %ERRORLEVEL% neq 0 (
 echo   [OK] nakama-common api generated successfully
 echo.
 
-@REM REM 2. Generate game msg
-@REM echo [2/4] Generating game msg...
-@REM cd /d "%PROJECT_ROOT%\game"
-@REM go generate
-@REM if %ERRORLEVEL% neq 0 (
-@REM     echo   [X] game msg generation failed
-@REM     cd /d "%PROJECT_ROOT%"
-@REM     exit /b 1
-@REM )
-@REM echo   [OK] game msg generated successfully
-@REM echo.
+REM 2. Generate game msg
+echo [2/4] Generating game msg...
+cd /d "%PROJECT_ROOT%\game"
+go generate
+if %ERRORLEVEL% neq 0 (
+    echo   [X] game msg generation failed
+    cd /d "%PROJECT_ROOT%"
+    exit /b 1
+)
+echo   [OK] game msg generated successfully
+echo.
 
 REM 3. Generate apigrpc
 echo [3/4] Generating apigrpc...

@@ -1,0 +1,1224 @@
+syntax = "proto3";
+
+package game;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/doublemo/nakama-plus/v3/game";
+
+option java_multiple_files = true;
+option java_outer_classname = "GameMsg";
+option java_package = "com.huohuaji.star";
+
+option csharp_namespace = "Game.Protobuf";
+
+message RedeemGiftRequest{
+  string gift_code = 1;
+}
+
+
+message RedeemGiftResponse{
+  int32 code = 1;
+  string msg = 2;
+}
+
+message FeedbackRequest {
+  int32 issues = 1;
+  string description = 2;
+}
+
+message AuthenticateWechatRequest{
+  string code = 1;
+}
+
+message AuthenticateTiktokRequest{
+  string code = 1;
+  string anonymous_code = 2;
+}
+
+message SubmitBeInvitedRequest {
+  string inviter_id = 1;
+}
+
+message ListInviteeResponse{
+  repeated string invitee_ids = 1;
+}
+
+message ClaimInviteRewardRequest{
+  repeated string invitee_ids = 1;
+}
+
+message ClaimInviteRewardResponse{
+  int32 code = 1;
+  string msg = 2;
+  Reward reward = 3; // 奖励数据
+  Wallet wallet_updated = 4; // 钱包更新结果
+  repeated Item inventory_updated = 5; // 背包更新结果
+}
+
+// 关卡宝箱信息
+message LevelBoxInfo {
+  repeated int32 claimed_box_ids = 1; // 已领取的宝箱ID列表
+}
+
+// 获取关卡宝箱请求
+message GetLevelBoxRequest {
+  repeated string level_ids = 1; // 关卡ID列表，如 ["L1001", "L1002"]
+}
+
+// 获取关卡宝箱响应
+message GetLevelBoxResponse {
+  int32 code = 1;
+  string msg = 2;
+  map<string, LevelBoxInfo> claimed_boxes = 3; // key: level_id, value: 已领取的宝箱ID列表
+}
+
+message GetGameTimeResponse{
+  google.protobuf.Timestamp game_time = 1;
+}
+
+// 获取已发布公告请求
+message ListPublishedAnnouncementsRequest {
+  int32 limit = 1;  // 每页数量
+  string cursor = 2;  // 分页游标
+}
+
+// 公告信息
+message AnnouncementInfo {
+  string id = 1;  // 公告ID
+  string title = 2;  // 标题
+  string content = 3;  // 内容
+  string img = 4;  // 图片URL
+  google.protobuf.Timestamp create_time = 5;  // 创建时间
+  google.protobuf.Timestamp update_time = 6;  // 更新时间
+}
+
+// 获取已发布公告响应
+message ListPublishedAnnouncementsResponse {
+  repeated AnnouncementInfo announcements = 1;  // 公告列表
+  int32 total_count = 2;  // 总数
+  string next_cursor = 3;  // 下一页游标
+}
+
+// 体力数据
+message StaminaData{
+  int32 stamina = 1;
+  string last_refresh_time = 2; // ISO 8601 格式，例如 "2024-05-18T12:34:56Z"
+}
+
+message EquipData{
+  repeated string battle_equips = 1;
+  map<string, int32> unlock_equips = 2;
+  repeated string unlocked_crystal_tech_ids = 3;
+  map<int32, int32> crystal_slots = 4;
+}
+
+// 玩家等级数据
+message PlayerLevelData{
+  int32 level = 1;      // 当前等级
+  int32 exp = 2;        // 当前经验值
+  int32 total_exp = 3;  // 总获得的经验值
+}
+
+message LevelData{
+  string cur_level_id = 1;
+  int32 best_progress = 2;
+  int32 has_mopping_times = 3; // 第一阶段已使用次数（扣体力）
+  int32 has_mopping_times_for_adv = 4; // 第二阶段已使用次数（扣体力+广告）
+  string last_mopping_timestamp = 5; // 最后一次扫荡时间，用于每日刷新，ISO 8601 格式
+  string last_get_on_hook_timestamp = 6; // 最后一次领取挂机奖励时间，ISO 8601 格式
+}
+
+// 首冲数据
+message FirstChargeData{
+  bool is_charged = 1;                     // 是否已首冲
+  string charge_time = 2;                  // 首冲时间，ISO 8601 格式
+  repeated int32 claimed_days = 3;         // 已领取的天数列表（例如：[1, 2, 3]）
+}
+
+// 七日购买数据
+message SevenDayData{
+  string last_purchase_time = 1;           // 最后一次购买时间，ISO 8601 格式
+  repeated int32 claimed_days = 2;         // 当前周期已领取的天数列表（例如：[0, 1, 2, 3]）
+  int32 total_purchases = 3;               // 总购买次数
+}
+
+// 每日签到数据
+message SignInData{
+  int32 current_day = 1;                   // 当前已签到到的天数（1-30）
+  string last_claim_date = 2;              // 最后一次签到日期（YYYY-MM-DD）
+}
+
+// 钱包结构v
+message Wallet{
+  int32 coin = 1;
+  int32 gem = 2;
+  int32 ad = 3;
+  int32 stamina = 4;
+}
+
+// 道具
+message Item {
+  string id = 1;
+  int32 num = 2;
+}
+
+// 奖励数据
+message Reward{
+  Wallet wallet = 1;
+  repeated Item items = 2;
+}
+
+// 钱包更新结果
+message WalletUpdateResult {
+  Wallet previous = 1; // 更新前的钱包状态
+  Wallet updated = 2;   // 更新后的钱包状态
+}
+
+// 背包更新结果
+message InventoryUpdateResult {
+ repeated Item previous = 1; // 更新前的背包状态
+ repeated Item updated = 2;   // 更新后的背包状态
+}
+
+// VIP状态
+message CheckVipStatusResponse {
+  // Expire time (]time.RFC3339)
+  string expire_time = 1;
+  // Signature
+  string signature = 2;
+  // 当前领奖状态
+  bool reward_claimed = 3;
+  string price = 4;
+}
+
+enum BattleType{
+  BATTLE_TYPE_NORMAL = 0;
+  BATTLE_TYPE_GOLDEN = 1;
+  BATTLE_TYPE_ELITE = 2;
+}
+
+
+//开始战斗
+message StartBattleRequest{
+  BattleType type = 1;
+  string level_id = 2;
+}
+
+message StartBattleResponse{
+  int32 code = 1;
+  string msg = 2;
+  StaminaData stamina = 3;
+}
+
+//结束战斗
+message EndBattleRequest{
+  int32 progress = 1;
+}
+
+message EndBattleResponse{
+  int32 code = 1;
+  string msg = 2;
+  Reward reward = 3;
+  Wallet wallet_updated = 4;
+  repeated Item inventory_updated = 5;
+  int32 exp_gained = 6;
+}
+
+// 快速通过战斗（直接扣体力发放奖励）
+message QuickBattleRequest{
+  BattleType type = 1;
+  string level_id = 2;
+}
+
+message QuickBattleResponse{
+  int32 code = 1;
+  string msg = 2;
+  Reward reward = 3;
+  StaminaData stamina = 4;
+  Wallet wallet_updated = 5;
+  repeated Item inventory_updated = 6;
+  int32 exp_gained = 7;
+}
+
+// 分享后领取战斗奖励请求
+message ClaimBattleRewardByShareRequest{
+}
+
+// 分享后领取战斗奖励响应
+message ClaimBattleRewardByShareResponse{
+  int32 code = 1;
+  string msg = 2;
+  Reward reward = 3; // 奖励数据
+  Wallet wallet_updated = 4; // 钱包更新结果
+  repeated Item inventory_updated = 5; // 背包更新结果
+}
+
+// 扫荡奖励请求
+message ClaimMoppingRewardRequest{
+  bool watched_ad = 1; // 是否观看了广告（第二阶段使用）
+}
+
+// 扫荡奖励响应
+message ClaimMoppingRewardResponse{
+  int32 code = 1;
+  string msg = 2;
+  Reward reward = 3;
+  Wallet wallet_updated = 4;
+  repeated Item inventory_updated = 5;
+  int32 has_mopping_times = 6;
+  int32 has_mopping_times_for_adv = 7;
+  StaminaData stamina = 8;
+  int32 exp_gained = 9;
+}
+
+// 领取挂机奖励请求
+message ClaimOnHookRewardRequest{
+}
+
+// 领取挂机奖励响应
+message ClaimOnHookRewardResponse{
+  int32 code = 1;
+  string msg = 2;
+  int32 hours = 3; // 领取的小时数
+  Reward reward = 4; // 其他奖励数据
+  Wallet wallet_updated = 5; // 钱包更新结果
+  repeated Item inventory_updated = 7; // 背包更新结果
+}
+
+// 领取关卡宝箱请求
+message ClaimLevelBoxRequest{
+  string level_id = 1;        // 关卡ID，如 "L1001"
+  repeated int32 box_ids = 2; // 宝箱ID列表，1-3
+}
+
+// 领取关卡宝箱响应
+message ClaimLevelBoxResponse{
+  int32 code = 1;
+  string msg = 2;
+  Reward rewards = 3;         // 奖励列表
+  Wallet wallet_updated = 4;           // 钱包更新结果
+  repeated Item inventory_updated = 5; // 背包更新结果
+}
+
+// 获取任务状态请求
+message GetTaskRequest{
+}
+
+// 获取任务状态响应
+message GetTaskResponse{
+  int32 code = 1;
+  string msg = 2;
+  int32 daily_liveness = 3;                      // 每日活跃度
+  int32 weekly_liveness = 4;                     // 每周活跃度
+  repeated string claimed_daily_tasks = 5;       // 已领取的每日任务ID列表（taskType 2）
+  repeated string claimed_weekly_tasks = 6;      // 已领取的每周任务ID列表（taskType 3）
+  repeated string claimed_main_tasks = 7;        // 已领取的主线任务ID列表（taskType 1）
+  repeated string claimed_daily_liveness_rewards = 8;  // 已领取的每日活跃度奖励ID列表
+  repeated string claimed_weekly_liveness_rewards = 9; // 已领取的每周活跃度奖励ID列表
+}
+
+// 领取任务奖励请求
+message ClaimTaskRewardRequest{
+  repeated string task_ids = 1; // 任务ID列表（可多个）
+}
+
+// 领取任务奖励响应
+message ClaimTaskRewardResponse{
+  int32 code = 1;
+  string msg = 2;
+  repeated int32 liveness_rewards = 3;                  // 获得的活跃度奖励 ID列表
+  Reward reward = 4;                   // 任务奖励
+  Wallet wallet_updated = 5;           // 钱包更新结果
+  repeated Item inventory_updated = 6; // 背包更新结果
+}
+
+// 领取活跃度奖励请求
+message ClaimLivenessRewardRequest{
+  repeated string reward_ids = 1; // 活跃度奖励ID
+}
+
+// 领取活跃度奖励响应
+message ClaimLivenessRewardResponse{
+  int32 code = 1;
+  string msg = 2;
+  Reward reward = 3;                   // 奖励数据
+  Wallet wallet_updated = 4;           // 钱包更新结果
+  repeated Item inventory_updated = 5; // 背包更新结果
+}
+
+// 获取首冲状态请求
+message GetFirstChargeStatusRequest{
+}
+
+// 获取首冲状态响应
+message GetFirstChargeStatusResponse{
+  int32 code = 1;
+  string msg = 2;
+  bool is_charged = 3;                 // 是否已首冲
+  string charge_time = 4;              // 首冲时间
+  repeated int32 claimed_days = 5;     // 已领取的天数列表
+  int32 available_days = 6;            // 当前可领取的天数（例如第3天可以领1、2、3天的奖励）
+  string price = 7;  //人民币购买价格
+}
+
+// 领取首冲奖励请求
+message ClaimFirstChargeRewardRequest{
+  repeated int32 days = 1; // 要领取的天数（1-7）
+}
+
+// 领取首冲奖励响应
+message ClaimFirstChargeRewardResponse{
+  int32 code = 1;
+  string msg = 2;
+  Reward reward = 3;                   // 奖励数据
+  Wallet wallet_updated = 4;           // 钱包更新结果
+  repeated Item inventory_updated = 5; // 背包更新结果
+  repeated int32 claimed_days = 6;     // 更新后的已领取天数列表
+}
+
+// 获取七日购买状态请求
+message GetSevenDayStatusRequest{
+}
+
+// 获取七日购买状态响应
+message GetSevenDayStatusResponse{
+  int32 code = 1;
+  string msg = 2;
+  bool is_purchased = 3;               // 是否已购买当前周期
+  string purchase_time = 4;            // 最后一次购买时间
+  repeated int32 claimed_days = 5;     // 已领取的天数列表
+  int32 available_days = 6;            // 当前可领取的天数（例如第3天可以领0、1、2、3天的奖励）
+  int32 total_purchases = 7;           // 总购买次数
+  string price = 8;  //人民币购买价格
+}
+
+// 领取七日奖励请求
+message ClaimSevenDayRewardRequest{
+  repeated int32 days = 1; //  要领取的天数（0-7，0表示立即获得）
+}
+
+// 领取七日奖励响应
+message ClaimSevenDayRewardResponse{
+  int32 code = 1;
+  string msg = 2;
+  Reward reward = 3;                   // 奖励数据
+  Wallet wallet_updated = 4;           // 钱包更新结果
+  repeated Item inventory_updated = 5; // 背包更新结果
+  repeated int32 claimed_days = 6;     // 更新后的已领取天数列表
+}
+
+// 领取VIP奖励请求（一次性）
+message ClaimVipRewardRequest{
+}
+
+// 领取VIP奖励响应
+message ClaimVipRewardResponse{
+  int32 code = 1;
+  string msg = 2;
+  Reward reward = 3;                   // 奖励数据
+  Wallet wallet_updated = 4;           // 钱包更新结果
+  repeated Item inventory_updated = 5; // 背包更新结果
+  bool reward_claimed = 6;             // 当前领奖状态
+}
+
+// 获取月卡状态请求
+message GetMonthlyCardStatusRequest{
+}
+
+// 获取月卡状态响应
+message GetMonthlyCardStatusResponse{
+  int32 code = 1;
+  string msg = 2;
+  bool is_active = 3;                  // 月卡是否有效
+  string expiry_time = 4;               // VIP过期时间 ISO
+  bool can_claim_daily_reward = 5;      // 是否可以领取当天奖励（月卡有效且与上次领取不是同一天）
+  bool purchase_reward_claimed = 6;     // 是否已领取购买奖励
+  string price = 7;                    // 人民币购买价格
+}
+
+// 装备兑换请求
+message ExchangeEquipRequest{
+  string id = 1;        // 兑换配置ID
+  int32 count = 2;      // 兑换数量（单位：道具个数）
+}
+
+// 装备兑换响应
+message ExchangeEquipResponse{
+  int32 code = 1;
+  string msg = 2;
+  Reward reward = 3;                   // 获得的物品
+  Wallet wallet_updated = 4;           // 钱包更新（若无变更则为空）
+  repeated Item inventory_updated = 5; // 背包更新
+  int32 exchanged_count = 6;           // 本次实际兑换数量
+  int32 total_cost = 7;                // 本次消耗的积分数量
+  int32 bought_count = 8;              // 本周累计购买数量（兑换后）
+}
+
+// 获取装备兑换数据请求
+message GetEquipExchangeRequest{
+}
+
+// 装备兑换信息
+message EquipExchangeInfo{
+  string id = 1;                       // 兑换配置ID
+  int32 bought_count = 2;              // 本周已购买数量
+  int32 week_limit = 3;                // 每周购买限制
+}
+
+// 获取装备兑换数据响应
+message GetEquipExchangeResponse{
+  int32 code = 1;
+  string msg = 2;
+  map<string, EquipExchangeInfo> exchange_infos = 3; // key: 兑换配置ID, value: 兑换信息
+}
+
+// 领取月卡奖励请求
+message ClaimMonthlyCardRewardRequest{
+  bool is_purchase_reward = 1;         // true表示领取购买奖励，false表示领取每日奖励
+}
+
+// 领取月卡奖励响应
+message ClaimMonthlyCardRewardResponse{
+  int32 code = 1;
+  string msg = 2;
+  Reward reward = 3;                   // 奖励数据
+  Wallet wallet_updated = 4;           // 钱包更新结果
+  repeated Item inventory_updated = 5; // 背包更新结果
+}
+
+// 领取每日签到奖励请求
+message ClaimSignInRewardRequest{
+}
+
+// 领取每日签到奖励响应
+message ClaimSignInRewardResponse{
+  int32 code = 1;
+  string msg = 2;
+  int32 day = 3;                       // 当前领取的天数
+  Reward reward = 4;                   // 奖励数据
+  Wallet wallet_updated = 5;           // 钱包更新结果
+  repeated Item inventory_updated = 6; // 背包更新结果
+}
+
+message GetSignInRewardRequest{
+}
+
+message GetSignInRewardResponse{
+  int32 code = 1;
+  string msg = 2;
+  int32 current_day = 3;     // 当前已签到到的天数（1-30）
+  bool is_claimed_today = 4; // 今天是否已经领取了奖励
+}
+
+// 获取7天登录奖励信息请求
+message GetSevenDaySignInRequest{
+}
+
+// 获取7天登录奖励信息响应
+message GetSevenDaySignInResponse{
+  int32 code = 1;
+  string msg = 2;
+  int32 claimed_day = 3;     // 已领取到第几天（0-7，0表示未领取）
+  string last_claim_date = 4; // 最后一次领取日期（YYYY-MM-DD）
+}
+
+// 领取7天登录奖励请求
+message ClaimSevenDaySignInRequest{
+}
+
+// 领取7天登录奖励响应
+message ClaimSevenDaySignInResponse{
+  int32 code = 1;
+  string msg = 2;
+  int32 day = 3;                       // 本次领取的天数
+  Reward reward = 4;                   // 奖励数据
+  Wallet wallet_updated = 5;           // 钱包更新结果
+  repeated Item inventory_updated = 6; // 背包更新结果
+}
+
+// 领取抖音奖励请求
+message ClaimByteRewardRequest{
+  string reward_id = 1; // 奖励ID：TTShortcutReword（添加到桌面）或 TTEntryReword（入口有奖）
+}
+
+// 领取抖音奖励响应
+message ClaimByteRewardResponse{
+  int32 code = 1;
+  string msg = 2;
+  Reward reward = 3;                   // 奖励数据
+  Wallet wallet_updated = 4;           // 钱包更新结果
+  repeated Item inventory_updated = 5; // 背包更新结果
+}
+
+message OperateWalletRequest{
+  enum Option {
+    GAIN = 0;
+    CONSUME = 1;
+  }
+  Option option = 1; // 操作类型
+  int32 coin = 2;
+  int32 gem = 3;
+  int32 ad = 4;
+  string reason = 5;
+  string signature = 6;
+  string id = 7;
+}
+
+message OperateWalletResponse{
+  int32 code = 1;
+  string msg = 2;
+  Wallet wallet_updated = 3; // 钱包更新结果
+}
+
+
+message OperateInventoryRequest{
+  enum Option {
+    ADD = 0;
+    SUBTRACT = 1;
+  }
+  Option option = 1; // 操作类型
+  repeated Item items = 2;
+  string reason = 3;
+  string signature = 4;
+  string id = 5;
+}
+
+message OperateInventoryResponse{
+  int32 code = 1;
+  string msg = 2;
+  repeated Item inventory_updated = 5; // 背包更新结果
+}
+
+message GetWalletDataRequest{
+}
+
+message GetWalletDataResponse{
+  int32 code = 1;
+  string msg = 2;
+  Wallet wallet = 3;
+}
+
+message GetInventoryDataRequest{
+}
+
+message GetInventoryDataResponse{
+  int32 code = 1;
+  string msg = 2;
+  repeated Item items = 3;
+}
+
+message UpgradeEquipRequest{
+  string equip_id = 1;
+}
+
+message UpgradeEquipResponse{
+  int32 code = 1;
+  string msg = 2;
+  string equip_id = 3;
+  int32  level = 4;
+  Wallet wallet_updated = 5; // 钱包更新结果
+  repeated Item inventory_updated = 6; // 背包更新结果
+}
+
+message UpgradeCrystalSlotRequest{
+  int32 equip_type = 1;
+}
+
+message UpgradeCrystalSlotResponse{
+  int32 code = 1;
+  string msg = 2;
+  int32 equip_type = 3;
+  int32 level = 4;
+  Wallet wallet_updated = 5;
+  repeated Item inventory_updated = 6;
+}
+
+message UpgradeCrystalTechRequest{
+  string tech_id = 1;
+}
+
+message UpgradeCrystalTechResponse{
+  int32 code = 1;
+  string msg = 2;
+  repeated string unlocked_crystal_tech_ids = 3;
+  Wallet wallet_updated = 4;
+  repeated Item inventory_updated = 5;
+}
+
+// 商店相关消息定义
+enum PayType {
+  FREE = 0;    // 免费
+  COIN = 1;    // 金币
+  GEM = 2;     // 钻石
+  AD = 3;      // 广告
+}
+
+// 商店商品（普通商店）
+message ShopItem {
+  string id = 1;                  // 配置表ID
+  string item_id = 2;             // 物品ID
+  PayType pay_type = 3;           // 货币类型
+  int32 price = 4;                // 当前价格
+  int32 discount = 5;             // 折扣（0-10，0表示无折扣）
+  int32 item_count = 6;           // 商品数量
+  int32 max_buy_count = 7;        // 最大购买次数（0表示无限制）
+  int32 bought_count = 8;         // 已购买次数
+  int32 index = 9;                // 通过index来购买
+}
+
+// 章节商店（IAP直购）
+message ShopChapterItem {
+  string id = 1;                  // 配置表ID
+  string level_id = 2;            // 章节id
+  string price = 3;               // 价格
+  string reward_id = 4;           // 奖励id
+  int32 max_buy_count = 5;        // 最大购买次数
+  int32 bought_count = 6;         // 已购买次数
+  int32 claimed_count = 7;        // 已领多少次
+}
+
+// 钻石商店（IAP直购）
+message ShopGemItem {
+  string id = 1;                  // 配置表ID
+  int32  num = 2;                 // 获得钻石数量
+  string price = 3;               // 价格
+  int32 bought_count = 4;         // 已购买次数
+  int32 claimed_count = 5;        // 已领多少次
+  int32 extra = 6;               // 首次额外奖励
+}
+
+// 单个商店数据（普通商店）
+message SingleShopData {
+  ShopType shop_type = 1;         // 商店类型
+  repeated ShopItem items = 2;    // 商品列表
+  bool can_refresh = 3;           // 是否可手动刷新
+  int32 refresh_count = 4;        // 可手动刷新次数
+  string next_refresh_time = 5;   // 下次自动刷新时间
+}
+
+// 完整商店数据
+message ShopData {
+  repeated SingleShopData shops = 1;  // 所有商店列表
+}
+
+// 商店类型枚举（只包含基于TplShop配置的常规商店）
+enum ShopType {
+  SHOP_DAILY = 0;      // 每日商店
+  SHOP_COIN = 1;       // 金币商店
+  SHOP_STRENGTH = 2;   // 体力商店
+}
+
+// 购买商店商品请求
+message BuyShopItemRequest {
+  ShopType shop_type = 1;     // 商店类型
+  int32 index = 2;            // 商品索引
+  bool ad_watched = 3;        // 是否已完整观看广告（true=免费，false=扣广告券）
+}
+
+// 购买商店商品响应
+message BuyShopItemResponse {
+  int32 code = 1;
+  string msg = 2;
+  Reward reward = 3;                    // 获得的奖励
+  Wallet wallet_updated = 4;            // 更新后的钱包
+  repeated Item inventory_updated = 5;  // 更新后的背包
+  ShopItem shop_item = 6;               // 购买的物品更新
+ }
+
+// 手动刷新商店请求
+message RefreshShopRequest {
+  ShopType shop_type = 1;     // 商店类型
+}
+
+// 手动刷新商店响应
+message RefreshShopResponse {
+  int32 code = 1;
+  string msg = 2;
+  SingleShopData shop_data = 3;  // 刷新后的商店数据
+  Wallet wallet_updated = 4;      // 更新后的钱包（扣除刷新费用）
+}
+
+// ==================== 宝箱商店（独立） ====================
+// 宝箱商店数据
+message BoxShopData {
+  string box_item_id = 1;         // 当前宝箱商品ID（对应TplBoxShopItem的ID）
+  int32 box_level = 2;            // 宝箱等级
+  int32 box_exp = 3;              // 宝箱经验
+  bool free_ad_used = 4;          // 当天的广告免费购买是否已用
+  string next_free_refresh_time = 5; // 下次广告免费购买刷新时间（RFC3339）
+}
+
+// 购买宝箱请求
+message BuyBoxItemRequest {
+  int32 count = 1;      // 开启数量（1或10）
+  bool use_key = 2;     // 是否使用宝箱钥匙（itemId: 20001）
+  bool use_free_ad = 3; // 是否使用广告免费购买
+  bool ad_watched = 4;  // 是否已完整观看广告（true=免费，false=扣广告券）
+  string rookie_box = 5; //新手宝箱
+}
+
+// 购买宝箱响应
+message BuyBoxItemResponse {
+  int32 code = 1;
+  string msg = 2;
+  Reward reward = 3;
+  Wallet wallet_updated = 4;
+  repeated Item inventory_updated = 5;
+  BoxShopData box_shop_data = 6;  // 更新后的宝箱商店
+  bool box_level_up = 7;          // 是否升级
+}
+
+// ==================== 章节商店（独立，IAP） ====================
+message ChapterShopData {
+  repeated ShopChapterItem items = 1;    // 章节商品列表
+}
+
+// 领取已购买章节商品请求
+message ClaimChapterItemRequest {
+  string id = 1;              // 商品ID（唯一标识）
+}
+
+// 购买章节商品响应
+message ClaimChapterItemResponse {
+  int32 code = 1;
+  string msg = 2;
+  Reward reward = 3;
+  Wallet wallet_updated = 4;
+  repeated Item inventory_updated = 5;
+  ShopChapterItem shop_item = 6;  // 领取的章节商品
+}
+
+// ==================== 钻石商店（独立，IAP） ====================
+message GemShopData {
+  repeated ShopGemItem items = 1;    // 钻石商品列表
+}
+
+// 领取已购买钻石商品请求
+message ClaimGemItemRequest {
+  string id = 1;              // 商品ID（唯一标识）
+}
+
+// 购买钻石商品响应
+message ClaimGemItemResponse {
+  int32 code = 1;
+  string msg = 2;
+  Reward reward = 3;
+  Wallet wallet_updated = 4;
+  repeated Item inventory_updated = 5;
+  ShopGemItem shop_item = 6;  // 领取的钻石商品
+}
+
+// Mark notifications as read.
+message MarkNotificationsReadRequest{
+  // Notification IDs to mark as read.
+  repeated string ids  =1;
+}
+
+message MarkNotificationsReadResponse{
+  // Marked count.
+  int32 markedcount = 1;
+}
+
+// Claim notification attachments.
+message ClaimNotificationAttachmentsRequest{
+  // Notification IDs to claim.
+  repeated string ids  =1;
+}
+
+message ClaimNotificationAttachmentsResponse{
+  // Claimed count.
+  int32 claimedcount = 1;
+    // Latest wallet snapshot after claiming attachments.
+  Reward reward = 2;
+  Wallet wallet_updated = 3;
+  // Aggregated inventory changes after claiming attachments.
+  repeated Item inventory_updated = 4;
+}
+
+message PurchaseRequest{
+  string site = 1;        // 应用 ID
+  string order_id = 2;    // 商户订单号
+  string uid = 3;         // 用户ID
+  string sid = 4;         // 服务器 ID
+  string cp_order_id = 5; // CP订单号
+  string roleid = 6;      // 角色ID
+  string rolename = 7;    // 角色名称
+  string order_money = 8; // 实际总价
+  string productid = 9;   // 商品ID
+  int32 pay_type = 10;    // 支付方式 1：苹果内购, 2：支付宝, 3和11：微信h5支付, 5：微信公众号支付, 13：微信虚拟内购
+  string ext = 11;        // 透传字段，由 CP 定义的字段
+  string time = 12;       // 时间戳 10位
+  string sign = 13;       // 签名
+}
+
+message PurchaseResponse{
+  int32 code = 1;
+  string msg = 2;
+}
+
+// 获取玩家等级数据请求
+message GetPlayerLevelDataRequest{
+}
+
+// 获取玩家等级数据响应
+message GetPlayerLevelDataResponse{
+  int32 code = 1;
+  string msg = 2;
+  PlayerLevelData data = 3;
+}
+
+// 升级玩家等级请求
+message UpgradePlayerLevelRequest{
+}
+
+// 升级玩家等级响应
+message UpgradePlayerLevelResponse{
+  int32 code = 1;
+  string msg = 2;
+  int32 level = 3;                    // 升级后的等级
+  int32 total_exp = 4;                // 总获得的经验值
+  Reward reward = 5;                  // 升级奖励
+  Wallet wallet_updated = 6;          // 钱包更新结果
+  repeated Item inventory_updated = 7; // 背包更新结果
+}
+
+// 获取挖矿数据请求
+message GetMineDataRequest{
+}
+
+// 获取挖矿数据响应
+message GetMineDataResponse{
+  int32 code = 1;
+  string msg = 2;
+  MineData data = 3;
+}
+
+// 挖矿数据
+message MineData{
+  int32 daily_mine_count = 1;         // 每日剩余挖矿次数
+  string last_refresh_date = 2;       // 最后刷新日期
+  int32 current_level = 3;            // 当前矿产等级
+  int32 current_mined_count = 4;      // 当前矿产已挖数量
+  bool is_completed = 5;              // 当前矿产是否已挖完
+  int32 buy_count = 6;                // 今日已购买次数
+}
+
+// 挖矿请求
+message DoMineRequest{
+}
+
+// 挖矿响应
+message DoMineResponse{
+  int32 code = 1;
+  string msg = 2;
+  int32 gained = 3;                   // 本次挖到的数量
+  bool is_crit = 4;                   // 是否暴击
+  int32 current_mined_count = 5;      // 当前矿产已挖数量
+  int32 remaining_count = 6;          // 剩余挖矿次数
+  bool is_completed = 7;              // 当前矿产是否已挖完
+  Reward reward = 8;                  // 奖励
+  Wallet wallet_updated = 9;          // 钱包更新结果
+  repeated Item inventory_updated = 10; // 背包更新结果
+}
+
+// 升级矿产请求
+message UpgradeMineRequest{
+}
+
+// 升级矿产响应
+message UpgradeMineResponse{
+  int32 code = 1;
+  string msg = 2;
+  int32 level = 3;                    // 升级后的矿产等级
+}
+
+// 购买挖矿次数请求
+message BuyMineCountRequest{
+}
+
+// 购买挖矿次数响应
+message BuyMineCountResponse{
+  int32 code = 1;
+  string msg = 2;
+  int32 buy_count = 3;                // 今日已购买次数
+  int32 daily_mine_count = 4;         // 每日剩余挖矿次数
+  Wallet wallet_updated = 5;          // 钱包更新结果
+}
+
+// ===== 休息站相关消息 =====
+
+// 休息站数据
+message RestStationData{
+  int32 stamina_count = 1;            // 当前存储的体力数量
+  string next_grant_time = 2;         // 下次补充体力的时间（UTC时间字符串，ISO 8601 格式）
+}
+
+// 获取休息站状态请求
+message GetRestStationRequest{
+}
+
+// 获取休息站状态响应
+message GetRestStationResponse{
+  int32 code = 1;
+  string msg = 2;
+  RestStationData data = 3;
+}
+
+// 领取休息站体力请求
+message ClaimRestStationStaminaRequest{
+  int32 count = 1;                    // 领取数量，0表示一键领取
+}
+
+// 领取休息站体力响应
+message ClaimRestStationStaminaResponse{
+  int32 code = 1;
+  string msg = 2;
+  RestStationData rest_station = 3;   // 更新后的休息站数据
+  StaminaData stamina = 4;            // 更新后的体力数据
+}
+
+// 测试发奖请求
+message TestGrantRewardRequest{
+  string reward_str = 1; // 奖励字符串，格式："itemid_num,itemid_num"，例如："10000_100,10001_50"
+}
+
+// 测试发奖响应
+message TestGrantRewardResponse{
+  int32 code = 1;
+  string msg = 2;
+  Reward reward = 3;                   // 发放的奖励数据
+  Wallet wallet_updated = 4;           // 钱包更新结果
+  repeated Item inventory_updated = 5; // 背包更新结果
+}
+
+// ==================== Crystal Equipment ====================
+// 水晶装备词条
+message CrystalEquipmentAffix{
+  string affix_id = 1; // 词条ID
+  int32 value = 2;     // 词条数值
+}
+
+// 水晶装备信息
+message CrystalEquipmentInfo{
+  string tpl_id = 1;                              // 模板ID
+  string id = 2;                                  // 唯一ID (UUID)
+  repeated CrystalEquipmentAffix active_affixes = 3;  // 当前激活的词条
+  repeated CrystalEquipmentAffix pending_affixes = 4; // 洗炼生成的备用词条
+  repeated string locked_affix_ids = 5;           // 锁定的词条ID列表
+}
+
+// 洗炼水晶装备请求
+message RefineCrystalEquipmentRequest{
+  string equipment_id = 1; // 装备唯一ID
+}
+
+// 洗炼水晶装备响应
+message RefineCrystalEquipmentResponse{
+  int32 code = 1;
+  string msg = 2;
+  CrystalEquipmentInfo equipment = 3; // 洗炼后的装备信息
+  Wallet wallet_updated = 4; // 钱包更新结果
+  repeated Item inventory_updated = 5; // 背包更新结果
+}
+
+// 锁定词条请求
+message LockCrystalAffixRequest{
+  string equipment_id = 1; // 装备唯一ID
+  string affix_id = 2;     // 要锁定的词条ID
+  bool lock = 3;           // 是否锁定
+}
+
+// 锁定词条响应
+message LockCrystalAffixResponse{
+  int32 code = 1;
+  string msg = 2;
+  CrystalEquipmentInfo equipment = 3; // 更新后的装备信息
+}
+
+// 激活备用词条请求
+message ActivatePendingAffixesRequest{
+  string equipment_id = 1; // 装备唯一ID
+}
+
+// 激活备用词条响应
+message ActivatePendingAffixesResponse{
+  int32 code = 1;
+  string msg = 2;
+  CrystalEquipmentInfo equipment = 3; // 更新后的装备信息
+}
+
+// 获取水晶装备列表请求
+message GetCrystalEquipmentsRequest{
+}
+
+// 获取水晶装备列表响应
+message GetCrystalEquipmentsResponse{
+  int32 code = 1;
+  string msg = 2;
+  repeated CrystalEquipmentInfo equipments = 3; // 所有水晶装备列表
+}
+
+// 分解水晶装备请求
+message SalvageCrystalEquipmentRequest{
+ repeated string equipment_ids = 1; // 装备唯一ID数组
+}
+
+// 分解水晶装备响应
+message SalvageCrystalEquipmentResponse{
+  int32 code = 1;
+  string msg = 2;
+  Reward reward = 3;                   // 发放的奖励数据
+  Wallet wallet_updated = 4;           // 钱包更新结果
+  repeated Item inventory_updated = 5; // 背包更新结果
+}
+
+// ==================== Crystal Skin ====================
+
+message GetCrystalSkinsRequest{
+}
+
+message GetCrystalSkinsResponse{
+  int32 code = 1;
+  string msg = 2;
+  repeated CrystalSkinInfo skins = 3; // 所有水晶皮肤列表
+}
+
+message CrystalSkinInfo{
+  string skin_id = 1; // 皮肤模板ID (如 "SKIN10001")
+  int32 star_level = 2; // 星级
+}
+
+message UnlockCrystalSkinRequest{
+  string skin_id = 1; // 皮肤ID (如 "SKIN10001")
+}
+
+message UnlockCrystalSkinResponse{
+  int32 code = 1;
+  string msg = 2;
+  CrystalSkinInfo skin = 3; // 解锁的皮肤信息
+  Wallet wallet_updated = 4; // 钱包更新结果
+  repeated Item inventory_updated = 5; // 背包更新结果
+}
+
+message UpgradeCrystalSkinRequest{
+  string skin_id = 1; // 皮肤ID (如 "SKIN10001")
+}
+
+message UpgradeCrystalSkinResponse{
+  int32 code = 1;
+  string msg = 2;
+  CrystalSkinInfo skin = 3; // 升级后的皮肤信息
+  Wallet wallet_updated = 4; // 钱包更新结果
+  repeated Item inventory_updated = 5; // 背包更新结果
+}
+
+message Challenge{
+  int32 id = 1;
+  string activity_id = 2;
+  google.protobuf.Timestamp open = 3; //开始
+  google.protobuf.Timestamp close = 4; //关闭
+  google.protobuf.Timestamp end = 5; //结束提交分数
+  google.protobuf.Timestamp over = 6; //结束领取奖励
+  int32 max_part = 7;
+  string tournament_id = 8;      // 玩家当前参与的竞标赛ID，如果为空表示未参与
+
+}
+
+message JoinChallengeStatus{
+  int32 id = 1;
+  string tournament_id = 2;
+  string activity_id = 3;
+  google.protobuf.Timestamp joined = 4;
+  bool rank_reward = 5;
+  bool low_score_reward = 6;
+  bool mid_score_reward = 7;
+  bool high_score_reward = 8;
+  google.protobuf.Timestamp over = 9;
+  google.protobuf.Timestamp open = 10;
+  google.protobuf.Timestamp close = 11;
+  google.protobuf.Timestamp end = 12;
+}
+
+message GetChallengeResponse{
+  repeated Challenge challenges = 1;
+  repeated JoinChallengeStatus joined = 2;
+  bool get_reward = 3;
+}
+
+
+message JoinChallengeRequest{
+  int32 challenge_id = 1;
+}
+
+message JoinChallengeResponse{
+  int32 code = 1;                // 状态码 (0: 成功, 其他: 错误码)
+  string msg = 2;                // 响应消息
+  Challenge challenge  = 3;
+}
+
+
+message GainChallengeRewardRequest{
+  int32 challenge_id = 1;
+  bool rank_reward = 2;
+}
+
+message GainChallengeRewardResponse{
+  int32 code = 1;                // 状态码 (0: 成功, 其他: 错误码)
+  string msg = 2;                // 响应消息
+  Reward reward = 3;     // 奖励
+  Wallet wallet_updated = 4; // 钱包更新结果
+  repeated Item inventory_updated = 5; // 背包更新结果
+}
+
+// 前三名统计数据
+message TopThreeStats {
+  int32 first_place = 1;         // 第一名次数
+  int32 second_place = 2;        // 第二名次数
+  int32 third_place = 3;         // 第三名次数
+  int64 last_updated = 4;        // 最后更新时间戳
+}
+
+// 获取前三名统计响应
+message GetChallengeTopStatsResponse {
+  int32 code = 1;                // 状态码 (0: 成功, 其他: 错误码)
+  string msg = 2;                // 响应消息
+  TopThreeStats stats = 3;       // 前三名统计数据
+}
+
+// 获取挑战次数信息请求
+message GetChallengeBattleTimesRequest {
+}
+
+// 获取挑战次数信息响应
+message GetChallengeBattleTimesResponse {
+  int32 code = 1;                // 状态码 (0: 成功, 其他: 错误码)
+  string msg = 2;                // 响应消息
+  int32 remaining_times = 3;     // 剩余挑战次数（基础次数）
+  int32 ad_times_remaining = 4;  // 看广告剩余次数（每天1次）
+  int32 gem_times_remaining = 5; // 钻石购买剩余次数（每天3次）
+  string last_reset_date = 6;    // 最后重置日期（YYYY-MM-DD）
+}
+
+// 购买挑战次数类型
+enum BuyChallengeBattleTimesType {
+  BUY_WITH_AD = 0;   // 看广告购买
+  BUY_WITH_GEM = 1;  // 钻石购买
+}
+
+// 购买挑战次数请求
+message BuyChallengeBattleTimesRequest {
+  BuyChallengeBattleTimesType type = 1;  // 购买类型
+  bool ad_watched = 2;                   // 是否已完整观看广告（仅type=AD时有效）
+}
+
+// 购买挑战次数响应
+message BuyChallengeBattleTimesResponse {
+  int32 code = 1;                // 状态码 (0: 成功, 其他: 错误码)
+  string msg = 2;                // 响应消息
+  int32 remaining_times = 3;     // 剩余挑战次数
+  int32 ad_times_remaining = 4;  // 看广告剩余次数
+  int32 gem_times_remaining = 5; // 钻石购买剩余次数
+  Wallet wallet_updated = 6;     // 钱包更新结果（扣除钻石或广告券）
+}
+

@@ -68,6 +68,9 @@ import {NotificationsListComponent} from './notifications/notifications-list.com
 import {MfaSetupComponent} from './mfa-setup/mfa-setup.component';
 import {QRCodeModule} from 'angularx-qrcode';
 import {AuditLogComponent} from './audit-log/audit-log.component'
+import {AnnouncementsComponent} from './announcements/announcements.component';
+import {TranslateModule} from './shared/translate.module';
+import {InventoryComponent} from './account/inventory/inventory.component';
 
 @NgModule({
   declarations: [
@@ -86,6 +89,7 @@ import {AuditLogComponent} from './audit-log/audit-log.component'
     ProfileComponent,
     AuthenticationComponent,
     WalletComponent,
+    InventoryComponent,
     FriendsComponent,
     GroupsComponent,
     GroupComponent,
@@ -107,7 +111,8 @@ import {AuditLogComponent} from './audit-log/audit-log.component'
     MfaSetupComponent,
     NotificationsComponent,
     NotificationsListComponent,
-    AuditLogComponent
+    AuditLogComponent,
+    AnnouncementsComponent
   ],
   imports: [
     NgxFileDropModule,
@@ -123,6 +128,7 @@ import {AuditLogComponent} from './audit-log/audit-log.component'
     FormsModule,
     NgSelectModule,
     QRCodeModule,
+    TranslateModule
   ],
   providers: [
     WINDOW_PROVIDERS,

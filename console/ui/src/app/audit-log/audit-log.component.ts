@@ -3,6 +3,7 @@ import {ActivatedRoute, ActivatedRouteSnapshot, Resolve, RouterStateSnapshot} fr
 import {ConsoleService, AuditLogList, AuditLogListAuditLog} from '../console.service';
 import {Observable} from 'rxjs';
 import {NgbDateStruct, NgbDate} from '@ng-bootstrap/ng-bootstrap';
+import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 
 const actions = new Map<number, string>([
     [1, 'Create'],
@@ -14,6 +15,7 @@ const actions = new Map<number, string>([
 ])
 
 const resources = new Map<number, string>([
+    [0, 'Account'],
     [1, 'Account Wallet'],
     [2, 'Account Export'],
     [3, 'Account Friends'],
@@ -34,15 +36,13 @@ const resources = new Map<number, string>([
     [18, 'Leaderboard Record'],
     [19, 'Match'],
     [20, 'Notification'],
-    [21, 'Satori Message'],
     [22, 'Settings'],
     [23, 'Storage Data'],
     [24, 'Storage Data Import'],
-    [25, 'Hiro Inventory'],
-    [26, 'Hiro Progression'],
-    [27, 'Hiro Economy'],
-    [28, 'Hiro Stats'],
-    [29, 'Hiro Energy']
+    [30, 'Announcement'],
+    [31, 'System Notification'],
+    [32, 'Personal Notification'],
+    [33, 'VIP Manager'],
 ])
 
 interface selectType {
@@ -64,10 +64,13 @@ export class AuditLogComponent implements OnInit {
     public filter: Record<string, string> = {};
     public usernames?: string[];
     public modelDatepicker:NgbDateStruct
+    public metadataModalTitle = '';
+    public metadataModalBody = '';
 
     constructor(
         private readonly route: ActivatedRoute,
-        private readonly consoleService: ConsoleService
+        private readonly consoleService: ConsoleService,
+        private readonly modalService: NgbModal
     ){}
 
     ngOnInit():void {
@@ -102,9 +105,9 @@ export class AuditLogComponent implements OnInit {
           cursor,
         ).subscribe(res => {
           this.auditLogList.length = 0;
-          this.auditLogList.push(...res.entries);
-          this.nextCursor = res.next_cursor;
-          this.prevCursor = res.prev_cursor;
+          this.auditLogList.push(...(res.entries ?? []));
+          this.nextCursor = res.next_cursor ?? '';
+          this.prevCursor = res.prev_cursor ?? '';
         }, error => {
           this.error = error;
         });
@@ -138,6 +141,25 @@ export class AuditLogComponent implements OnInit {
 
     public toResourceString(resource: number): string {
         return resources.get(resource) ?? 'Unkown'
+    }
+
+    public openMetadata(modalContent: any, item: AuditLogListAuditLog): void {
+      const resource = (item.resource ?? 0) as number
+      const action = (item.action ?? 0) as number
+      const username = (item.username ?? '').toString()
+      this.metadataModalTitle = `${this.toResourceString(resource)} / ${this.toActionString(action)} / ${username}`
+      const raw = (item.metadata ?? '').toString()
+      if (!raw) {
+        this.metadataModalBody = '(empty)'
+      } else {
+        try {
+          const obj = JSON.parse(raw)
+          this.metadataModalBody = JSON.stringify(obj, null, 2)
+        } catch {
+          this.metadataModalBody = raw
+        }
+      }
+      this.modalService.open(modalContent, {size: 'm', scrollable: true})
     }
 
     public getResources():selectType[] {

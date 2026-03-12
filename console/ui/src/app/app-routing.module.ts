@@ -29,6 +29,7 @@ import {AccountComponent, AccountResolver} from './account/account.component';
 import {ProfileComponent} from './account/profile/profile.component';
 import {AuthenticationComponent} from './account/authentication/authentication.component';
 import {WalletComponent, WalletLedgerResolver} from './account/wallet/wallet.component';
+import {InventoryComponent, InventoryLedgerResolver} from './account/inventory/inventory.component';
 import {FriendsComponent, FriendsResolver} from './account/friends/friends.component';
 import {GroupsComponent, GroupsResolver} from './account/groups/groups.component';
 import {GroupDetailsComponent} from './group/details/groupDetailsComponent';
@@ -48,6 +49,10 @@ import {SubscriptionsListComponent} from './subscriptions/subscriptions-list.com
 import {MfaSetupComponent} from './mfa-setup/mfa-setup.component';
 import {NotificationsListComponent} from './notifications/notifications-list.component';
 import {NotificationsComponent, NotificationsResolver} from './account/notifications/notifications.component';
+import {AnnouncementsComponent} from './announcements/announcements.component';
+import {SystemNotificationsComponent} from './system-notifications/system-notifications.component';
+import {PersonalNotificationsComponent} from './personal-notifications/personal-notifications.component';
+import {VipAccountsComponent, VipAccountsResolver} from './vip-accounts/vip-accounts.component';
 import {AuditLogComponent, AuditLogResolver} from './audit-log/audit-log.component'
 
 const routes: Routes = [
@@ -90,6 +95,7 @@ const routes: Routes = [
           {path: 'profile', component: ProfileComponent, resolve: []},
           {path: 'authentication', component: AuthenticationComponent, resolve: []},
           {path: 'wallet', component: WalletComponent, resolve: [WalletLedgerResolver]},
+          {path: 'inventory', component: InventoryComponent, resolve: [InventoryLedgerResolver]},
           {path: 'friends', component: FriendsComponent, resolve: [FriendsResolver]},
           {path: 'groups', component: GroupsComponent, resolve: [GroupsResolver]},
           {path: 'notifications', component: NotificationsComponent, resolve: [NotificationsResolver]},
@@ -103,6 +109,10 @@ const routes: Routes = [
       {path: 'purchases', component: PurchasesListComponent, resolve: [PurchasesResolver], data: {minRole: 'IN_APP_PURCHASE'}},
       {path: 'subscriptions', component: SubscriptionsListComponent, resolve: [SubscriptionsResolver], data: {minRole: 'IN_APP_PURCHASE'}},
       {path: 'settings/mfa', component: MfaSetupComponent, resolve: []},
+      {path: 'announcements', component: AnnouncementsComponent, data: {minRole: 'ANNOUNCEMENT'}},
+      {path: 'system-notifications', component: SystemNotificationsComponent, data: {minRole: 'SYSTEM_NOTIFICATION'}},
+      {path: 'personal-notifications', component: PersonalNotificationsComponent, data: {minRole: 'PERSONAL_NOTIFICATION'}},
+      {path: 'vip-accounts', component: VipAccountsComponent, resolve: [VipAccountsResolver], data: {minRole: 'VIP_MANAGER'}},
       {path: 'audit/log', component: AuditLogComponent, resolve: [AuditLogResolver], data: {minRole: 'AUDIT_LOG'}}
     ]},
   {

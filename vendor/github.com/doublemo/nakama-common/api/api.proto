@@ -46,6 +46,8 @@ message Account {
   google.protobuf.Timestamp verify_time = 6;
   // The UNIX time (for gRPC clients) or ISO string (for REST clients) when the user's account was disabled/banned.
   google.protobuf.Timestamp disable_time = 7;
+  // The user's inventory data.
+  string inventory = 8;
 }
 
 // Obtain a new authentication token using a refresh token.
@@ -895,6 +897,10 @@ message Notification {
   google.protobuf.Timestamp create_time = 6;
   // True if this notification was persisted to the database.
   bool persistent = 7;
+  // Status of notification 0 unread, 1 read. 2 attachment recived.
+  int32 status = 8;
+  // The UNIX time (for gRPC clients) or ISO string (for REST clients) when the notification was expired.
+  google.protobuf.Timestamp expiry_time = 9;
 }
 
 // A collection of zero or more notifications.

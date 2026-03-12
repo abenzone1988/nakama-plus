@@ -18,6 +18,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/doublemo/nakama-common/api"
 	"github.com/gofrs/uuid/v5"
@@ -287,4 +288,56 @@ func fetchUserID(ctx context.Context, db *sql.DB, usernames []string) ([]string,
 	}
 
 	return ids, nil
+}
+
+type UserInfo struct {
+	UserID   uuid.UUID
+	Username string
+}
+
+func fetchUserIDsByUsernames(ctx context.Context, db *sql.DB, usernames []string) (map[string]UserInfo, error) {
+	if len(usernames) == 0 {
+		return make(map[string]UserInfo), nil
+	}
+
+	// ����IN��ѯ��ռλ��
+	placeholders := make([]string, len(usernames))
+	args := make([]interface{}, len(usernames))
+	for i, username := range usernames {
+		placeholders[i] = "$" + fmt.Sprintf("%d", i+1)
+		args[i] = username
+	}
+
+	query := fmt.Sprintf("SELECT id, username FROM users WHERE username IN (%s)",
+		strings.Join(placeholders, ","))
+
+	rows, err := db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	userMap := make(map[string]UserInfo)
+	for rows.Next() {
+		var userIDStr, username string
+		if err := rows.Scan(&userIDStr, &username); err != nil {
+			return nil, err
+		}
+
+		userID, err := uuid.FromString(userIDStr)
+		if err != nil {
+			return nil, err
+		}
+
+		userMap[username] = UserInfo{
+			UserID:   userID,
+			Username: username,
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return userMap, nil
 }

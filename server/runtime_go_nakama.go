@@ -4532,6 +4532,47 @@ func (n *RuntimeGoNakamaModule) GetFleetManager() runtime.FleetManager {
 	return n.fleetManager
 }
 
+// runtimePeerAdapter 适配 server.Peer -> runtime.Peer，避免直接接口断言的类型冲突。
+type runtimePeerAdapter struct {
+	peer Peer
+}
+
+func (a *runtimePeerAdapter) InvokeMS(ctx context.Context, in *api.AnyRequest) (*api.AnyResponseWriter, error) {
+	if a == nil || a.peer == nil {
+		return nil, fmt.Errorf("peer not available")
+	}
+	return a.peer.InvokeMS(ctx, in)
+}
+
+func (a *runtimePeerAdapter) SendMS(ctx context.Context, in *api.AnyRequest) error {
+	if a == nil || a.peer == nil {
+		return fmt.Errorf("peer not available")
+	}
+	return a.peer.SendMS(ctx, in)
+}
+
+func (a *runtimePeerAdapter) Event(ctx context.Context, in *api.AnyRequest, names ...string) error {
+	if a == nil || a.peer == nil {
+		return fmt.Errorf("peer not available")
+	}
+	return a.peer.Event(ctx, in, names...)
+}
+
+func (a *runtimePeerAdapter) GetCacher() *runtime.PeerCacher {
+	if a == nil || a.peer == nil {
+		return nil
+	}
+
+	c := a.peer.GetCacher()
+	if c == nil {
+		return nil
+	}
+
+	// server.PeerCacher 实现了 runtime.PeerCacher 接口，这里通过接口适配成 *runtime.PeerCacher。
+	var rc runtime.PeerCacher = c
+	return &rc
+}
+
 // @group peer
 // @summary Get the peer client.
 // @return peer(runtime.Peer) The Peer client.
@@ -4540,5 +4581,8 @@ func (n *RuntimeGoNakamaModule) GetPeer() (runtime.Peer, bool) {
 	if !ok {
 		return nil, false
 	}
-	return peer.(runtime.Peer), true
+	if peer == nil {
+		return nil, false
+	}
+	return &runtimePeerAdapter{peer: peer}, true
 }

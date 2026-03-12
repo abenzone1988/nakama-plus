@@ -336,6 +336,59 @@ func (s *ConsoleServer) GetWalletLedger(ctx context.Context, in *console.GetWall
 	return &console.WalletLedgerList{Items: consoleLedger, NextCursor: nextCursorStr, PrevCursor: prevCursorStr}, nil
 }
 
+func (s *ConsoleServer) GetInventoryLedger(ctx context.Context, in *console.GetInventoryLedgerRequest) (*console.InventoryLedgerList, error) {
+	logger, _ := LoggerWithTraceId(ctx, s.logger)
+	userID, err := uuid.FromString(in.AccountId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "Requires a valid user ID.")
+	}
+
+	limit := int(in.Limit)
+	if limit < 1 || limit > 100 {
+		return nil, status.Error(codes.InvalidArgument, "expects a limit value between 1 and 100")
+	}
+
+	var after time.Time
+	if in.After != nil {
+		after = in.After.AsTime()
+	}
+	var before time.Time
+	if in.Before != nil {
+		before = in.Before.AsTime()
+	}
+
+	ledger, nextCursorStr, prevCursorStr, err := ListInventoryLedger(ctx, logger, s.db, userID, &limit, in.Cursor, after, before)
+	if err != nil {
+		// Error already logged in function above.
+		return nil, status.Error(codes.Internal, "An error occurred while trying to list the user's inventory ledger.")
+	}
+
+	// Convert to console wire format.
+	consoleLedger := make([]*console.InventoryLedger, 0, len(ledger))
+	for _, ledgerItem := range ledger {
+		changeset, err := json.Marshal(ledgerItem.Changeset)
+		if err != nil {
+			logger.Error("Error encoding inventory ledger changeset.", zap.Error(err))
+			return nil, status.Error(codes.Internal, "An error occurred while trying to list the user's inventory ledger.")
+		}
+		metadata, err := json.Marshal(ledgerItem.Metadata)
+		if err != nil {
+			logger.Error("Error encoding inventory ledger metadata.", zap.Error(err))
+			return nil, status.Error(codes.Internal, "An error occurred while trying to list the user's inventory ledger.")
+		}
+		consoleLedger = append(consoleLedger, &console.InventoryLedger{
+			Id:         ledgerItem.ID,
+			UserId:     ledgerItem.UserID,
+			Changeset:  string(changeset),
+			Metadata:   string(metadata),
+			CreateTime: &timestamppb.Timestamp{Seconds: ledgerItem.CreateTime},
+			UpdateTime: &timestamppb.Timestamp{Seconds: ledgerItem.UpdateTime},
+		})
+	}
+
+	return &console.InventoryLedgerList{Items: consoleLedger, NextCursor: nextCursorStr, PrevCursor: prevCursorStr}, nil
+}
+
 func (s *ConsoleServer) ListAccounts(ctx context.Context, in *console.ListAccountsRequest) (*console.AccountList, error) {
 	const defaultLimit = 50
 

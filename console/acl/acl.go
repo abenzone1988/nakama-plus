@@ -356,6 +356,32 @@ func CheckACL(path string, userPermissions Permission) bool {
 		requiredPermissions = NewPermission(console.AclResources_SATORI_MESSAGE, PermissionWrite)
 	case "/nakama.console.Console/SendNotificationRequest":
 		requiredPermissions = NewPermission(console.AclResources_NOTIFICATION, PermissionWrite)
+	case "/nakama.console.Console/CreateAnnouncement":
+		requiredPermissions = NewPermission(console.AclResources_ANNOUNCEMENT, PermissionWrite)
+	case "/nakama.console.Console/UpdateAnnouncement":
+		requiredPermissions = NewPermission(console.AclResources_ANNOUNCEMENT, PermissionWrite)
+	case "/nakama.console.Console/DeleteAnnouncement":
+		requiredPermissions = NewPermission(console.AclResources_ANNOUNCEMENT, PermissionDelete)
+	case "/nakama.console.Console/GetAnnouncement":
+		requiredPermissions = NewPermission(console.AclResources_ANNOUNCEMENT, PermissionRead)
+	case "/nakama.console.Console/ListAnnouncements":
+		requiredPermissions = NewPermission(console.AclResources_ANNOUNCEMENT, PermissionRead)
+	case "/nakama.console.Console/SearchAnnouncements":
+		requiredPermissions = NewPermission(console.AclResources_ANNOUNCEMENT, PermissionRead)
+	case "/nakama.console.Console/ListSystemNotifications":
+		requiredPermissions = NewPermission(console.AclResources_SYSTEM_NOTIFICATION, PermissionRead)
+	case "/nakama.console.Console/CreateSystemNotification":
+		requiredPermissions = NewPermission(console.AclResources_SYSTEM_NOTIFICATION, PermissionWrite)
+	case "/nakama.console.Console/UpdateSystemNotification":
+		requiredPermissions = NewPermission(console.AclResources_SYSTEM_NOTIFICATION, PermissionWrite)
+	case "/nakama.console.Console/DeleteSystemNotification":
+		requiredPermissions = NewPermission(console.AclResources_SYSTEM_NOTIFICATION, PermissionDelete)
+	case "/nakama.console.Console/GetSystemNotification":
+		requiredPermissions = NewPermission(console.AclResources_SYSTEM_NOTIFICATION, PermissionRead)
+	case "/nakama.console.Console/CreatePersonalNotification":
+		requiredPermissions = NewPermission(console.AclResources_PERSONAL_NOTIFICATION, PermissionWrite)
+	case "/nakama.console.Console/ListPersonalNotificationLogs":
+		requiredPermissions = NewPermission(console.AclResources_PERSONAL_NOTIFICATION, PermissionRead)
 	case "/v2/console/storage/import":
 		// Special case for non-grpc gateway endpoint.
 		requiredPermissions = NewPermission(console.AclResources_STORAGE_DATA_IMPORT, PermissionWrite)
