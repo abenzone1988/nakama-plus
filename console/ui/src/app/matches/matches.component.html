@@ -1,9 +1,9 @@
-<h2 class="pb-1">Active Matches</h2>
-<h6 class="pb-4">{{matches.length}} running matches found.</h6>
+<h2 class="pb-1">{{ 'Active Matches' | translate }}</h2>
+<h6 class="pb-4">{{matches.length}} {{ 'running matches found.' | translate }}</h6>
 
 <ngb-alert [dismissible]="false" type="danger" class="mb-3" *ngIf="error">
   <img src="/static/svg/red-triangle.svg" alt="" width="16" height="" class="mr-2">
-  <h6 class="mr-2 d-inline font-weight-bold">An error occurred: {{error}}</h6>
+  <h6 class="mr-2 d-inline font-weight-bold">{{ 'An error occurred:' | translate }} {{error}}</h6>
 </ngb-alert>
 
 <div class="input-group mb-1">
@@ -18,7 +18,7 @@
     </div>
   </div>
   <div class="input-group-append">
-    <button type="submit" class="btn btn-primary" (click)="search()">Search</button>
+    <button type="submit" class="btn btn-primary" (click)="search()">{{ 'Search' | translate }}</button>
   </div>
 </div>
 <div class="row no-gutters mb-4">
@@ -26,17 +26,32 @@
     <div class="col-md-9">
       <form [hidden]="activeType !== 'All'" [formGroup]="searchForm1" (ngSubmit)="search()">
         <div class="input-group">
-          <input type="text" class="form-control" formControlName="match_id" placeholder="Filter by match ID"/>
+          <input
+            type="text"
+            class="form-control"
+            formControlName="match_id"
+            [placeholder]="'MatchesFilterById' | translate"
+          />
         </div>
       </form>
       <form [hidden]="activeType !== 'Relayed'" [formGroup]="searchForm2" (ngSubmit)="search()">
         <div class="input-group">
-          <input type="text" class="form-control" formControlName="match_id" placeholder="Filter by match ID"/>
+          <input
+            type="text"
+            class="form-control"
+            formControlName="match_id"
+            [placeholder]="'MatchesFilterById' | translate"
+          />
         </div>
       </form>
       <form [hidden]="activeType !== 'Authoritative'" [formGroup]="searchForm3" (ngSubmit)="search()">
         <div class="input-group">
-          <input type="text" class="form-control border-right-0" formControlName="query" placeholder="Filter by query or match ID"/>
+          <input
+            type="text"
+            class="form-control border-right-0"
+            formControlName="query"
+            [placeholder]="'MatchesFilterByQueryOrId' | translate"
+          />
           <div class="input-group-append">
             <div class="btn-group" ngbDropdown>
               <button type="button" class="btn btn-outline-secondary dropdown-radius-left" ngbDropdownToggle>
@@ -57,17 +72,17 @@
   <table class="table table-sm table-bordered">
     <thead class="thead-light">
     <tr>
-      <th><span [class.pl-3]="matches.length > 0">Match ID</span></th>
-      <th style="width: 140px">Presence Count</th>
-      <th style="width: 100px">Authoritative</th>
-      <th style="width: 100px">Node</th>
-      <th style="width: 130px">Handler Name</th>
-      <th style="width: 90px">Tick Rate</th>
+      <th><span [class.pl-3]="matches.length > 0">{{ 'Match ID' | translate }}</span></th>
+      <th style="width: 140px">{{ 'Presence Count' | translate }}</th>
+      <th style="width: 100px">{{ 'Authoritative' | translate }}</th>
+      <th style="width: 100px">{{ 'Node' | translate }}</th>
+      <th style="width: 130px">{{ 'Handler Name' | translate }}</th>
+      <th style="width: 90px">{{ 'Tick Rate' | translate }}</th>
     </tr>
     </thead>
     <tbody>
     <tr *ngIf="matches.length === 0">
-      <td colSpan="8" class="text-muted">No realtime matches were found.</td>
+      <td colSpan="8" class="text-muted">{{ 'No realtime matches were found.' | translate }}</td>
     </tr>
 
     <ng-template ngFor let-i="index" let-m [ngForOf]="matches">
@@ -83,8 +98,8 @@
         </td>
         <td>{{m.api_match.size}}</td>
         <td class="text-center">
-          <span *ngIf="m.api_match.authoritative">Yes</span>
-          <span *ngIf="!m.api_match.authoritative">No</span>
+          <span *ngIf="m.api_match.authoritative">{{ 'Yes' | translate }}</span>
+          <span *ngIf="!m.api_match.authoritative">{{ 'No' | translate }}</span>
         </td>
         <td>{{m.node}}</td>
         <td>{{m.api_match.handler_name}}</td>
@@ -95,7 +110,7 @@
 
           <div class="d-flex p-0">
             <div class="p-3 w-33 border">
-              <small><b>Match Label</b></small>
+              <small><b>{{ 'Match Label' | translate }}</b></small>
 
               <pre class="pre-wrap m-0 p-0"><small>{{m.api_match.label}}</small></pre>
             </div>
@@ -103,15 +118,15 @@
             <div class="p-3 w-33 border border-left-0">
               <img *ngIf="!matchStates[i] || matchStates[i] === null" src="/static/spinner.svg" class="d-block" width="16">
               <div *ngIf="matchStates[i] !== null">
-                <small><b>Current Tick</b></small>
+                <small><b>{{ 'Current Tick' | translate }}</b></small>
                 <pre class="pre-wrap m-0 p-0"><small>{{matchStates[i].tick}}</small></pre>
-                <small><b>Match State</b></small>
+                <small><b>{{ 'Match State' | translate }}</b></small>
                 <pre class="pre-wrap m-0 p-0"><small>{{matchStates[i].state}}</small></pre>
               </div>
             </div>
 
             <div class="p-3 w-33 border border-left-0">
-              <small><b>Match Presences</b></small>
+              <small><b>{{ 'Match Presences' | translate }}</b></small>
               <img *ngIf="!matchStates[i] || matchStates[i] === null" src="/static/spinner.svg" class="d-block" width="16">
               <pre *ngIf="matchStates[i] !== null" class="pre-wrap m-0 p-0"><small>{{getMatchPresencesString(matchStates[i].presences)}}</small></pre>
             </div>

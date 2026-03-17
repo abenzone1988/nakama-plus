@@ -1,6 +1,8 @@
 <ngb-alert [dismissible]="false" type="danger" *ngIf="error">
-  <img src="/src/static/svg/red-triangle.svg" alt="" width="16" height="" class="mr-2">
-  <h6 class="mr-2 d-inline font-weight-bold">Error while processing request: {{error}}</h6>
+  <img src="/static/svg/red-triangle.svg" alt="" width="16" height="" class="mr-2">
+  <h6 class="mr-2 d-inline font-weight-bold">
+    {{ 'Error while processing request:' | translate }} {{error}}
+  </h6>
 </ngb-alert>
 
 <div class="row no-gutters mb-4">
@@ -21,14 +23,14 @@
     <thead class="thead-light">
     <tr>
       <th>ID</th>
-      <th *ngIf="!userId">User ID</th>
-      <th>Sender ID</th>
-      <th>Subject</th>
-      <th>Code</th>
-      <th style="width: 180px">Create Time</th>
-      <th style="width: 180px">Expiry Time</th>
-      <th style="width: 100px">Status</th>
-      <th style="width: 90px" *ngIf="deleteAllowed()">Remove</th>
+      <th *ngIf="!userId">{{ 'User ID' | translate }}</th>
+      <th>{{ 'Sender ID' | translate }}</th>
+      <th>{{ 'Subject' | translate }}</th>
+      <th>{{ 'Code' | translate }}</th>
+      <th style="width: 180px">{{ 'Create Time' | translate }}</th>
+      <th style="width: 180px">{{ 'Expiry Time' | translate }}</th>
+      <th style="width: 100px">{{ 'Status' | translate }}</th>
+      <th style="width: 90px" *ngIf="deleteAllowed()">{{ 'Remove' | translate }}</th>
     </tr>
     </thead>
     <tbody>
@@ -48,12 +50,16 @@
         <td>{{n.create_time}}</td>
         <td>{{n.expiry_time}}</td>
         <td>{{notificationStatus[n.status]}}</td>
-        <td *ngIf="deleteAllowed()" class="text-center"><button type="button" class="btn btn-sm btn-danger" (click)="deleteNotification($event, i, n);">Delete</button></td>
+        <td *ngIf="deleteAllowed()" class="text-center">
+          <button type="button" class="btn btn-sm btn-danger" (click)="deleteNotification($event, i, n);">
+            {{ 'Delete' | translate }}
+          </button>
+        </td>
       </tr>
       <tr *ngIf="notificationsRowsOpen[i]" class="open-row">
         <td colspan="9">
           <div class="p-2">
-            <div><small><b>Content</b></small></div>
+            <div><small><b>{{ 'Content' | translate }}</b></small></div>
             <div>
               <pre class="pre-wrap m-0 p-0"><small>{{n.content}}</small></pre>
             </div>
@@ -61,7 +67,9 @@
         </td>
       </tr>
     </ng-template>
-    <tr *ngIf="notifications.length === 0"><td colspan="9" class="text-muted">No notifications were found.</td></tr>
+    <tr *ngIf="notifications.length === 0">
+      <td colspan="9" class="text-muted">{{ 'No notifications were found.' | translate }}</td>
+    </tr>
     </tbody>
   </table>
 </div>

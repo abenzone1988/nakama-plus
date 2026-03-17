@@ -1,5 +1,5 @@
-<h2 class="pb-1">Storage Objects</h2>
-<h6 class="pb-4">{{objectCount}} objects found.</h6>
+<h2 class="pb-1">{{ 'Storage Objects' | translate }}</h2>
+<h6 class="pb-4">{{objectCount}} {{ 'objects found.' | translate }}</h6>
 
 <div class="row no-gutters mb-3">
     <div class="col d-flex justify-content-between no-gutters">
@@ -9,24 +9,36 @@
             <div class="input-group-prepend">
               <div class="btn-group" ngbDropdown>
                 <button [disabled]="collections.length === 0" type="button" class="btn btn-outline-secondary dropdown-radius" ngbDropdownToggle>
-                  <span *ngIf="!f.collection.value || f.collection.value === ''">Filter by collection</span>
+                  <span *ngIf="!f.collection.value || f.collection.value === ''">{{ 'Filter by collection' | translate }}</span>
                   <span *ngIf="f.collection.value && f.collection.value !== ''">{{f.collection.value}}</span>
                 </button>
                 <div class="dropdown-menu" ngbDropdownMenu>
-                  <button [hidden]="!f.collection.value || f.collection.value === ''" type="button" class="btn btn-secondary text-secondary" ngbDropdownItem (click)="f.collection.reset();">&#10008; Deselect collection</button>
+                  <button [hidden]="!f.collection.value || f.collection.value === ''" type="button" class="btn btn-secondary text-secondary" ngbDropdownItem (click)="f.collection.reset();">
+                    &#10008; {{ 'Deselect collection' | translate }}
+                  </button>
                   <div [hidden]="!f.collection.value || f.collection.value === ''" class="dropdown-divider"></div>
                   <button *ngFor="let c of collections" type="button" ngbDropdownItem (click)="f.collection.setValue(c);">{{c}}</button>
                 </div>
               </div>
             </div>
-            <input type="text" class="form-control" formControlName="key" placeholder="Filter by key"/>
+            <input
+              type="text"
+              class="form-control"
+              formControlName="key"
+              [placeholder]="'StorageFilterByKey' | translate"
+            />
 
-            <input type="text" class="form-control border-right-0" formControlName="user_id" placeholder="Filter by user ID"/>
+            <input
+              type="text"
+              class="form-control border-right-0"
+              formControlName="user_id"
+              [placeholder]="'StorageFilterByUserId' | translate"
+            />
             <div class="input-group-append">
               <span class="input-group-text" (click)="f.user_id.setValue(systemUserId);"><img class="mr-1" src="/static/svg/purple-cog-1.svg" alt="" width="20" height=""></span>
             </div>
             <div class="input-group-append">
-              <button class="btn btn-primary" type="submit" [disabled]="disableSearch()" (click)="search(0)">Search</button>
+              <button class="btn btn-primary" type="submit" [disabled]="disableSearch()" (click)="search(0)">{{ 'Search' | translate }}</button>
             </div>
           </div>
         </form>
@@ -43,30 +55,30 @@
 
 <ngb-alert [dismissible]="false" type="danger" class="mb-3" *ngIf="error">
   <img src="/static/svg/red-triangle.svg" alt="" width="16" height="" class="mr-2">
-  <h6 class="mr-2 d-inline font-weight-bold">Error when querying storage objects: {{error}}</h6>
+  <h6 class="mr-2 d-inline font-weight-bold">{{ 'Error when querying storage objects' | translate }}: {{error}}</h6>
 </ngb-alert>
 
 <div class="row no-gutters">
   <table class="table table-sm table-hover table-bordered">
     <thead class="thead-light">
       <tr>
-        <th>Collection Name</th>
-        <th>Key Name</th>
-        <th style="width: 320px">User ID</th>
-        <th style="width: 180px">Last Update</th>
-        <th style="width: 90px" *ngIf="deleteAllowed()">Remove</th>
+        <th>{{ 'Collection Name' | translate }}</th>
+        <th>{{ 'Key Name' | translate }}</th>
+        <th style="width: 320px">{{ 'User ID' | translate }}</th>
+        <th style="width: 180px">{{ 'Last Update' | translate }}</th>
+        <th style="width: 90px" *ngIf="deleteAllowed()">{{ 'Remove' | translate }}</th>
       </tr>
     </thead>
     <tbody>
       <tr *ngIf="objects.length === 0">
-        <td colSpan="5" class="text-muted">No storage objects found - change the filter criteria or add new objects.</td>
+        <td colSpan="5" class="text-muted">{{ 'No storage objects found - change the filter criteria or add new objects.' | translate }}</td>
       </tr>
       <tr *ngFor="let o of objects; index as i;">
         <td (click)="viewObject(o);">{{o.collection}}</td>
         <td (click)="viewObject(o);">{{o.key}}</td>
         <td (click)="viewObject(o);">{{o.user_id}}</td>
         <td (click)="viewObject(o);">{{o.update_time}}</td>
-        <td *ngIf="deleteAllowed()" class="text-center"><button type="button" class="btn btn-sm btn-danger" (click)="deleteObject($event, i, o);">Delete</button></td>
+        <td *ngIf="deleteAllowed()" class="text-center"><button type="button" class="btn btn-sm btn-danger" (click)="deleteObject($event, i, o);">{{ 'Delete' | translate }}</button></td>
       </tr>
     </tbody>
   </table>

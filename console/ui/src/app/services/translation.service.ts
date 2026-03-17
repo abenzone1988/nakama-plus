@@ -7,13 +7,13 @@ import { catchError } from 'rxjs/operators';
   providedIn: 'root'
 })
 export class TranslationService {
-  private currentLang = new BehaviorSubject<string>('en');
+  private currentLang = new BehaviorSubject<string>('zh');
   private translations = new BehaviorSubject<{[key: string]: string}>({});
   private translationsCache = new Map<string, {[key: string]: string}>();
 
   constructor(private http: HttpClient) {
-    // 从 localStorage 恢复语言设置
-    const savedLang = localStorage.getItem('language') || 'en';
+    // 从 localStorage 恢复语言设置，默认使用中文
+    const savedLang = localStorage.getItem('language') || 'zh';
     this.setLanguage(savedLang);
   }
 

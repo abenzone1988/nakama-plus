@@ -1,40 +1,51 @@
-<h2 class="pb-1">User Account</h2>
+<h2 class="pb-1">{{ 'User Account' | translate }}</h2>
 <div class="account-top-nav d-flex justify-content-between align-items-baseline mb-4">
   <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a [routerLink]="['/accounts']">Account</a></li>
+      <li class="breadcrumb-item"><a [routerLink]="['/accounts']">{{ 'Account' | translate }}</a></li>
       <li class="breadcrumb-item active">{{account.user.id}}</li>
     </ol>
   </nav>
 
   <div>
-    <button *ngIf="exportAllowed()" (click)="exportAccount($event)" type="button" class="btn  btn-outline-secondary mr-2"><img class="mr-2" src="/static/svg/export.svg" alt="" width="13" height="13">Export</button>
-    <button *ngIf="banAllowed()" (click)="banUnbanAccount($event)" type="button" class="btn  btn-outline-secondary mr-2"><img class="mr-2" src="/static/svg/ban.svg" alt="" width="13" height="13">
-      <span *ngIf="account.disable_time">Unban</span>
-      <span *ngIf="!account.disable_time">Ban</span>
+    <button *ngIf="exportAllowed()" (click)="exportAccount($event)" type="button" class="btn  btn-outline-secondary mr-2">
+      <img class="mr-2" src="/static/svg/export.svg" alt="" width="13" height="13">
+      {{ 'Export' | translate }}
     </button>
-    <button *ngIf="deleteAllowed()" (click)="deleteAccount($event, false)" type="button" class="btn btn-danger btn-danger-icon mr-2"><img class="mr-2" src="/static/svg/bin-red.svg" alt="" width="14" height="">Delete</button>
-    <button *ngIf="deleteAllowed()" (click)="deleteAccount($event, true)" type="button" class="btn btn-danger btn-danger-icon mr-2"><img class="mr-2" src="/static/svg/bin-recorded.svg" alt="" width="15" height="">Recorded delete</button>
+    <button *ngIf="banAllowed()" (click)="banUnbanAccount($event)" type="button" class="btn  btn-outline-secondary mr-2"><img class="mr-2" src="/static/svg/ban.svg" alt="" width="13" height="13">
+      <span *ngIf="account.disable_time">{{ 'Unban' | translate }}</span>
+      <span *ngIf="!account.disable_time">{{ 'Ban' | translate }}</span>
+    </button>
+    <button *ngIf="deleteAllowed()" (click)="deleteAccount($event, false)" type="button" class="btn btn-danger btn-danger-icon mr-2">
+      <img class="mr-2" src="/static/svg/bin-red.svg" alt="" width="14" height="">
+      {{ 'Delete' | translate }}
+    </button>
+    <button *ngIf="deleteAllowed()" (click)="deleteAccount($event, true)" type="button" class="btn btn-danger btn-danger-icon mr-2">
+      <img class="mr-2" src="/static/svg/bin-recorded.svg" alt="" width="15" height="">
+      {{ 'Recorded delete' | translate }}
+    </button>
   </div>
 </div>
 
 <ngb-alert [dismissible]="false" type="danger" class="mb-3" *ngIf="error">
   <img src="/static/svg/red-triangle.svg" alt="" width="16" height="" class="mr-2">
-  <h6 class="mr-2 d-inline font-weight-bold">An error occurred: {{error}}</h6>
+  <h6 class="mr-2 d-inline font-weight-bold">{{ 'An error occurred:' | translate }} {{error}}</h6>
 </ngb-alert>
 
 <nav ngbNav #accountNav="ngbNav" class="navbar-expand-sm p-0 mb-3">
   <ng-container *ngFor="let v of views">
     <div *ngIf="isAllowed(v.minRole)">
       <ng-container [ngbNavItem]="v.path">
-        <a ngbNavLink routerLinkActive="account-link-active" [routerLink]="['/accounts', account.user.id, v.path]">{{v.label}}</a>
+        <a ngbNavLink routerLinkActive="account-link-active" [routerLink]="['/accounts', account.user.id, v.path]">
+          {{ v.label | translate }}
+        </a>
       </ng-container>
     </div>
   </ng-container>
   <div *ngIf="storageAllowed()">
     <ng-container ngbNavItem="storage">
       <a ngbNavLink [routerLink]="['/storage']" [queryParams]="{'user_id': this.account.user.id}">
-        Storage
+        {{ 'Storage' | translate }}
       </a>
     </ng-container>
   </div>

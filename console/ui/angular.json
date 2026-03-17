@@ -35,7 +35,8 @@
             "aot": true,
             "assets": [
               "src/favicon.ico",
-              "src/static"
+              "src/static",
+              "src/assets"
             ],
             "styles": [
               "src/bootstrap.min.css",

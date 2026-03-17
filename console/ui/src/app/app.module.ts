@@ -71,6 +71,7 @@ import {AuditLogComponent} from './audit-log/audit-log.component'
 import {AnnouncementsComponent} from './announcements/announcements.component';
 import {TranslateModule} from './shared/translate.module';
 import {InventoryComponent} from './account/inventory/inventory.component';
+import {SystemNotificationsComponent} from './system-notifications/system-notifications.component';
 
 @NgModule({
   declarations: [
@@ -128,7 +129,8 @@ import {InventoryComponent} from './account/inventory/inventory.component';
     FormsModule,
     NgSelectModule,
     QRCodeModule,
-    TranslateModule
+    TranslateModule,
+    SystemNotificationsComponent
   ],
   providers: [
     WINDOW_PROVIDERS,

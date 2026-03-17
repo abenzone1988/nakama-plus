@@ -32,6 +32,7 @@ import {SegmentService} from 'ngx-segment-analytics';
 import {ConsoleService, UserRole} from '../console.service';
 import {Globals} from '../globals';
 import {environment} from '../../environments/environment';
+import { TranslationService } from '../services/translation.service';
 
 @Component({
   templateUrl: './base.component.html',
@@ -43,27 +44,34 @@ export class BaseComponent implements OnInit, OnDestroy {
   private segmentRouterSub: Subscription;
   public loading = true;
   public error = '';
+  public currentLang: string = 'en';
+  public userMenuOpen = false;
 
   public routes = [
-    {navItem: 'status', routerLink: ['/status'], label: 'Status', minRole: '', icon: 'status'},
-    {navItem: 'users', routerLink: ['/users'], label: 'User Management', minRole: 'USER', icon: 'user-management'},
-    {navItem: 'config', routerLink: ['/config'], label: 'Configuration', minRole: 'CONFIGURATION', icon: 'configuration'},
-    {navItem: 'modules', routerLink: ['/modules'], label: 'Runtime Modules', minRole: 'CONFIGURATION', separator: true, icon: 'runtime-modules'},
-    {navItem: 'accounts', routerLink: ['/accounts'], label: 'Accounts', minRole: 'ACCOUNT', icon: 'accounts'},
-    {navItem: 'groups', routerLink: ['/groups'], label: 'Groups', minRole: 'GROUP', icon: 'groups'},
-    {navItem: 'storage', routerLink: ['/storage'], label: 'Storage', minRole: 'STORAGE_DATA', icon: 'storage'},
-    {navItem: 'leaderboards', routerLink: ['/leaderboards'], label: 'Leaderboards', minRole: 'LEADERBOARD', icon: 'leaderboard'},
-    {navItem: 'chat', routerLink: ['/chat'], label: 'Chat Messages', minRole: 'CHANNEL_MESSAGE', icon: 'chat'},
-    {navItem: 'notifications', routerLink: ['/notifications'], label: 'Notifications', minRole: 'NOTIFICATION', icon: 'notification'},
-    {navItem: 'announcements', routerLink: ['/announcements'], label: 'Announcements', minRole: 'ANNOUNCEMENT', icon: 'announcement'},
-    {navItem: 'system-notifications', routerLink: ['/system-notifications'], label: 'SystemNotice', minRole: 'SYSTEM_NOTIFICATION', icon: 'system-notifications'},
-    {navItem: 'personal-notifications', routerLink: ['/personal-notifications'], label: 'PersonalNotice', minRole: 'NOTIFICATION', icon: 'gift'},
-    {navItem: 'vip-accounts', routerLink: ['/vip-accounts'], label: 'VIPMANAGER', minRole: 'VIP_MANAGER', icon: 'vip'},
-    {navItem: 'purchases', routerLink: ['/purchases'], label: 'Purchases', minRole: 'IN_APP_PURCHASE', icon: 'purchases'},
-    {navItem: 'subscriptions', routerLink: ['/subscriptions'], label: 'Subscriptions', minRole: 'IN_APP_PURCHASE', icon: 'subscriptions'},
-    {navItem: 'matches', routerLink: ['/matches'], label: 'Matches', minRole: 'MATCH', icon: 'running-matches'},
-    {navItem: 'apiexplorer', routerLink: ['/apiexplorer'], label: 'API Explorer', minRole: 'API_EXPLORER', icon: 'api-explorer'},
-    {navItem: 'auditlog', routerLink: ['/audit/log'], label: 'Audit Log', minRole: 'AUDIT_LOG', icon: 'status'},
+    // Top: dashboard
+    {navItem: 'status', routerLink: ['/status'], label: 'Dashboard', section: 'top', minRole: '', icon: 'status'},
+
+    // Main menu
+    {navItem: 'accounts', routerLink: ['/accounts'], label: 'Players', section: 'main', minRole: 'ACCOUNT', icon: 'accounts'},
+    {navItem: 'groups', routerLink: ['/groups'], label: 'Groups', section: 'main', minRole: 'GROUP', icon: 'groups'},
+    {navItem: 'storage', routerLink: ['/storage'], label: 'Storage', section: 'main', minRole: 'STORAGE_DATA', icon: 'storage'},
+    {navItem: 'matches', routerLink: ['/matches'], label: 'Matches', section: 'main', minRole: 'MATCH', icon: 'running-matches'},
+    {navItem: 'leaderboards', routerLink: ['/leaderboards'], label: 'Leaderboards', section: 'main', minRole: 'LEADERBOARD', icon: 'leaderboard'},
+    {navItem: 'notifications', routerLink: ['/notifications'], label: 'Notifications', section: 'main', minRole: 'NOTIFICATION', icon: 'notification'},
+    {navItem: 'purchases', routerLink: ['/purchases'], label: 'Payments', section: 'main', minRole: 'IN_APP_PURCHASE', icon: 'purchases'},
+    {navItem: 'chat', routerLink: ['/chat'], label: 'Chat Messages', section: 'main', minRole: 'CHANNEL_MESSAGE', icon: 'chat'},
+    // Extra main items from your extensions
+    {navItem: 'announcements', routerLink: ['/announcements'], label: 'Announcements', section: 'main', minRole: 'ANNOUNCEMENT', icon: 'announcement'},
+    {navItem: 'system-notifications', routerLink: ['/system-notifications'], label: 'SystemNotice', section: 'main', minRole: 'SYSTEM_NOTIFICATION', icon: 'system-notifications'},
+    {navItem: 'personal-notifications', routerLink: ['/personal-notifications'], label: 'PersonalNotice', section: 'main', minRole: 'NOTIFICATION', icon: 'gift'},
+    {navItem: 'vip-accounts', routerLink: ['/vip-accounts'], label: 'VIPMANAGER', section: 'main', minRole: 'VIP_MANAGER', icon: 'vip'},
+
+    // Development
+    {navItem: 'users', routerLink: ['/users'], label: 'User Management', section: 'dev', minRole: 'USER', icon: 'user-management'},
+    {navItem: 'apiexplorer', routerLink: ['/apiexplorer'], label: 'API Explorer', section: 'dev', minRole: 'API_EXPLORER', icon: 'api-explorer'},
+    {navItem: 'modules', routerLink: ['/modules'], label: 'Runtime Modules', section: 'dev', minRole: 'CONFIGURATION', icon: 'runtime-modules'},
+    {navItem: 'config', routerLink: ['/config'], label: 'Settings', section: 'dev', minRole: 'CONFIGURATION', icon: 'configuration'},
+    {navItem: 'auditlog', routerLink: ['/audit/log'], label: 'Audit Log', section: 'dev', minRole: 'AUDIT_LOG', icon: 'status'},
   ];
 
   constructor(
@@ -71,6 +79,7 @@ export class BaseComponent implements OnInit, OnDestroy {
     private readonly router: Router,
     private segment: SegmentService,
     private readonly authService: AuthenticationService,
+    private readonly translationService: TranslationService,
   ) {
     this.loading = false;
     // Buffer router events every 2 seconds, to reduce loading screen jitter
@@ -113,6 +122,10 @@ export class BaseComponent implements OnInit, OnDestroy {
         segment.page(nav.url);
       }
     });
+
+    this.translationService.getCurrentLang().subscribe(lang => {
+      this.currentLang = lang;
+    });
   }
 
   ngOnInit(): void {
@@ -151,6 +164,14 @@ export class BaseComponent implements OnInit, OnDestroy {
   }
 
   onSidebarNavChange(changeEvent: NgbNavChangeEvent): void {}
+
+  switchLanguage(lang: string): void {
+    this.translationService.setLanguage(lang);
+  }
+
+  toggleUserMenu(): void {
+    this.userMenuOpen = !this.userMenuOpen;
+  }
 }
 
 @Injectable({providedIn: 'root'})

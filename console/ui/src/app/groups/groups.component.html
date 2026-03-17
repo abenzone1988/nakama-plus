@@ -1,16 +1,21 @@
-<h2 class="pb-1">User Groups</h2>
-<h6 class="pb-3">{{groupsCount}} groups found.</h6>
+<h2 class="pb-1">{{ 'User Groups' | translate }}</h2>
+<h6 class="pb-3">{{groupsCount}} {{ 'groups found.' | translate }}</h6>
 
 <div class="row no-gutters mb-4">
   <div class="col d-flex justify-content-between no-gutters align-items-center">
     <div class="col-md-9">
       <form [formGroup]="searchForm" (ngSubmit)="search(0)">
         <div class="input-group">
-          <input type="text" class="form-control border-right-0" formControlName="filter" placeholder="Filter by group ID or name (use '%' for wildcard search)"/>
+          <input
+            type="text"
+            class="form-control border-right-0"
+            formControlName="filter"
+            [placeholder]="'GroupsFilterPlaceholder' | translate"
+          />
 
           <div class="input-group-append">
             <div class="btn-group">
-              <button type="button" class="btn btn-primary dropdown-radius" (click)="search(0)">Search</button>
+              <button type="button" class="btn btn-primary dropdown-radius" (click)="search(0)">{{ 'Search' | translate }}</button>
             </div>
           </div>
         </div>
@@ -28,29 +33,29 @@
 
 <ngb-alert [dismissible]="false" type="danger" class="mb-3" *ngIf="error">
   <img src="/static/svg/red-triangle.svg" alt="" width="16" height="" class="mr-2">
-  <h6 class="mr-2 d-inline font-weight-bold">Error when querying groups: {{error}}</h6>
+  <h6 class="mr-2 d-inline font-weight-bold">{{ 'Error when querying groups' | translate }}: {{error}}</h6>
 </ngb-alert>
 
 <div class="row no-gutters">
   <table class="table table-sm table-hover table-bordered">
     <thead class="thead-light">
       <tr>
-        <th style="width: 320px">Group ID</th>
-        <th>Name</th>
-        <th style="width: 180px">Last Update</th>
-        <th style="width: 90px" *ngIf="deleteAllowed()">Remove</th>
+        <th style="width: 320px">{{ 'Group ID' | translate }}</th>
+        <th>{{ 'Name' | translate }}</th>
+        <th style="width: 180px">{{ 'Last Update' | translate }}</th>
+        <th style="width: 90px" *ngIf="deleteAllowed()">{{ 'Remove' | translate }}</th>
       </tr>
     </thead>
     <tbody>
       <tr *ngIf="groups.length === 0">
-        <td colSpan="5" class="text-muted">No groups found - change the filter criteria or add new user groups.</td>
+        <td colSpan="5" class="text-muted">{{ 'No groups found - change the filter criteria or add new user groups.' | translate }}</td>
       </tr>
       <tr *ngFor="let g of groups; index as i;">
         <td (click)="viewGroup(g);">{{g.id}}</td>
         <td (click)="viewGroup(g);">{{g.name}}</td>
         <td (click)="viewGroup(g);">{{g.update_time}}</td>
         <td *ngIf="deleteAllowed() && g.id === systemUserId"></td>
-        <td *ngIf="deleteAllowed() && g.id !== systemUserId" class="text-center"><button type="button" class="btn btn-sm btn-danger" (click)="deleteGroup($event, i, g);">Delete</button></td>
+        <td *ngIf="deleteAllowed() && g.id !== systemUserId" class="text-center"><button type="button" class="btn btn-sm btn-danger" (click)="deleteGroup($event, i, g);">{{ 'Delete' | translate }}</button></td>
       </tr>
     </tbody>
   </table>

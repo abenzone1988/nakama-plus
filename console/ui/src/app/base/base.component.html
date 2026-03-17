@@ -1,9 +1,8 @@
 <div class="container-fluid">
-  <div class="row">
-
+  <div class="row layout-row">
     <!-- sidebar -->
     <nav #sidenav="ngbNav" ngbNav (navChange)="onSidebarNavChange($event)"
-         class="col-md-2 d-none d-md-block sidebar position-fixed px-0">
+         class="sidebar d-none d-md-block px-0">
       <div class="flex-column text-uppercase">
         <ng-container [ngbNavItem]="'logo'">
           <a [routerLink]="['/']">
@@ -13,24 +12,78 @@
         </ng-container>
         <hr>
 
+        <!-- Dashboard -->
         <ng-template ngFor let-r [ngForOf]="routes">
-          <ng-container *ngIf="isAllow(r.minRole)" [ngbNavItem]="r.navItem">
-            <a ngbNavLink routerLinkActive="active" [routerLink]="r.routerLink"><img class="link-icon mr-1" src="/static/svg/{{r.icon}}.svg" alt="" width="24" height=""><span class="link-text">{{r.label}}</span></a>
+          <ng-container *ngIf="r.section === 'top' && isAllow(r.minRole)" [ngbNavItem]="r.navItem">
+            <a ngbNavLink routerLinkActive="active" [routerLink]="r.routerLink">
+              <img class="link-icon mr-1" src="/static/svg/{{r.icon}}.svg" alt="" width="24" height="">
+              <span class="link-text">{{ r.label | translate }}</span>
+            </a>
           </ng-container>
         </ng-template>
 
         <hr />
-        <div class="logged-in-as nav-link disabled">Logged in as: {{getUsername()}}</div>
-        <ng-container *ngIf="!isMfaEnabled()" [ngbNavItem]="'mfasetup'">
-          <a ngbNavLink routerLinkActive="active" [routerLink]="['/settings/mfa']"><img class="mr-1" src="/static/svg/configuration.svg" alt="" width="24" height=""><span class="link-text">MFA Setup</span></a>
-        </ng-container>
-        <ng-container [ngbNavItem]="'logout'">
-          <a ngbNavLink routerLinkActive="active" [routerLink]="['/login']" (click)="logout()"><img class="mr-1" src="/static/svg/log-out.svg" alt="" width="24" height=""><span class="link-text">Logout</span></a>
-        </ng-container>
+        <div class="sidebar-section-title px-3 mb-1">MAIN MENU</div>
+        <!-- Main menu -->
+        <ng-template ngFor let-r [ngForOf]="routes">
+          <ng-container *ngIf="r.section === 'main' && isAllow(r.minRole)" [ngbNavItem]="r.navItem">
+            <a ngbNavLink routerLinkActive="active" [routerLink]="r.routerLink">
+              <img class="link-icon mr-1" src="/static/svg/{{r.icon}}.svg" alt="" width="24" height="">
+              <span class="link-text">{{ r.label | translate }}</span>
+            </a>
+          </ng-container>
+        </ng-template>
+
+        <hr />
+        <div class="sidebar-section-title px-3 mb-1">DEVELOPMENT</div>
+        <!-- Development -->
+        <ng-template ngFor let-r [ngForOf]="routes">
+          <ng-container *ngIf="r.section === 'dev' && isAllow(r.minRole)" [ngbNavItem]="r.navItem">
+            <a ngbNavLink routerLinkActive="active" [routerLink]="r.routerLink">
+              <img class="link-icon mr-1" src="/static/svg/{{r.icon}}.svg" alt="" width="24" height="">
+              <span class="link-text">{{ r.label | translate }}</span>
+            </a>
+          </ng-container>
+        </ng-template>
+
       </div>
     </nav>
     <!-- main content -->
-    <main role="main" class="ml-sm-auto col-md-10 col-lg-10 main-extended px-4 py-4">
+    <main role="main" class="main-extended px-4 py-4">
+      <div class="topbar d-flex justify-content-end align-items-center mb-3">
+        <div class="user-menu position-relative">
+          <button type="button"
+                  class="btn btn-outline-secondary rounded-circle p-2"
+                  (click)="toggleUserMenu()">
+            <img src="/static/svg/user.svg" alt="" width="20" height="20">
+          </button>
+          <div class="user-menu-dropdown" *ngIf="userMenuOpen">
+            <div class="user-menu-header">
+              Logged in as: <span class="font-weight-bold">{{getUsername()}}</span>
+            </div>
+            <div class="dropdown-divider my-2"></div>
+            <div class="user-menu-header mb-1">
+              Language:
+            </div>
+            <div class="btn-group mb-2" role="group" aria-label="Language">
+              <button type="button"
+                      class="btn btn-sm btn-outline-secondary"
+                      [class.active]="currentLang === 'en'"
+                      (click)="switchLanguage('en')">EN</button>
+              <button type="button"
+                      class="btn btn-sm btn-outline-secondary"
+                      [class.active]="currentLang === 'zh'"
+                      (click)="switchLanguage('zh')">中</button>
+            </div>
+            <div class="dropdown-divider my-2"></div>
+            <button type="button"
+                    class="btn btn-link dropdown-item px-0"
+                    (click)="logout()">
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
       <div *ngIf="error" class="mx-auto">
         <h2 class="pb-2"><img src="/static/svg/red-triangle.svg" class="mr-2" style="width: 1em; height: 1em">An error has occurred!</h2>
         <h6 class="mr-2 d-inline font-weight-bold">{{error}}</h6>

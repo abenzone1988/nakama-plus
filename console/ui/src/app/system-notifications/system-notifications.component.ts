@@ -27,6 +27,7 @@ import {NgbModal, NgbCalendar, NgbDateStruct, NgbTimeStruct, NgbDate, NgbAlert, 
 import {SystemNotificationsService} from './system-notifications.service';
 import {DeleteConfirmService} from '../shared/delete-confirm.service';
 import {CommonModule} from '@angular/common';
+import {TranslateModule} from '../shared/translate.module';
 
 import {ModalDismissReasons} from '@ng-bootstrap/ng-bootstrap';
 
@@ -41,7 +42,7 @@ interface NotificationResponse {
   templateUrl: './system-notifications.component.html',
   styleUrls: ['./system-notifications.component.scss'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NgbModule]
+  imports: [CommonModule, ReactiveFormsModule, NgbModule, TranslateModule]
 })
 export class SystemNotificationsComponent implements OnInit {
   private today: NgbDate;

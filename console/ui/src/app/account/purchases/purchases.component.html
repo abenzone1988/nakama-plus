@@ -1,6 +1,8 @@
 <ngb-alert [dismissible]="false" type="danger" *ngIf="error">
-  <img src="/src/static/svg/red-triangle.svg" alt="" width="16" height="" class="mr-2">
-  <h6 class="mr-2 d-inline font-weight-bold">Error while processing request: {{error}}</h6>
+  <img src="/static/svg/red-triangle.svg" alt="" width="16" height="" class="mr-2">
+  <h6 class="mr-2 d-inline font-weight-bold">
+    {{ 'Error while processing request:' | translate }} {{error}}
+  </h6>
 </ngb-alert>
 
 <div class="row no-gutters mb-4">
@@ -20,13 +22,13 @@
   <table class="table table-sm table-bordered table-hover">
     <thead class="thead-light">
     <tr>
-      <th>Transaction ID</th>
-      <th *ngIf="!userId">User ID</th>
-      <th>Product ID</th>
-      <th>Store</th>
-      <th style="width: 180px">Purchase Time</th>
-      <th style="width: 180px">Create Time</th>
-      <th style="width: 180px">Refund Time</th>
+      <th>{{ 'Transaction ID' | translate }}</th>
+      <th *ngIf="!userId">{{ 'User ID' | translate }}</th>
+      <th>{{ 'Product ID' | translate }}</th>
+      <th>{{ 'Store' | translate }}</th>
+      <th style="width: 180px">{{ 'Purchase Time' | translate }}</th>
+      <th style="width: 180px">{{ 'Create Time' | translate }}</th>
+      <th style="width: 180px">{{ 'Refund Time' | translate }}</th>
     </tr>
     </thead>
     <tbody>
@@ -49,7 +51,7 @@
       <tr *ngIf="purchasesRowsOpen[i]" class="open-row">
         <td colspan="6">
           <div class="p-2">
-            <div><small><b>Provider Response</b></small></div>
+            <div><small><b>{{ 'Provider Response' | translate }}</b></small></div>
             <div>
               <pre class="pre-wrap m-0 p-0"><small>{{p.provider_response}}</small></pre>
             </div>
@@ -57,7 +59,9 @@
         </td>
       </tr>
     </ng-template>
-    <tr *ngIf="purchases.length === 0"><td colspan="6" class="text-muted">No purchases were found.</td></tr>
+    <tr *ngIf="purchases.length === 0">
+      <td colspan="6" class="text-muted">{{ 'No purchases were found.' | translate }}</td>
+    </tr>
     </tbody>
   </table>
 </div>
