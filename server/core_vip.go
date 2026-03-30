@@ -196,6 +196,45 @@ func VipAccountRemove(ctx context.Context, logger *zap.Logger, db *sql.DB, userI
 	return nil
 }
 
+// VipAccountSetExpiry 设置VIP到期时间（用于延长/缩短）。
+func VipAccountSetExpiry(ctx context.Context, logger *zap.Logger, db *sql.DB, userID uuid.UUID, expiryTime time.Time) (*console.VipAccount, error) {
+	// 因为 vip_accounts.user_id 在库里是 UNIQUE，所以只会存在一条有效记录
+	var id string
+	var username string
+	var createTime time.Time
+
+	err := db.QueryRowContext(ctx, `
+		SELECT id, username, create_time
+		FROM vip_accounts
+		WHERE user_id = $1
+	`, userID).Scan(&id, &username, &createTime)
+	if err == sql.ErrNoRows {
+		return nil, ErrVipAccountNotFound
+	} else if err != nil {
+		logger.Error("查询VIP账户失败", zap.Error(err))
+		return nil, err
+	}
+
+	_, err = db.ExecContext(ctx, `
+		UPDATE vip_accounts
+		SET expiry_time = $1
+		WHERE user_id = $2
+	`, expiryTime, userID)
+	if err != nil {
+		logger.Error("更新VIP到期时间失败", zap.Error(err))
+		return nil, err
+	}
+
+	return &console.VipAccount{
+		Id:         id,
+		UserId:     userID.String(),
+		Username:   username,
+		CreateTime: timestamppb.New(createTime),
+		ExpiryTime: timestamppb.New(expiryTime),
+		IsActive:   expiryTime.After(time.Now()),
+	}, nil
+}
+
 // VipAccountCheck 检查用户VIP状态
 func VipAccountCheck(ctx context.Context, logger *zap.Logger, db *sql.DB, userID uuid.UUID) (*console.VipAccount, bool, error) {
 	var id, username string

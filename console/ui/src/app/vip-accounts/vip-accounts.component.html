@@ -82,6 +82,13 @@
       <td class="text-center">
         <button
           type="button"
+          class="btn btn-sm btn-outline-primary"
+          (click)="openEditVipExpiryModal(editVipExpiryModalContent, account)"
+          title="修改到期时间">
+          修改到期时间
+        </button>
+        <button
+          type="button"
           class="btn btn-sm btn-outline-danger"
           (click)="removeVipAccount($event, i, account)"
           *ngIf="isVipActive(account)"
@@ -104,7 +111,6 @@
   <div class="modal-header">
     <h4 class="modal-title" id="modal-basic-title">添加VIP用户</h4>
     <button type="button" class="btn-close" aria-label="关闭" (click)="modal.dismiss()" data-bs-dismiss="modal">
-      <span aria-hidden="true">&times;</span>
     </button>
   </div>
   <div class="modal-body">
@@ -159,7 +165,6 @@
   <div class="modal-header">
     <h4 class="modal-title" id="error-modal-title">操作失败详情</h4>
     <button type="button" class="btn-close" aria-label="关闭" (click)="modal.dismiss()" data-bs-dismiss="modal">
-      <span aria-hidden="true">&times;</span>
     </button>
   </div>
   <div class="modal-body">
@@ -172,5 +177,41 @@
   </div>
   <div class="modal-footer">
     <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">确定</button>
+  </div>
+</ng-template>
+
+<!-- 修改VIP到期时间模态框 -->
+<ng-template #editVipExpiryModalContent let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title" id="edit-vip-expiry-title">修改到期时间</h4>
+    <button type="button" class="btn-close" aria-label="关闭" (click)="modal.dismiss()" data-bs-dismiss="modal">
+    </button>
+  </div>
+  <div class="modal-body">
+    <form [formGroup]="editVipExpiryForm" (ngSubmit)="updateVipExpiryAccount()" role="form">
+      <div class="form-group">
+        <label for="edit_expiry_time">新的到期时间 <span class="text-danger">*</span></label>
+        <input
+          type="datetime-local"
+          class="form-control"
+          id="edit_expiry_time"
+          formControlName="expiry_time">
+        <small class="form-text text-muted">将直接把 VIP 到期时间设置为你选择的时间。</small>
+      </div>
+
+      <ngb-alert [dismissible]="false" type="danger" *ngIf="error">
+        <img src="/static/svg/red-triangle.svg" alt="" width="16" height="" class="mr-2">
+        <span>{{error}}</span>
+      </ngb-alert>
+
+      <ngb-alert [dismissible]="false" type="success" *ngIf="success">
+        <img src="/static/svg/green-tick.svg" alt="" width="16" height="" class="mr-2">
+        <span>{{success}}</span>
+      </ngb-alert>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">取消</button>
+    <button type="button" class="btn btn-primary" (click)="updateVipExpiryAccount()" [disabled]="editVipExpiryForm.invalid">保存</button>
   </div>
 </ng-template>

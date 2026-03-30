@@ -845,6 +845,11 @@ export interface SendNotificationRequest {
   user_ids?:Array<string>
 }
 
+export interface SetVipExpiryAccountRequest {
+  // New expiry time
+  expiry_time?:string
+}
+
 /** A single setting. */
 export interface Setting {
   // Name identifier.
@@ -2824,6 +2829,14 @@ export class ConsoleService {
     const urlPath = `/v2/console/vip/account/${user_id}`;
     let params = new HttpParams({ encoder: new CustomHttpParamEncoder() });
     return this.httpClient.delete(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
+  }
+
+  /** Set VIP expiry time. */
+  setVipExpiryAccount(auth_token: string, user_id: string, body: SetVipExpiryAccountRequest): Observable<VipAccount> {
+    const encodedUser_id = encodeURIComponent(String(user_id))
+    const urlPath = `/v2/console/vip/account/${user_id}/expiry`;
+    let params = new HttpParams({ encoder: new CustomHttpParamEncoder() });
+    return this.httpClient.put<VipAccount>(this.config.host + urlPath, body, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
   }
 
   /** List VIP accounts */

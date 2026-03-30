@@ -497,8 +497,19 @@ func adjustSchemaData(schema *Swagger, prefixesToRemove []string, interfacesToRe
 		adjustProps(def.Properties)
 		// Rename Console*Body definitions to *Request so frontend types match proto names.
 		// protoc-gen-openapiv2 creates Console{Op}Body when a message has both path and body fields.
-		if strings.HasPrefix(name, "Console") && strings.HasSuffix(name, "Body") {
-			newName := strings.TrimSuffix(strings.TrimPrefix(name, "Console"), "Body") + "Request"
+		//
+		// NOTE: swagger definition keys may include prefixes we remove later (e.g. "consoleConsoleWriteStorageObjectBody").
+		// We must evaluate the rename rule after stripping those prefixes, otherwise the rename may not trigger and
+		// frontend types will fluctuate between "*Request" and "Console*Body" across regenerations.
+		strippedName := name
+		for _, prefix := range prefixesToRemove {
+			if strings.HasPrefix(strippedName, prefix) {
+				strippedName = strings.TrimPrefix(strippedName, prefix)
+				break
+			}
+		}
+		if strings.HasPrefix(strippedName, "Console") && strings.HasSuffix(strippedName, "Body") {
+			newName := strings.TrimSuffix(strings.TrimPrefix(strippedName, "Console"), "Body") + "Request"
 			delete(schema.Definitions, name)
 			schema.Definitions[newName] = def
 			continue

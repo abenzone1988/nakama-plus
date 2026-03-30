@@ -4248,6 +4248,46 @@
         ]
       }
     },
+    "/v2/console/vip/account/{user_id}/expiry": {
+      "put": {
+        "summary": "Set VIP expiry time.",
+        "operationId": "Console_SetVipExpiryAccount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/consoleVipAccount"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/googlerpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "user_id",
+            "description": "User ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ConsoleSetVipExpiryAccountBody"
+            }
+          }
+        ],
+        "tags": [
+          "Console"
+        ]
+      }
+    },
     "/v2/console/vip/accounts": {
       "get": {
         "summary": "List VIP accounts",
@@ -4468,6 +4508,16 @@
         }
       },
       "description": "Make a user's mfa required or not."
+    },
+    "ConsoleSetVipExpiryAccountBody": {
+      "type": "object",
+      "properties": {
+        "expiry_time": {
+          "type": "string",
+          "format": "date-time",
+          "title": "New expiry time"
+        }
+      }
     },
     "ConsoleUnlinkDeviceBody": {
       "type": "object",

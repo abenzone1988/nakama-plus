@@ -71,6 +71,7 @@ const (
 	Console_ListVipAccounts_FullMethodName              = "/nakama.console.Console/ListVipAccounts"
 	Console_RemoveVipAccount_FullMethodName             = "/nakama.console.Console/RemoveVipAccount"
 	Console_CheckVipStatus_FullMethodName               = "/nakama.console.Console/CheckVipStatus"
+	Console_SetVipExpiryAccount_FullMethodName          = "/nakama.console.Console/SetVipExpiryAccount"
 	Console_DeleteAccounts_FullMethodName               = "/nakama.console.Console/DeleteAccounts"
 	Console_DeleteLeaderboard_FullMethodName            = "/nakama.console.Console/DeleteLeaderboard"
 	Console_DeleteLeaderboardRecord_FullMethodName      = "/nakama.console.Console/DeleteLeaderboardRecord"
@@ -218,6 +219,8 @@ type ConsoleClient interface {
 	RemoveVipAccount(ctx context.Context, in *VipAccountId, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// Check if user is VIP
 	CheckVipStatus(ctx context.Context, in *VipAccountId, opts ...grpc.CallOption) (*VipStatusResponse, error)
+	// Set VIP expiry time.
+	SetVipExpiryAccount(ctx context.Context, in *SetVipExpiryAccountRequest, opts ...grpc.CallOption) (*VipAccount, error)
 	// Delete (non-recorded) all user accounts.
 	DeleteAccounts(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// Delete leaderboard
@@ -705,6 +708,16 @@ func (c *consoleClient) CheckVipStatus(ctx context.Context, in *VipAccountId, op
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(VipStatusResponse)
 	err := c.cc.Invoke(ctx, Console_CheckVipStatus_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *consoleClient) SetVipExpiryAccount(ctx context.Context, in *SetVipExpiryAccountRequest, opts ...grpc.CallOption) (*VipAccount, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(VipAccount)
+	err := c.cc.Invoke(ctx, Console_SetVipExpiryAccount_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1567,6 +1580,8 @@ type ConsoleServer interface {
 	RemoveVipAccount(context.Context, *VipAccountId) (*emptypb.Empty, error)
 	// Check if user is VIP
 	CheckVipStatus(context.Context, *VipAccountId) (*VipStatusResponse, error)
+	// Set VIP expiry time.
+	SetVipExpiryAccount(context.Context, *SetVipExpiryAccountRequest) (*VipAccount, error)
 	// Delete (non-recorded) all user accounts.
 	DeleteAccounts(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	// Delete leaderboard
@@ -1828,6 +1843,9 @@ func (UnimplementedConsoleServer) RemoveVipAccount(context.Context, *VipAccountI
 }
 func (UnimplementedConsoleServer) CheckVipStatus(context.Context, *VipAccountId) (*VipStatusResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckVipStatus not implemented")
+}
+func (UnimplementedConsoleServer) SetVipExpiryAccount(context.Context, *SetVipExpiryAccountRequest) (*VipAccount, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetVipExpiryAccount not implemented")
 }
 func (UnimplementedConsoleServer) DeleteAccounts(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteAccounts not implemented")
@@ -2677,6 +2695,24 @@ func _Console_CheckVipStatus_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConsoleServer).CheckVipStatus(ctx, req.(*VipAccountId))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Console_SetVipExpiryAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetVipExpiryAccountRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConsoleServer).SetVipExpiryAccount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Console_SetVipExpiryAccount_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConsoleServer).SetVipExpiryAccount(ctx, req.(*SetVipExpiryAccountRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -4241,6 +4277,10 @@ var Console_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CheckVipStatus",
 			Handler:    _Console_CheckVipStatus_Handler,
+		},
+		{
+			MethodName: "SetVipExpiryAccount",
+			Handler:    _Console_SetVipExpiryAccount_Handler,
 		},
 		{
 			MethodName: "DeleteAccounts",

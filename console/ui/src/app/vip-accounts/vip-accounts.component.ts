@@ -14,7 +14,7 @@
 
 import {Component, Injectable, OnInit, OnDestroy, ViewChild, TemplateRef} from '@angular/core';
 import {ActivatedRoute, ActivatedRouteSnapshot, Resolve, Router, RouterStateSnapshot} from '@angular/router';
-import {VipAccountList, VipAccount, ConsoleService, UserRole, AddVipAccountRequest, AddVipAccountResponse, VipAccountError} from '../console.service';
+import {VipAccountList, VipAccount, ConsoleService, UserRole, AddVipAccountRequest, AddVipAccountResponse, VipAccountError, SetVipExpiryAccountRequest} from '../console.service';
 import {Observable, Subject} from 'rxjs';
 import {UntypedFormBuilder, UntypedFormGroup, Validators, ReactiveFormsModule} from '@angular/forms';
 import {AuthenticationService} from '../authentication.service';
@@ -38,6 +38,8 @@ export class VipAccountsComponent implements OnInit, OnDestroy {
   public prevCursor = '';
   public searchForm: UntypedFormGroup;
   public addVipForm: UntypedFormGroup;
+  public editVipExpiryForm: UntypedFormGroup;
+  public selectedVipForExpiry: VipAccount | null = null;
   public querySubject: Subject<void>;
   public ongoingQuery = false;
   public showAddVipModal = false;
@@ -65,6 +67,10 @@ export class VipAccountsComponent implements OnInit, OnDestroy {
     this.addVipForm = this.formBuilder.group({
       usernames: ['', Validators.required], // 改为支持多个用户名输入
       expire_time: [''],
+    });
+
+    this.editVipExpiryForm = this.formBuilder.group({
+      expiry_time: ['', Validators.required],
     });
 
     const qp = this.route.snapshot.queryParamMap;
@@ -261,7 +267,63 @@ export class VipAccountsComponent implements OnInit, OnDestroy {
           event.target.disabled = false;
         }, );
       }
-    ,null, "确认删除", "确认删除vip权限？");
+    ,undefined, "确认删除", "确认删除vip权限？");
+  }
+
+  openEditVipExpiryModal(content: any, account: VipAccount): void {
+    this.selectedVipForExpiry = account;
+    this.error = '';
+    this.success = '';
+    this.editVipExpiryForm.reset();
+
+    this.editVipExpiryForm.patchValue({
+      expiry_time: this.toDateTimeLocalValue(account.expiry_time),
+    });
+
+    this.modalService.open(content, { ariaLabelledBy: 'edit-vip-expiry-title' });
+  }
+
+  updateVipExpiryAccount(): void {
+    if (this.editVipExpiryForm.invalid || !this.selectedVipForExpiry?.user_id) {
+      return;
+    }
+
+    const userId = this.selectedVipForExpiry.user_id;
+    const expiryLocalValue = this.editVipExpiryFormControls.expiry_time.value as string;
+    const expiryIso = new Date(expiryLocalValue).toISOString();
+
+    const request: SetVipExpiryAccountRequest = {
+      expiry_time: expiryIso,
+    };
+
+    this.consoleService.setVipExpiryAccount('', userId, request).subscribe(
+      (vip: VipAccount) => {
+        const idx = this.vipAccounts.findIndex(a => a.user_id === userId);
+        if (idx >= 0) {
+          this.vipAccounts[idx].expiry_time = vip.expiry_time;
+          this.vipAccounts[idx].username = vip.username || this.vipAccounts[idx].username;
+          this.vipAccounts[idx].is_active = vip.is_active;
+        }
+
+        this.success = 'VIP到期时间已更新';
+        this.error = '';
+        this.modalService.dismissAll();
+      },
+      (err) => {
+        this.error = err;
+        this.success = '';
+      }
+    );
+  }
+
+  private toDateTimeLocalValue(dateString: string | undefined): string {
+    if (!dateString) return '';
+    const d = new Date(dateString);
+    if (Number.isNaN(d.getTime())) return '';
+
+    // datetime-local 需要的是“本地时间”格式（没有时区）
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0, 16);
   }
 
   viewAccount(account: VipAccount): void {
@@ -286,6 +348,10 @@ export class VipAccountsComponent implements OnInit, OnDestroy {
 
   get addVipFormControls(): any {
     return this.addVipForm.controls;
+  }
+
+  get editVipExpiryFormControls(): any {
+    return this.editVipExpiryForm.controls;
   }
 }
 

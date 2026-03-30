@@ -165,3 +165,32 @@ func (s *ConsoleServer) CheckVipStatus(ctx context.Context, in *console.VipAccou
 
 	return response, nil
 }
+
+func (s *ConsoleServer) SetVipExpiryAccount(ctx context.Context, in *console.SetVipExpiryAccountRequest) (*console.VipAccount, error) {
+	// 参数验证
+	if in.GetUserId() == "" {
+		return nil, status.Error(codes.InvalidArgument, "用户ID不能为空")
+	}
+	if in.GetExpiryTime() == nil {
+		return nil, status.Error(codes.InvalidArgument, "到期时间不能为空")
+	}
+
+	// 验证用户ID格式
+	userID, err := uuid.FromString(in.GetUserId())
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "用户ID格式无效")
+	}
+
+	expiryTime := in.GetExpiryTime().AsTime()
+
+	vipAccount, err := VipAccountSetExpiry(ctx, s.logger, s.db, userID, expiryTime)
+	if err != nil {
+		if err == ErrVipAccountNotFound {
+			return nil, status.Error(codes.NotFound, "VIP账户不存在")
+		}
+		s.logger.Error("设置VIP到期时间失败", zap.Error(err))
+		return nil, status.Error(codes.Internal, "设置VIP到期时间失败")
+	}
+
+	return vipAccount, nil
+}

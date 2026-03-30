@@ -281,6 +281,14 @@
   rpc CheckVipStatus (VipAccountId) returns (VipStatusResponse) {
     option (google.api.http).get = "/v2/console/vip/status/{user_id}";
   }
+
+  // Set VIP expiry time.
+  rpc SetVipExpiryAccount (SetVipExpiryAccountRequest) returns (VipAccount) {
+    option (google.api.http) = {
+      put: "/v2/console/vip/account/{user_id}/expiry"
+      body: "*"
+    };
+  }
    // Delete (non-recorded) all user accounts.
    rpc DeleteAccounts (google.protobuf.Empty) returns (google.protobuf.Empty) {
      option (google.api.http).delete = "/v2/console/account";
@@ -2579,6 +2587,14 @@ message VipAccountList {
 message VipAccountId {
   // User ID
   string user_id = 1;
+}
+
+message SetVipExpiryAccountRequest {
+  // User ID
+  string user_id = 1;
+
+  // New expiry time
+  google.protobuf.Timestamp expiry_time = 2;
 }
 
 message VipStatusResponse {

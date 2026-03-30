@@ -491,6 +491,11 @@ func consoleAuditLogInterceptor(logger *zap.Logger, db *sql.DB) func(context.Con
 				resource = console.AclResources_VIP_MANAGER
 				metadata, mErr = auditLogMarshaller.Marshal(msg)
 				log = "vip account removed"
+			case "/nakama.console.Console/SetVipExpiryAccount":
+				action = console.AuditLogAction_UPDATE
+				resource = console.AclResources_VIP_MANAGER
+				metadata, mErr = auditLogMarshaller.Marshal(msg)
+				log = "vip account expiry updated"
 			}
 
 			if mErr != nil {
