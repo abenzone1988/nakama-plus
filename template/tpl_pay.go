@@ -9,9 +9,10 @@ import (
 )
 
 type TplPay struct {
-	ID          string `json:"id"`
-	Money       string `json:"money"`
-	ProductName string `json:"productName"`
+	ID           string `json:"id"`
+	Money        string `json:"money"`
+	ProductName  string `json:"productName"`
+	IOSProductID string `json:"iOSProductId"`
 }
 
 // ReadOnlyTplPaySlice 只读TplPay切片接口

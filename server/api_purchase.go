@@ -19,6 +19,7 @@ import (
 
 	"github.com/doublemo/nakama-common/api"
 	"github.com/doublemo/nakama-plus/v3/game"
+	"github.com/doublemo/nakama-plus/v3/template"
 	"github.com/gofrs/uuid/v5"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -99,6 +100,32 @@ func (s *ApiServer) ValidatePurchaseAppleV2(ctx context.Context, in *game.Valida
 	validation, err := ValidatePurchaseAppleServerAPI(ctx, logger, s.db, userID, s.config.GetIAP().Apple, in.GetTransactionId(), in.GetProductId(), in.GetEnvironment(), persist)
 	if err != nil {
 		return nil, err
+	}
+
+	// 发货：仅在 persist=true 时可可靠幂等（SeenBefore）。
+	if persist && validation != nil && len(validation.ValidatedPurchases) > 0 {
+		for _, vp := range validation.ValidatedPurchases {
+			if vp == nil || vp.SeenBefore {
+				continue
+			}
+
+			// Apple 返回的 productId -> 映射到 TplPay.ID（内部支付ID）
+			iosProductID := vp.ProductId
+			tplPays := s.templateManager.GetTplPay().FindByFilter(func(tp template.TplPay) bool {
+				return tp.IOSProductID == iosProductID
+			})
+			if tplPays == nil || tplPays.Len() == 0 {
+				logger.Warn("未找到对应的 iOSProductId 支付配置", zap.String("ios_product_id", iosProductID), zap.String("transaction_id", vp.TransactionId))
+				return nil, status.Error(codes.FailedPrecondition, "iOS product is not configured.")
+			}
+			tplPay := tplPays.Get(0)
+
+			// 复用现有发货逻辑：productID 使用内部支付ID（TplPay.ID）
+			if err := s.deliverProductToUser(ctx, userID, tplPay.ID, tplPay.Money, nil); err != nil {
+				logger.Error("Apple IAP 发货失败", zap.Error(err), zap.String("user_id", userID.String()), zap.String("pay_id", tplPay.ID), zap.String("ios_product_id", iosProductID), zap.String("transaction_id", vp.TransactionId))
+				return nil, status.Error(codes.Internal, "Purchase validated but delivery failed.")
+			}
+		}
 	}
 
 	return validation, nil
