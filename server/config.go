@@ -1419,6 +1419,14 @@ var _ runtime.IAPAppleConfig = (*IAPAppleConfig)(nil)
 type IAPAppleConfig struct {
 	SharedPassword          string `yaml:"shared_password" json:"shared_password" usage:"Your Apple Store App IAP shared password. Only necessary for validation of auto-renewable subscriptions."`
 	NotificationsEndpointId string `yaml:"notifications_endpoint_id" json:"notifications_endpoint_id" usage:"The callback endpoint identifier for Apple Store subscription notifications."`
+
+	// App Store Server API (recommended verification path, v2).
+	// See https://developer.apple.com/documentation/appstoreserverapi/generating-json-web-tokens-for-api-requests
+	ServerAPIKeyID          string `yaml:"server_api_key_id" json:"server_api_key_id" usage:"App Store Connect API Key ID (kid) for App Store Server API JWT."`
+	ServerAPIIssuerID       string `yaml:"server_api_issuer_id" json:"server_api_issuer_id" usage:"App Store Connect Issuer ID (iss) for App Store Server API JWT."`
+	ServerAPIBundleID       string `yaml:"server_api_bundle_id" json:"server_api_bundle_id" usage:"Bundle ID (bid) claim for App Store Server API JWT."`
+	ServerAPIPrivateKey     string `yaml:"server_api_private_key" json:"server_api_private_key" usage:"App Store Connect API private key (.p8) contents in PEM format for App Store Server API JWT."`
+	ServerAPIPrivateKeyFile string `yaml:"server_api_private_key_file" json:"server_api_private_key_file" usage:"Path to App Store Connect API private key (.p8) PEM file."`
 }
 
 func (iap IAPAppleConfig) GetSharedPassword() string {

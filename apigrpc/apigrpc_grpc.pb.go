@@ -115,6 +115,7 @@ const (
 	Nakama_UpdateAccount_FullMethodName                     = "/nakama.api.Nakama/UpdateAccount"
 	Nakama_UpdateGroup_FullMethodName                       = "/nakama.api.Nakama/UpdateGroup"
 	Nakama_ValidatePurchaseApple_FullMethodName             = "/nakama.api.Nakama/ValidatePurchaseApple"
+	Nakama_ValidatePurchaseAppleV2_FullMethodName           = "/nakama.api.Nakama/ValidatePurchaseAppleV2"
 	Nakama_ValidateSubscriptionApple_FullMethodName         = "/nakama.api.Nakama/ValidateSubscriptionApple"
 	Nakama_ValidatePurchaseGoogle_FullMethodName            = "/nakama.api.Nakama/ValidatePurchaseGoogle"
 	Nakama_ValidateSubscriptionGoogle_FullMethodName        = "/nakama.api.Nakama/ValidateSubscriptionGoogle"
@@ -362,6 +363,8 @@ type NakamaClient interface {
 	UpdateGroup(ctx context.Context, in *api.UpdateGroupRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// Validate Apple IAP Receipt
 	ValidatePurchaseApple(ctx context.Context, in *api.ValidatePurchaseAppleRequest, opts ...grpc.CallOption) (*api.ValidatePurchaseResponse, error)
+	// Validate Apple IAP Receipt (App Store Server API, v2)
+	ValidatePurchaseAppleV2(ctx context.Context, in *game.ValidatePurchaseAppleV2Request, opts ...grpc.CallOption) (*api.ValidatePurchaseResponse, error)
 	// Validate Apple Subscription Receipt
 	ValidateSubscriptionApple(ctx context.Context, in *api.ValidateSubscriptionAppleRequest, opts ...grpc.CallOption) (*api.ValidateSubscriptionResponse, error)
 	// Validate Google IAP Receipt
@@ -1291,6 +1294,16 @@ func (c *nakamaClient) ValidatePurchaseApple(ctx context.Context, in *api.Valida
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(api.ValidatePurchaseResponse)
 	err := c.cc.Invoke(ctx, Nakama_ValidatePurchaseApple_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *nakamaClient) ValidatePurchaseAppleV2(ctx context.Context, in *game.ValidatePurchaseAppleV2Request, opts ...grpc.CallOption) (*api.ValidatePurchaseResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(api.ValidatePurchaseResponse)
+	err := c.cc.Invoke(ctx, Nakama_ValidatePurchaseAppleV2_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -2316,6 +2329,8 @@ type NakamaServer interface {
 	UpdateGroup(context.Context, *api.UpdateGroupRequest) (*emptypb.Empty, error)
 	// Validate Apple IAP Receipt
 	ValidatePurchaseApple(context.Context, *api.ValidatePurchaseAppleRequest) (*api.ValidatePurchaseResponse, error)
+	// Validate Apple IAP Receipt (App Store Server API, v2)
+	ValidatePurchaseAppleV2(context.Context, *game.ValidatePurchaseAppleV2Request) (*api.ValidatePurchaseResponse, error)
 	// Validate Apple Subscription Receipt
 	ValidateSubscriptionApple(context.Context, *api.ValidateSubscriptionAppleRequest) (*api.ValidateSubscriptionResponse, error)
 	// Validate Google IAP Receipt
@@ -2718,6 +2733,9 @@ func (UnimplementedNakamaServer) UpdateGroup(context.Context, *api.UpdateGroupRe
 }
 func (UnimplementedNakamaServer) ValidatePurchaseApple(context.Context, *api.ValidatePurchaseAppleRequest) (*api.ValidatePurchaseResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ValidatePurchaseApple not implemented")
+}
+func (UnimplementedNakamaServer) ValidatePurchaseAppleV2(context.Context, *game.ValidatePurchaseAppleV2Request) (*api.ValidatePurchaseResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ValidatePurchaseAppleV2 not implemented")
 }
 func (UnimplementedNakamaServer) ValidateSubscriptionApple(context.Context, *api.ValidateSubscriptionAppleRequest) (*api.ValidateSubscriptionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ValidateSubscriptionApple not implemented")
@@ -4362,6 +4380,24 @@ func _Nakama_ValidatePurchaseApple_Handler(srv interface{}, ctx context.Context,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(NakamaServer).ValidatePurchaseApple(ctx, req.(*api.ValidatePurchaseAppleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Nakama_ValidatePurchaseAppleV2_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(game.ValidatePurchaseAppleV2Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NakamaServer).ValidatePurchaseAppleV2(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Nakama_ValidatePurchaseAppleV2_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NakamaServer).ValidatePurchaseAppleV2(ctx, req.(*game.ValidatePurchaseAppleV2Request))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -6224,6 +6260,10 @@ var Nakama_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ValidatePurchaseApple",
 			Handler:    _Nakama_ValidatePurchaseApple_Handler,
+		},
+		{
+			MethodName: "ValidatePurchaseAppleV2",
+			Handler:    _Nakama_ValidatePurchaseAppleV2_Handler,
 		},
 		{
 			MethodName: "ValidateSubscriptionApple",

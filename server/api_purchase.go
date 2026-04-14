@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/doublemo/nakama-common/api"
+	"github.com/doublemo/nakama-plus/v3/game"
 	"github.com/gofrs/uuid/v5"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -80,6 +81,27 @@ func (s *ApiServer) ValidatePurchaseApple(ctx context.Context, in *api.ValidateP
 	}
 
 	return validation, err
+}
+
+func (s *ApiServer) ValidatePurchaseAppleV2(ctx context.Context, in *game.ValidatePurchaseAppleV2Request) (*api.ValidatePurchaseResponse, error) {
+	userID := ctx.Value(ctxUserIDKey{}).(uuid.UUID)
+	logger, _ := LoggerWithTraceId(ctx, s.logger)
+
+	if len(in.GetTransactionId()) < 1 {
+		return nil, status.Error(codes.InvalidArgument, "TransactionId cannot be empty.")
+	}
+
+	persist := true
+	if in.Persist != nil {
+		persist = in.Persist.GetValue()
+	}
+
+	validation, err := ValidatePurchaseAppleServerAPI(ctx, logger, s.db, userID, s.config.GetIAP().Apple, in.GetTransactionId(), in.GetProductId(), in.GetEnvironment(), persist)
+	if err != nil {
+		return nil, err
+	}
+
+	return validation, nil
 }
 
 func (s *ApiServer) ValidatePurchaseGoogle(ctx context.Context, in *api.ValidatePurchaseGoogleRequest) (*api.ValidatePurchaseResponse, error) {

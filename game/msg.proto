@@ -3,6 +3,7 @@ syntax = "proto3";
 package game;
 
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
 
 option go_package = "github.com/doublemo/nakama-plus/v3/game";
 
@@ -14,6 +15,19 @@ option csharp_namespace = "Game.Protobuf";
 
 message RedeemGiftRequest{
   string gift_code = 1;
+}
+
+// Apple IAP 校验（App Store Server API v2）
+// 客户端只需要上报 transaction_id（StoreKit2/SDK 返回的交易号）。
+message ValidatePurchaseAppleV2Request {
+  // Apple transaction identifier.
+  string transaction_id = 1;
+  // Optional: expected product id for server-side cross-check.
+  string product_id = 2;
+  // Persist the purchase (default true on server if unset).
+  google.protobuf.BoolValue persist = 3;
+  // Optional: client-side environment hint, e.g. "Sandbox" or "Production".
+  string environment = 4;
 }
 
 
