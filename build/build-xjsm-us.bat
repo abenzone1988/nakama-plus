@@ -132,7 +132,27 @@ echo Building Nakama main image...
 echo Dockerfile: ./Dockerfile
 echo Image tag: %FULL_IMAGE_NAME%
 
-set BUILD_ARGS=buildx build .. --platform %PLATFORM% --file ./Dockerfile --build-arg COMMIT="%COMMIT%" --build-arg VERSION="%VERSION%" --cache-from type=local,src=C:\tmp\.buildx-cache --cache-to type=local,dest=C:\tmp\.buildx-cache-new,mode=max -t %FULL_IMAGE_NAME%:%VERSION% -t %FULL_IMAGE_NAME%:latest
+REM Build base images first (so main image build skips apt upgrades).
+set BUILDER_BASE_IMAGE=%FULL_IMAGE_NAME%-builder-base:bookworm-go1.25
+set RUNTIME_BASE_IMAGE=%FULL_IMAGE_NAME%-runtime-base:bookworm
+
+echo.
+echo Building builder base image: %BUILDER_BASE_IMAGE%
+docker buildx build .. --platform %PLATFORM% --file ./Dockerfile.builder-base --cache-from type=local,src=C:\tmp\.buildx-cache --cache-to type=local,dest=C:\tmp\.buildx-cache-new,mode=max -t %BUILDER_BASE_IMAGE% --push
+if errorlevel 1 (
+    echo [ERROR] Builder base image build failed
+    exit /b 1
+)
+
+echo.
+echo Building runtime base image: %RUNTIME_BASE_IMAGE%
+docker buildx build .. --platform %PLATFORM% --file ./Dockerfile.runtime-base --cache-from type=local,src=C:\tmp\.buildx-cache --cache-to type=local,dest=C:\tmp\.buildx-cache-new,mode=max -t %RUNTIME_BASE_IMAGE% --push
+if errorlevel 1 (
+    echo [ERROR] Runtime base image build failed
+    exit /b 1
+)
+
+set BUILD_ARGS=buildx build .. --platform %PLATFORM% --file ./Dockerfile --build-arg COMMIT="%COMMIT%" --build-arg VERSION="%VERSION%" --build-arg BUILDER_BASE_IMAGE="%BUILDER_BASE_IMAGE%" --build-arg RUNTIME_BASE_IMAGE="%RUNTIME_BASE_IMAGE%" --cache-from type=local,src=C:\tmp\.buildx-cache --cache-to type=local,dest=C:\tmp\.buildx-cache-new,mode=max -t %FULL_IMAGE_NAME%:%VERSION% -t %FULL_IMAGE_NAME%:latest
 
 if "%NO_PUSH%"=="false" (
     set BUILD_ARGS=%BUILD_ARGS% --push

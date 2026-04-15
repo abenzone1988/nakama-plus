@@ -15,7 +15,10 @@
 # docker build . --build-arg commit="$(git rev-parse --short HEAD)" --build-arg version=v2.1.1 -t heroiclabs/nakama:2.1.1
 # docker build . --build-arg commit="$(git rev-parse --short HEAD)" --build-arg version="$(git rev-parse --short HEAD)" -t heroiclabs/nakama-prerelease:"$(git rev-parse --short HEAD)"
 
-FROM golang:1.25.0-bookworm AS builder
+ARG BUILDER_BASE_IMAGE=golang:1.25.0-bookworm
+ARG RUNTIME_BASE_IMAGE=debian:bookworm-slim
+
+FROM ${BUILDER_BASE_IMAGE} AS builder
 
 ARG COMMIT
 ARG VERSION
@@ -28,14 +31,15 @@ ENV CGO_ENABLED=1
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
-    apt-get -y upgrade && \
-    apt-get install -y --no-install-recommends ca-certificates gcc libc6-dev
+    apt-get install -y --no-install-recommends ca-certificates gcc libc6-dev && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /go/build/nakama
 COPY . .
 RUN go build -o /go/build-out/nakama -trimpath -mod=vendor -gcflags "-trimpath $PWD" -asmflags "-trimpath $PWD" -ldflags "-s -w -X main.version=$VERSION -X main.commitID=$COMMIT"
 
-FROM debian:bookworm-slim
+FROM ${RUNTIME_BASE_IMAGE}
 
 ARG VERSION
 
@@ -49,7 +53,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN mkdir -p /nakama/data/modules && \
     apt-get update && \
-    apt-get -y upgrade && \
     apt-get install -y --no-install-recommends ca-certificates tzdata iproute2 tini && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*

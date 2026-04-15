@@ -64,6 +64,12 @@ func (s *ConsoleServer) GetConfig(ctx context.Context, in *emptypb.Empty) (*cons
 	if cfg.GetIAP().Apple.SharedPassword != "" {
 		cfg.GetIAP().Apple.SharedPassword = ObfuscationString
 	}
+	if cfg.GetIAP().Apple.ServerAPIPrivateKey != "" {
+		cfg.GetIAP().Apple.ServerAPIPrivateKey = ObfuscationString
+	}
+	if cfg.GetIAP().Apple.ServerAPIPrivateKeyFile != "" {
+		cfg.GetIAP().Apple.ServerAPIPrivateKeyFile = ObfuscationString
+	}
 	if cfg.GetIAP().Huawei.ClientSecret != "" {
 		cfg.GetIAP().Huawei.ClientSecret = ObfuscationString
 	}
