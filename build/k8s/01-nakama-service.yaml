@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nakama-headless
+  namespace: starhold
+  labels:
+    app: nakama
+spec:
+  clusterIP: None
+  selector:
+    app: nakama
+  ports:
+    - name: nakama-socket
+      port: 7350
+      targetPort: 7350
+      protocol: TCP
+    - name: nakama-console
+      port: 7351
+      targetPort: 7351
+      protocol: TCP
+    - name: nakama-grpc
+      port: 7340
+      targetPort: 7340
+      protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nakama
+  namespace: starhold
+  labels:
+    app: nakama
+spec:
+  selector:
+    app: nakama
+  ports:
+    - name: nakama-socket
+      port: 7350
+      targetPort: 7350
+      protocol: TCP
+    - name: nakama-console
+      port: 7351
+      targetPort: 7351
+      protocol: TCP
+    - name: nakama-grpc
+      port: 7340
+      targetPort: 7340
+      protocol: TCP
+  type: ClusterIP

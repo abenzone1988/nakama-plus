@@ -81,13 +81,13 @@ iap:
     client_id: "id"
     client_secret: "secret"
 
-#cluster:
-#  gossip_bindaddr: "0.0.0.0"
-#  gossip_bindport: 7335
-#  gossip_advertise_addr: "192.168.102.8"
-#  etcd:
-#    endpoints:
-#      - "0.0.0.0:2379"
+cluster:
+  gossip_bindaddr: "0.0.0.0"
+  gossip_bindport: 7335
+  gossip_advertise_addr: "192.168.102.8" # 跨主机部署时必填：对端可访问的本机 IP
+  etcd:
+    endpoints:
+      - "0.0.0.0:2379"
 
 
   grpc:

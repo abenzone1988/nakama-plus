@@ -185,6 +185,26 @@ func (s *ConsoleServer) DeleteWalletLedger(ctx context.Context, in *console.Dele
 	return &emptypb.Empty{}, nil
 }
 
+func (s *ConsoleServer) DeleteInventoryLedger(ctx context.Context, in *console.DeleteInventoryLedgerRequest) (*emptypb.Empty, error) {
+	userID, err := uuid.FromString(in.Id)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "Requires a valid user ID.")
+	}
+	inventoryID, err := uuid.FromString(in.InventoryId)
+	if err != nil || inventoryID == uuid.Nil {
+		return nil, status.Error(codes.InvalidArgument, "Requires a valid inventory ledger item ID.")
+	}
+
+	_, err = s.db.ExecContext(ctx, "DELETE FROM inventory_ledger WHERE id = $1 AND user_id = $2", inventoryID, userID)
+	if err != nil {
+		s.logger.Error("Error deleting from inventory ledger.", zap.String("id", inventoryID.String()), zap.String("user_id", userID.String()), zap.Error(err))
+		return nil, status.Error(codes.Internal, "An error occurred while trying to remove the user's inventory ledger item.")
+	}
+
+	return &emptypb.Empty{}, nil
+}
+
+
 func (s *ConsoleServer) ExportAccount(ctx context.Context, in *console.AccountId) (*console.AccountExport, error) {
 	logger, _ := LoggerWithTraceId(ctx, s.logger)
 	userID, err := uuid.FromString(in.Id)
@@ -788,6 +808,15 @@ func (s *ConsoleServer) UpdateAccount(ctx context.Context, in *console.UpdateAcc
 		}
 		params = append(params, v.Value)
 		statements = append(statements, "wallet = $"+strconv.Itoa(len(params)))
+	}
+
+	if v := in.Inventory; v != nil && v.Value != "" {
+		var inventoryMap map[string]interface{}
+		if err := json.Unmarshal([]byte(v.Value), &inventoryMap); err != nil {
+			return nil, status.Error(codes.InvalidArgument, "Inventory must be a valid JSON object.")
+		}
+		params = append(params, v.Value)
+		statements = append(statements, "inventory = $"+strconv.Itoa(len(params)))
 	}
 
 	for oldDeviceID, newDeviceID := range in.DeviceIds {

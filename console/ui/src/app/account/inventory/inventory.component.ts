@@ -71,10 +71,6 @@ export class InventoryComponent implements OnInit, AfterViewInit {
     this.route.parent.data.subscribe(
       d => {
         this.account = d[0].account;
-        // Initialize editor after account data is loaded
-        if (this.editor && this.editor.nativeElement) {
-          this.initializeEditor();
-        }
       },
       err => {
         this.error = err;
@@ -98,27 +94,12 @@ export class InventoryComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    // Initialize editor if account data is already loaded
-    if (this.account) {
-      this.initializeEditor();
-    }
-  }
-
-  private initializeEditor(): void {
-    if (this.jsonEditor) {
-      // Editor already initialized
-      return;
-    }
-
-    // Get inventory from account or use empty object
-    const inventoryText = this.account.inventory || '{}';
-
     this.jsonEditor = new JSONEditor({
       target: this.editor.nativeElement,
       props: {
         mode: Mode.text,
         readOnly: !this.updateAllowed(),
-        content: {text: inventoryText},
+        content: {text: this.account?.inventory ?? '{}'},
       },
     });
   }
@@ -139,8 +120,6 @@ export class InventoryComponent implements OnInit, AfterViewInit {
 
     const body: UpdateAccountRequest = {inventory};
     this.consoleService.updateAccount('', this.account.user.id, body).subscribe(d => {
-      // Update the local account object with the new inventory value
-      this.account.inventory = inventory;
       this.updated = true;
       this.updating = false;
     }, err => {

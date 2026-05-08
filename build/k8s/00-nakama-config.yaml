@@ -1,0 +1,87 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: starhold
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nakama-config
+  namespace: starhold
+data:
+  nakama.yaml: |
+    name: "nakama-plus"
+    data_dir: "/var/lib/nakama/data"
+
+    logger:
+      stdout: true
+      level: "info"
+      file: "/var/lib/nakama/data/logfile.log"
+      max_age: 30
+      max_size: 100
+      rotation: true
+
+    metrics:
+      reporting_freq_sec: 60
+      namespace: "nakama"
+      prometheus_port: 0
+
+    database:
+      address: [] # 留空，通过 StatefulSet 的启动参数 --database.address 动态注入
+      conn_max_lifetime_ms: 0
+      max_open_conns: 100
+      max_idle_conns: 100
+
+    runtime:
+      path: "/var/lib/nakama/data/modules"
+      http_key: "default_http_key"
+
+    socket:
+      server_key: "sparkgame"
+      port: 7350
+      max_message_size_bytes: 4096
+      read_timeout_ms: 30000
+      write_timeout_ms: 30000
+      idle_timeout_ms: 60000
+      write_wait_ms: 5000
+      pong_wait_ms: 25000
+      ping_period_ms: 15000
+      outgoing_queue_size: 16
+
+    session:
+      encryption_key: "default_encryption_key"
+      token_expiry_sec: 7200
+      refresh_encryption_key: "default_refresh_encryption_key"
+      refresh_token_expiry_sec: 2592000
+      single_socket: true
+
+    social:
+      steam:
+        publisher_key: ""
+        app_id: 0
+
+    console:
+      port: 7351
+      signing_key: "default_signing_key"
+
+    matchmaker:
+      max_tickets: 2
+      interval_sec: 15
+      max_intervals: 3
+
+    cluster:
+      gossip_bindaddr: "0.0.0.0"
+      gossip_bindport: 7335
+      gossip_advertise_addr: "127.0.0.1:7335"
+      etcd:
+        endpoints:
+          - "etcd-client.starhold.svc.cluster.local:2379"
+
+    grpc:
+      access_token: "default_grpc_token"
+      heartbeat_timeout: 15
+      ca_cert: "/var/lib/nakama/certs/CA.pem"
+      server_name_override: "starhold.uk"
+
+    cache:
+      prefix: "nakama"

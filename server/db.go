@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -58,15 +59,52 @@ func DbConnect(ctx context.Context, logger *zap.Logger, config Config, create bo
 		parsedURL.RawQuery = query.Encode()
 	}
 
-	if len(parsedURL.User.Username()) < 1 {
-		parsedURL.User = url.User("root")
+	username := parsedURL.User.Username()
+	if username == "" {
+		if envUser := os.Getenv("PGUSER"); envUser != "" {
+			username = envUser
+		} else {
+			username = "root"
+		}
 	}
+
+	password, hasPassword := parsedURL.User.Password()
+	if !hasPassword {
+		if envPassword := os.Getenv("PGPASSWORD"); envPassword != "" {
+			password = envPassword
+			hasPassword = true
+		}
+	}
+
+	if hasPassword {
+		parsedURL.User = url.UserPassword(username, password)
+	} else {
+		parsedURL.User = url.User(username)
+	}
+
+	// 强制支持环境变量覆盖 Host, Port 和 Database
+	if envHost := os.Getenv("PGHOST"); envHost != "" {
+		parsedURL.Host = net.JoinHostPort(envHost, parsedURL.Port())
+	}
+	if envPort := os.Getenv("PGPORT"); envPort != "" {
+		host, _, _ := net.SplitHostPort(parsedURL.Host)
+		if host == "" {
+			host = parsedURL.Host
+		}
+		parsedURL.Host = net.JoinHostPort(host, envPort)
+	}
+
 	dbName := "nakama"
-	if len(parsedURL.Path) > 0 {
+	if envDB := os.Getenv("PGDATABASE"); envDB != "" {
+		dbName = envDB
+		parsedURL.Path = "/" + dbName
+	} else if len(parsedURL.Path) > 0 {
 		dbName = parsedURL.Path[1:]
 	} else {
 		parsedURL.Path = "/" + dbName
 	}
+
+	logger.Info("Database connection", zap.String("dsn", parsedURL.Redacted()))
 
 	// Resolve initial database address based on host before connecting.
 	dbHostname := parsedURL.Hostname()
