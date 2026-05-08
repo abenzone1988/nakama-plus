@@ -12,7 +12,7 @@ metadata:
 spec:
   ingressClassName: alb
   rules:
-    - host: nakama.starhold.uk
+    - host: api.starhold.uk
       http:
         paths:
           - path: /
@@ -22,3 +22,33 @@ spec:
                 name: nakama
                 port:
                   number: 7350
+    - host: api-dev.starhold.uk
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: nakama-dev
+                port:
+                  number: 7350
+    - host: admin.starhold.uk
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: nakama
+                port:
+                  number: 7351
+    - host: admin-dev.starhold.uk
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: nakama-dev
+                port:
+                  number: 7351

@@ -14,7 +14,8 @@ set "AWS_ACCOUNT_ID=746669197317"
 set "ECR_REPOSITORY=starhold-us/nakama-plus"
 set "PLATFORM=linux/amd64"
 set "NO_PUSH=false"
-set "ALSO_TAG_LATEST=false"
+set "ALSO_TAG_LATEST=true"
+set "RELEASE_TAG="
 set "CREATE_REPO=false"
 
 echo === build-aws-ecr.bat ===
@@ -60,6 +61,12 @@ if /i "%~1"=="--also-tag-latest" (
   shift
   goto parse_args
 )
+if /i "%~1"=="--release-tag" (
+  set "RELEASE_TAG=%~2"
+  shift
+  shift
+  goto parse_args
+)
 if /i "%~1"=="--create-repo" (
   set "CREATE_REPO=true"
   shift
@@ -81,6 +88,7 @@ echo   --repo REPOSITORY      ECR repository (default: %ECR_REPOSITORY%)
 echo   --platform PLATFORM    Docker platform (default: %PLATFORM%)
 echo   --no-push              Build only, do not push
 echo   --also-tag-latest      Also push tag ":latest" (default: %ALSO_TAG_LATEST%)
+echo   --release-tag TAG      Also push a specific release tag (e.g. v1.0.0)
 echo   --create-repo          Create ECR repo if missing (default: %CREATE_REPO%)
 echo   --help                 Show this help
 echo.
@@ -104,8 +112,8 @@ REM ---- commit tag ----
 set "COMMIT="
 for /f "usebackq delims=" %%i in (`git rev-parse --short HEAD 2^>nul`) do set "COMMIT=%%i"
 if not defined COMMIT (
-  echo [ERR] Cannot determine git commit. Are you in a git repo?
-  exit /b 1
+  echo [WRN] Cannot determine git commit. Using 'dev' as fallback.
+  set "COMMIT=dev"
 )
 
 set "TAG=%COMMIT%"
@@ -118,6 +126,7 @@ echo   Account  : %AWS_ACCOUNT_ID%
 echo   Repo     : %ECR_REPOSITORY%
 echo   Image    : %IMAGE%
 echo   Tag      : %TAG%
+if defined RELEASE_TAG echo   Release  : %RELEASE_TAG%
 echo   Platform : %PLATFORM%
 echo   Push     : %NO_PUSH%
 echo ========================================
@@ -211,6 +220,9 @@ REM ---- build & push ----
 set "BUILD_ARGS=buildx build .. --platform "%PLATFORM%" --file ./Dockerfile --build-arg COMMIT="%COMMIT%" --build-arg VERSION="%TAG%" --build-arg BUILDER_BASE_IMAGE="%BUILDER_BASE_IMAGE%" --build-arg RUNTIME_BASE_IMAGE="%RUNTIME_BASE_IMAGE%" -t "%IMAGE%:%TAG%""
 if /i "%ALSO_TAG_LATEST%"=="true" (
   set "BUILD_ARGS=%BUILD_ARGS% -t "%IMAGE%:latest""
+)
+if defined RELEASE_TAG (
+  set "BUILD_ARGS=%BUILD_ARGS% -t "%IMAGE%:%RELEASE_TAG%""
 )
 if /i "%NO_PUSH%"=="false" (
   set "BUILD_ARGS=%BUILD_ARGS% --push"

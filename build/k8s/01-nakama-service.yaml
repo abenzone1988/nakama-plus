@@ -9,6 +9,7 @@ spec:
   clusterIP: None
   selector:
     app: nakama
+    version: prod
   ports:
     - name: nakama-socket
       port: 7350
@@ -33,6 +34,7 @@ metadata:
 spec:
   selector:
     app: nakama
+    version: prod
   ports:
     - name: nakama-socket
       port: 7350

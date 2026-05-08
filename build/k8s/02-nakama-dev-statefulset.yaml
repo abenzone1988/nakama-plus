@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: nakama-dev
+  namespace: starhold
+  labels:
+    app: nakama
+    version: dev
+spec:
+  serviceName: nakama-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nakama
+      version: dev
+  template:
+    metadata:
+      labels:
+        app: nakama
+        version: dev
+    spec:
+      terminationGracePeriodSeconds: 60
+      initContainers:
+        - name: nakama-migration
+          image: 746669197317.dkr.ecr.us-east-1.amazonaws.com/starhold-us/nakama-plus:latest
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              # 现在的代码会自动从 PGPASSWORD 环境变量读取并进行 URL 编码
+              DB_URL="postgres://${PGUSER}@${PGHOST}:${PGPORT}/${PGDATABASE}?sslmode=require"
+              /nakama/nakama migrate up --config /nakama/data/config.yaml --database.address "$DB_URL"
+          env:
+            - name: PGHOST
+              valueFrom: { secretKeyRef: { name: starhold-db, key: host } }
+            - name: PGPORT
+              valueFrom: { secretKeyRef: { name: starhold-db, key: port } }
+            - name: PGUSER
+              valueFrom: { secretKeyRef: { name: starhold-db, key: username } }
+            - name: PGPASSWORD
+              valueFrom: { secretKeyRef: { name: starhold-db, key: password } }
+            - name: PGDATABASE
+              valueFrom: { secretKeyRef: { name: starhold-db, key: database } }
+          volumeMounts:
+            - name: nakama-config
+              mountPath: /nakama/data/config.yaml
+              subPath: nakama.yaml
+      containers:
+        - name: nakama
+          image: 746669197317.dkr.ecr.us-east-1.amazonaws.com/starhold-us/nakama-plus:latest
+          imagePullPolicy: Always
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              DB_URL="postgres://${PGUSER}@${PGHOST}:${PGPORT}/${PGDATABASE}?sslmode=require"
+              # 显式导出 NAKAMA_ 前缀的环境变量，这是 Nakama 官方支持的覆盖方式
+              export NAKAMA_CLUSTER_GOSSIP_ADVERTISE_ADDR="${MY_POD_NAME}.nakama-headless.starhold.svc.cluster.local:7335"
+              
+              exec /nakama/nakama --name "${MY_POD_NAME}" --config /nakama/data/config.yaml --database.address "$DB_URL"
+          env:
+            - name: PGHOST
+              valueFrom: { secretKeyRef: { name: starhold-db, key: host } }
+            - name: PGPORT
+              valueFrom: { secretKeyRef: { name: starhold-db, key: port } }
+            - name: PGUSER
+              valueFrom: { secretKeyRef: { name: starhold-db, key: username } }
+            - name: PGPASSWORD
+              valueFrom: { secretKeyRef: { name: starhold-db, key: password } }
+            - name: PGDATABASE
+              valueFrom: { secretKeyRef: { name: starhold-db, key: database } }
+            - name: MY_POD_NAME
+              valueFrom: { fieldRef: { fieldPath: metadata.name } }
+          ports:
+            - name: nakama-socket
+              containerPort: 7350
+            - name: nakama-console
+              containerPort: 7351
+            - name: nakama-grpc
+              containerPort: 7340
+            - name: nakama-gossip
+              containerPort: 7335
+          volumeMounts:
+            - name: nakama-config
+              mountPath: /nakama/data/config.yaml
+              subPath: nakama.yaml
+            - name: nakama-data
+              mountPath: /var/lib/nakama/data
+          readinessProbe:
+            tcpSocket: { port: 7350 }
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket: { port: 7350 }
+            initialDelaySeconds: 30
+            periodSeconds: 10
+      volumes:
+        - name: nakama-config
+          configMap:
+            name: nakama-config
+            items: [{ key: nakama.yaml, path: nakama.yaml }]
+  volumeClaimTemplates:
+    - metadata: { name: nakama-data }
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources: { requests: { storage: 2Gi } }

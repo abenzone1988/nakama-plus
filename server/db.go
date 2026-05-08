@@ -59,13 +59,13 @@ func DbConnect(ctx context.Context, logger *zap.Logger, config Config, create bo
 		parsedURL.RawQuery = query.Encode()
 	}
 
-	username := parsedURL.User.Username()
+	// 强制优先从环境变量读取用户名
+	username := os.Getenv("PGUSER")
 	if username == "" {
-		if envUser := os.Getenv("PGUSER"); envUser != "" {
-			username = envUser
-		} else {
-			username = "root"
-		}
+		username = parsedURL.User.Username()
+	}
+	if username == "" {
+		username = "root"
 	}
 
 	password, hasPassword := parsedURL.User.Password()
@@ -81,11 +81,6 @@ func DbConnect(ctx context.Context, logger *zap.Logger, config Config, create bo
 	} else {
 		parsedURL.User = url.User(username)
 	}
-
-	// 【调试日志】打印密码信息，确认是否被正确读取
-	logger.Info("DEBUG: Password info",
-		zap.Int("length", len(password)),
-		zap.String("raw_password", password)) // 临时打印完整密码
 
 	// 强制支持环境变量覆盖 Host, Port 和 Database
 	if envHost := os.Getenv("PGHOST"); envHost != "" {
