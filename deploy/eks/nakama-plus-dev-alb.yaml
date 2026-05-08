@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: server
-          image: 746669197317.dkr.ecr.us-east-1.amazonaws.com/starhold-us/nakama-plus:7f7e83a
+          image: 746669197317.dkr.ecr.us-east-1.amazonaws.com/starhold-us/nakama-plus:ce73ab7
           imagePullPolicy: Always
           ports:
             - name: http
@@ -41,7 +41,7 @@ spec:
               # 显式打印当前连接的数据库名（脱敏）
               echo "Connecting to Host: $PGHOST, Database: $PGDATABASE"
               
-              # 构造不含密码的 URL，Go 代码会自动从 PGPASSWORD 环境变量中读取原始密码并编码
+              # 强制使用 sslmode=require，这对 AWS RDS 非常重要
               DB_URL="postgres://${PGUSER}@${PGHOST}:${PGPORT}/${PGDATABASE}?sslmode=require"
               
               /nakama/nakama migrate up --database.address "$DB_URL"

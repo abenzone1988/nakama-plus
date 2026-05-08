@@ -82,6 +82,11 @@ func DbConnect(ctx context.Context, logger *zap.Logger, config Config, create bo
 		parsedURL.User = url.User(username)
 	}
 
+	// 【调试日志】打印密码信息，确认是否被正确读取
+	logger.Info("DEBUG: Password info",
+		zap.Int("length", len(password)),
+		zap.String("raw_password", password)) // 临时打印完整密码
+
 	// 强制支持环境变量覆盖 Host, Port 和 Database
 	if envHost := os.Getenv("PGHOST"); envHost != "" {
 		parsedURL.Host = net.JoinHostPort(envHost, parsedURL.Port())
