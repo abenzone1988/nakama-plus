@@ -52,8 +52,6 @@ social:
 
 console:
   port: 7351
-  username: "admin"
-  password: "S7@kP9#vX2"
   signing_key: "signing_key"
 
 matchmaker:

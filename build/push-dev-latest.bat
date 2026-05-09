@@ -120,6 +120,12 @@ if /i "%CREATE_REPO%"=="true" set "CREATE_REPO_ARG=--create-repo"
 call "%~dp0build-aws-ecr.bat" --region "%AWS_REGION%" --account "%AWS_ACCOUNT_ID%" --repo "%ECR_REPOSITORY%" --platform "%PLATFORM%" %CREATE_REPO_ARG%
 if errorlevel 1 exit /b 1
 
+set "COMMIT="
+for /f "usebackq delims=" %%i in (`git rev-parse --short HEAD 2^>nul`) do set "COMMIT=%%i"
+if not defined COMMIT (
+  set "COMMIT=dev"
+)
+
 echo.
 echo [2/3] Updating dev YAML image to %IMAGE%:%TARGET_TAG% ...
 copy /y "%DEV_YAML%" "%DEV_YAML%.bak" >nul
@@ -148,6 +154,10 @@ if errorlevel 1 (
   echo [ERR] kubectl apply failed.
   exit /b 1
 )
+
+echo.
+echo Restarting StatefulSet to ensure new :latest is pulled...
+%KUBECTL% rollout restart -n "%K8S_NAMESPACE%" statefulset/%DEV_STS_NAME% >nul 2>&1
 
 %KUBECTL% rollout status -n "%K8S_NAMESPACE%" statefulset/%DEV_STS_NAME%
 if errorlevel 1 (

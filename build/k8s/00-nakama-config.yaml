@@ -11,7 +11,7 @@ metadata:
 data:
   nakama.yaml: |
     name: "nakama-plus"
-    data_dir: "/var/lib/nakama/data"
+    data_dir: "/nakama/data"
 
     logger:
       stdout: true
@@ -33,7 +33,7 @@ data:
       max_idle_conns: 100
 
     runtime:
-      path: "/var/lib/nakama/data/modules"
+      path: "/nakama/data/modules"
       http_key: "default_http_key"
 
     socket:
@@ -62,8 +62,8 @@ data:
 
     console:
       port: 7351
-      username: "sparkinfi"
-      password: ""
+      username: "admin"
+      password: "S7@kP9#vX2"
       signing_key: "default_signing_key"
 
     matchmaker:
