@@ -15,6 +15,7 @@ const tplCollection = "Tpl"
 
 type TemplateManager interface {
 	LoadData()
+	LoadDataFromFiles()
 	GetTplRedemption() *TableTplRedemption
 	GetTplLevelInfo() *TableTplLevelInfo
 	GetTplActivityLevelInfo() *TableTplActivityLevelInfo
@@ -56,6 +57,7 @@ type LocalTemplateManager struct {
 	sync.RWMutex
 	logger                                  *zap.Logger
 	db                                      *sql.DB
+	loadPath                                string
 	tableTplRedemption                      *TableTplRedemption
 	tableTplLevelInfo                       *TableTplLevelInfo
 	tableTplItem                            *TableTplItem
@@ -97,6 +99,7 @@ func NewLocalTemplateManager(logger *zap.Logger, db *sql.DB, config Config) Temp
 	t := LocalTemplateManager{
 		logger:                                  logger,
 		db:                                      db,
+		loadPath:                                jsonPath,
 		tableTplRedemption:                      NewTableTplRedemption(logger, jsonPath),
 		tableTplLevelInfo:                       NewTableTplLevelInfo(logger, jsonPath),
 		tableTplItem:                            NewTableTplItem(logger, jsonPath),
@@ -132,7 +135,7 @@ func NewLocalTemplateManager(logger *zap.Logger, db *sql.DB, config Config) Temp
 		tableTplCrystalSkinDev:                  NewTableTplCrystalSkinDev(logger, jsonPath),
 		tableTplEquipExchange:                   NewTableTplEquipExchange(logger, jsonPath),
 	}
-	t.LoadData()
+	t.LoadDataFromFiles()
 	return &t
 }
 
@@ -174,6 +177,46 @@ func (t *LocalTemplateManager) LoadData() {
 	t.tableTplCrystalSkin.LoadData(t.StorageReadTpl("TplCrystalSkin"))
 	t.tableTplCrystalSkinDev.LoadData(t.StorageReadTpl("TplCrystalSkinDev"))
 	t.tableTplEquipExchange.LoadData(t.StorageReadTpl("TplEquipExchange"))
+}
+
+func (t *LocalTemplateManager) LoadDataFromFiles() {
+	t.Lock()
+	defer t.Unlock()
+
+	t.tableTplRedemption.LoadData(ReadTemplateFile(t.logger, t.loadPath, "TplRedemption.json"))
+	t.tableTplLevelInfo.LoadData(ReadTemplateFile(t.logger, t.loadPath, "TplLevelInfo.json"))
+	t.tableTplItem.LoadData(ReadTemplateFile(t.logger, t.loadPath, "TplItem.json"))
+	t.tableTplReward.LoadData(ReadTemplateFile(t.logger, t.loadPath, "TplReward.json"))
+	t.tableTplActivityLevelInfo.LoadData(ReadTemplateFile(t.logger, t.loadPath, "TplActivityLevelInfo.json"))
+	t.tableTplCrystalTechnology.LoadData(ReadTemplateFile(t.logger, t.loadPath, "TplCrystalTechnologyDev.json"))
+	t.tableTplEquipment.LoadData(ReadTemplateFile(t.logger, t.loadPath, "TplEquipment.json"))
+	t.tableTplEquipmentDev.LoadData(ReadTemplateFile(t.logger, t.loadPath, "TplEquipmentDev.json"))
+	t.tableTplUnlock.LoadData(ReadTemplateFile(t.logger, t.loadPath, "TplUnlock.json"))
+	t.tableTplShop.LoadData(ReadTemplateFile(t.logger, t.loadPath, "TplShop.json"))
+	t.tableTplShopDailyItem.LoadData(ReadTemplateFile(t.logger, t.loadPath, "TplShopDailyItem.json"))
+	t.tableTplShopPermanentItem.LoadData(ReadTemplateFile(t.logger, t.loadPath, "TplShopPermanentItem.json"))
+	t.tableTplBoxShop.LoadData(ReadTemplateFile(t.logger, t.loadPath, "TplBoxShop.json"))
+	t.tableTplBoxShopItem.LoadData(ReadTemplateFile(t.logger, t.loadPath, "TplBoxShopItem.json"))
+	t.tableTplShopChapterItem.LoadData(ReadTemplateFile(t.logger, t.loadPath, "TplShopChapterItem.json"))
+	t.tableTplShopGemItem.LoadData(ReadTemplateFile(t.logger, t.loadPath, "TplShopGemItem.json"))
+	t.tableTplTasks.LoadData(ReadTemplateFile(t.logger, t.loadPath, "TplTasks.json"))
+	t.tableTplProgressReward.LoadData(ReadTemplateFile(t.logger, t.loadPath, "TplProgressReward.json"))
+	t.tableTplFirstCharge.LoadData(ReadTemplateFile(t.logger, t.loadPath, "TplFirstCharge.json"))
+	t.tableTplSevenDay.LoadData(ReadTemplateFile(t.logger, t.loadPath, "TplSevenDay.json"))
+	t.tableTplDailySignIn.LoadData(ReadTemplateFile(t.logger, t.loadPath, "TplDailySignIn.json"))
+	t.tableTplSevenDaySignIn.LoadData(ReadTemplateFile(t.logger, t.loadPath, "TplSevenDaySignIn.json"))
+	t.tableTplPay.LoadData(ReadTemplateFile(t.logger, t.loadPath, "TplPay.json"))
+	t.tableTplPlayerLevel.LoadData(ReadTemplateFile(t.logger, t.loadPath, "TplPlayerLevel.json"))
+	t.tableTplEliteLevelInfo.LoadData(ReadTemplateFile(t.logger, t.loadPath, "TplEliteLevelInfo.json"))
+	t.tableTplMine.LoadData(ReadTemplateFile(t.logger, t.loadPath, "TplMine.json"))
+	t.tableTplCrystalEquipmentSlotDev.LoadData(ReadTemplateFile(t.logger, t.loadPath, "TplCrystalEquipmentSlotDev.json"))
+	t.tableTplCrystalEquipment.LoadData(ReadTemplateFile(t.logger, t.loadPath, "TplCrystalEquipment.json"))
+	t.tableTplCrystalEquipmentRefinement.LoadData(ReadTemplateFile(t.logger, t.loadPath, "TplCrystalEquipmentRefinement.json"))
+	t.tableTplCrystalEquipmentRefinementAffix.LoadData(ReadTemplateFile(t.logger, t.loadPath, "TplCrystalEquipmentRefinementAffix.json"))
+	t.tableTplCrystalEquipmentRandomReward.LoadData(ReadTemplateFile(t.logger, t.loadPath, "TplCrystalEquipmentRandomReward.json"))
+	t.tableTplCrystalSkin.LoadData(ReadTemplateFile(t.logger, t.loadPath, "TplCrystalSkin.json"))
+	t.tableTplCrystalSkinDev.LoadData(ReadTemplateFile(t.logger, t.loadPath, "TplCrystalSkinDev.json"))
+	t.tableTplEquipExchange.LoadData(ReadTemplateFile(t.logger, t.loadPath, "TplEquipExchange.json"))
 }
 
 func (t *LocalTemplateManager) GetTplEquipExchange() *TableTplEquipExchange {

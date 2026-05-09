@@ -9,14 +9,14 @@ cd /d "%~dp0"
 
 set "DEBUG=false"
 
-set "AWS_REGION=us-east-1"
-set "AWS_ACCOUNT_ID=746669197317"
-set "ECR_REPOSITORY=starhold-us/nakama-plus"
-set "PLATFORM=linux/amd64"
-set "NO_PUSH=false"
-set "ALSO_TAG_LATEST=true"
-set "RELEASE_TAG="
-set "CREATE_REPO=false"
+if not defined AWS_REGION set "AWS_REGION=us-east-1"
+if not defined AWS_ACCOUNT_ID set "AWS_ACCOUNT_ID=746669197317"
+if not defined ECR_REPOSITORY set "ECR_REPOSITORY=starhold-us/nakama-plus"
+if not defined PLATFORM set "PLATFORM=linux/amd64"
+if not defined NO_PUSH set "NO_PUSH=false"
+if not defined ALSO_TAG_LATEST set "ALSO_TAG_LATEST=true"
+if not defined RELEASE_TAG set "RELEASE_TAG="
+if not defined CREATE_REPO set "CREATE_REPO=false"
 
 echo === build-aws-ecr.bat ===
 
@@ -243,4 +243,3 @@ if exist "C:\tmp\.buildx-cache-new" (
 
 echo [OK] Done: %IMAGE%:%TAG%
 exit /b 0
-

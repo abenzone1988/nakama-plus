@@ -58,6 +58,7 @@ RUN mkdir -p /nakama/data/modules && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /nakama/
+COPY data/ /nakama/data/
 COPY --from=builder "/go/build-out/nakama" /nakama/
 EXPOSE 7349 7350 7351
 

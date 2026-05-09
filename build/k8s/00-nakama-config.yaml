@@ -62,6 +62,8 @@ data:
 
     console:
       port: 7351
+      username: "sparkinfi"
+      password: ""
       signing_key: "default_signing_key"
 
     matchmaker:
