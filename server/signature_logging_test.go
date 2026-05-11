@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/doublemo/nakama-common/api"
 	"github.com/gofrs/uuid/v5"
-	"github.com/heroiclabs/nakama-common/api"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"go.uber.org/zap/zaptest/observer"

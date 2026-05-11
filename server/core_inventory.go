@@ -23,6 +23,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"sync/atomic"
 	"time"
 
 	"github.com/doublemo/nakama-common/runtime"
@@ -31,6 +32,24 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
+
+var inventoryLedgerRetentionMaxItems int64
+var inventoryLedgerRetentionMaxAgeDays int64
+
+func setInventoryLedgerRetention(maxItems, maxAgeDays int) {
+	if maxItems < 0 {
+		maxItems = 0
+	}
+	if maxAgeDays < 0 {
+		maxAgeDays = 0
+	}
+	atomic.StoreInt64(&inventoryLedgerRetentionMaxItems, int64(maxItems))
+	atomic.StoreInt64(&inventoryLedgerRetentionMaxAgeDays, int64(maxAgeDays))
+}
+
+func getInventoryLedgerRetention() (int, int) {
+	return int(atomic.LoadInt64(&inventoryLedgerRetentionMaxItems)), int(atomic.LoadInt64(&inventoryLedgerRetentionMaxAgeDays))
+}
 
 type inventoryLedgerListCursor struct {
 	UserId     string
@@ -284,6 +303,44 @@ SELECT
 			if err != nil {
 				logger.Error("Error writing user inventory ledgers.", zap.Error(err))
 				return nil, err
+			}
+
+			maxItems, maxAgeDays := getInventoryLedgerRetention()
+			if maxItems > 0 || maxAgeDays > 0 {
+				uniqueUserIDs := make([]string, 0, len(userIdParams))
+				seen := make(map[string]struct{}, len(userIdParams))
+				for _, uid := range userIdParams {
+					if _, ok := seen[uid]; ok {
+						continue
+					}
+					seen[uid] = struct{}{}
+					uniqueUserIDs = append(uniqueUserIDs, uid)
+				}
+
+				if maxAgeDays > 0 {
+					_, err = tx.Exec(ctx, "DELETE FROM inventory_ledger WHERE user_id = ANY($1::uuid[]) AND create_time < (now() - ($2::int * INTERVAL '1 day'))", uniqueUserIDs, maxAgeDays)
+					if err != nil {
+						logger.Error("Error pruning user inventory ledger by age.", zap.Error(err))
+						return nil, err
+					}
+				}
+				if maxItems > 0 {
+					_, err = tx.Exec(ctx, `
+WITH ranked AS (
+	SELECT user_id, create_time, id,
+		   row_number() OVER (PARTITION BY user_id ORDER BY create_time DESC, id DESC) AS rn
+	FROM inventory_ledger
+	WHERE user_id = ANY($1::uuid[])
+)
+DELETE FROM inventory_ledger il
+USING ranked r
+WHERE il.user_id = r.user_id AND il.create_time = r.create_time AND il.id = r.id AND r.rn > $2::int;
+`, uniqueUserIDs, maxItems)
+					if err != nil {
+						logger.Error("Error pruning user inventory ledger by max items.", zap.Error(err))
+						return nil, err
+					}
+				}
 			}
 		}
 	}

@@ -53,6 +53,7 @@ type Config interface {
 	GetGoogleAuth() *GoogleAuthConfig
 	GetSatori() *SatoriConfig
 	GetStorage() *StorageConfig
+	GetLedger() *LedgerConfig
 	GetMFA() *MFAConfig
 	GetParty() *PartyConfig
 	GetLimit() int
@@ -130,6 +131,10 @@ func ParseArgs(logger *zap.Logger, args []string) Config {
 		}
 	}
 
+	ledgerCfg := mainConfig.GetLedger()
+	setWalletLedgerRetention(ledgerCfg.WalletLedgerMaxItems, ledgerCfg.WalletLedgerMaxAgeDays)
+	setInventoryLedgerRetention(ledgerCfg.InventoryLedgerMaxItems, ledgerCfg.InventoryLedgerMaxAgeDays)
+
 	return mainConfig
 }
 
@@ -168,6 +173,18 @@ func ValidateConfig(logger *zap.Logger, c Config) map[string]string {
 	}
 	if c.GetRuntime().HTTPKey == "" {
 		logger.Fatal("Runtime HTTP key must be set", zap.String("param", "runtime.http_key"))
+	}
+	if c.GetLedger().WalletLedgerMaxItems < 0 {
+		logger.Fatal("Wallet ledger max items must be >= 0", zap.Int("ledger.wallet_ledger_max_items", c.GetLedger().WalletLedgerMaxItems))
+	}
+	if c.GetLedger().WalletLedgerMaxAgeDays < 0 {
+		logger.Fatal("Wallet ledger max age days must be >= 0", zap.Int("ledger.wallet_max_age_days", c.GetLedger().WalletLedgerMaxAgeDays))
+	}
+	if c.GetLedger().InventoryLedgerMaxItems < 0 {
+		logger.Fatal("Inventory ledger max items must be >= 0", zap.Int("ledger.inventory_ledger_max_items", c.GetLedger().InventoryLedgerMaxItems))
+	}
+	if c.GetLedger().InventoryLedgerMaxAgeDays < 0 {
+		logger.Fatal("Inventory ledger max age days must be >= 0", zap.Int("ledger.inventory_max_age_days", c.GetLedger().InventoryLedgerMaxAgeDays))
 	}
 	if c.GetConsole().MaxMessageSizeBytes < 1 {
 		logger.Fatal("Console max message size bytes must be >= 1", zap.Int64("console.max_message_size_bytes", c.GetConsole().MaxMessageSizeBytes))
@@ -486,6 +503,7 @@ type config struct {
 	GoogleAuth       *GoogleAuthConfig  `yaml:"google_auth" json:"google_auth" usage:"Google's auth settings."`
 	Satori           *SatoriConfig      `yaml:"satori" json:"satori" usage:"Satori integration settings."`
 	Storage          *StorageConfig     `yaml:"storage" json:"storage" usage:"Storage settings."`
+	Ledger           *LedgerConfig      `yaml:"ledger" json:"ledger" usage:"Ledger retention settings."`
 	MFA              *MFAConfig         `yaml:"mfa" json:"mfa" usage:"MFA settings."`
 	Party            *PartyConfig       `yaml:"party" json:"party" usage:"Party settings."`
 	Limit            int                `json:"-"` // Only used for migrate command.
@@ -518,6 +536,7 @@ func NewConfig(logger *zap.Logger) *config {
 		GoogleAuth:       NewGoogleAuthConfig(),
 		Satori:           NewSatoriConfig(),
 		Storage:          NewStorageConfig(),
+		Ledger:           NewLedgerConfig(),
 		Party:            NewPartyConfig(),
 		MFA:              NewMFAConfig(),
 		Limit:            -1,
@@ -551,6 +570,7 @@ func (c *config) Clone() (Config, error) {
 		Satori:           c.Satori.Clone(),
 		GoogleAuth:       c.GoogleAuth.Clone(),
 		Storage:          c.Storage.Clone(),
+		Ledger:           c.Ledger.Clone(),
 		MFA:              c.MFA.Clone(),
 		Cluster:          c.Cluster.Clone(),
 		Limit:            c.Limit,
@@ -632,6 +652,13 @@ func (c *config) GetSatori() *SatoriConfig {
 
 func (c *config) GetStorage() *StorageConfig {
 	return c.Storage
+}
+
+func (c *config) GetLedger() *LedgerConfig {
+	if c.Ledger == nil {
+		c.Ledger = NewLedgerConfig()
+	}
+	return c.Ledger
 }
 
 func (c *config) GetParty() *PartyConfig {
@@ -1621,6 +1648,31 @@ func (cfg *StorageConfig) Clone() *StorageConfig {
 
 func NewStorageConfig() *StorageConfig {
 	return &StorageConfig{}
+}
+
+type LedgerConfig struct {
+	WalletLedgerMaxItems      int `yaml:"wallet_ledger_max_items" json:"wallet_ledger_max_items" usage:"Maximum number of wallet ledger items to keep per user. Default 0 (unlimited)."`
+	WalletLedgerMaxAgeDays    int `yaml:"wallet_ledger_max_age_days" json:"wallet_ledger_max_age_days" usage:"Maximum age in days of wallet ledger items to keep per user. Default 0 (unlimited)."`
+	InventoryLedgerMaxItems   int `yaml:"inventory_ledger_max_items" json:"inventory_ledger_max_items" usage:"Maximum number of inventory ledger items to keep per user. Default 0 (unlimited)."`
+	InventoryLedgerMaxAgeDays int `yaml:"inventory_ledger_max_age_days" json:"inventory_ledger_max_age_days" usage:"Maximum age in days of inventory ledger items to keep per user. Default 0 (unlimited)."`
+}
+
+func (cfg *LedgerConfig) Clone() *LedgerConfig {
+	if cfg == nil {
+		return nil
+	}
+
+	cfgCopy := *cfg
+	return &cfgCopy
+}
+
+func NewLedgerConfig() *LedgerConfig {
+	return &LedgerConfig{
+		WalletLedgerMaxItems:      0,
+		WalletLedgerMaxAgeDays:    0,
+		InventoryLedgerMaxItems:   0,
+		InventoryLedgerMaxAgeDays: 0,
+	}
 }
 
 type MFAConfig struct {

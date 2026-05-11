@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/doublemo/nakama-common/runtime"
 	"github.com/gofrs/uuid/v5"
@@ -577,4 +578,86 @@ func TestUpdateWalletRepeatedSingleUser(t *testing.T) {
 	assert.Contains(t, wallet, "value", "wallet did not contain value")
 	assert.IsType(t, float64(0), wallet["value"], "wallet value was not float64")
 	assert.Equal(t, float64(6), wallet["value"].(float64), "wallet value did not match")
+}
+
+func TestWalletLedgerRetentionMaxItems(t *testing.T) {
+	db := NewDB(t)
+	nk := NewRuntimeGoNakamaModule(logger, db, nil, cfg, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+
+	prevMaxItems, prevMaxAgeDays := getWalletLedgerRetention()
+	setWalletLedgerRetention(10, 0)
+	defer setWalletLedgerRetention(prevMaxItems, prevMaxAgeDays)
+
+	userID, _, _, err := AuthenticateCustom(context.Background(), logger, db, uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String(), true)
+	if err != nil {
+		t.Fatalf("error creating user: %v", err.Error())
+	}
+
+	for i := 0; i < 15; i++ {
+		_, _, err := nk.WalletUpdate(context.Background(), userID, map[string]int64{"value": 1}, nil, true)
+		if err != nil {
+			t.Fatalf("error updating wallet: %v", err.Error())
+		}
+	}
+
+	uid := uuid.FromStringOrNil(userID)
+	var count int
+	err = db.QueryRowContext(context.Background(), "SELECT count(*) FROM wallet_ledger WHERE user_id = $1", uid).Scan(&count)
+	if err != nil {
+		t.Fatalf("error querying wallet ledger count: %v", err.Error())
+	}
+	assert.Equal(t, 10, count)
+}
+
+func TestWalletLedgerRetentionMaxAgeDays(t *testing.T) {
+	db := NewDB(t)
+	nk := NewRuntimeGoNakamaModule(logger, db, nil, cfg, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+
+	prevMaxItems, prevMaxAgeDays := getWalletLedgerRetention()
+	setWalletLedgerRetention(0, 1)
+	defer setWalletLedgerRetention(prevMaxItems, prevMaxAgeDays)
+
+	userID, _, _, err := AuthenticateCustom(context.Background(), logger, db, uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String(), true)
+	if err != nil {
+		t.Fatalf("error creating user: %v", err.Error())
+	}
+
+	for i := 0; i < 2; i++ {
+		_, _, err := nk.WalletUpdate(context.Background(), userID, map[string]int64{"value": 1}, nil, true)
+		if err != nil {
+			t.Fatalf("error updating wallet: %v", err.Error())
+		}
+	}
+
+	uid := uuid.FromStringOrNil(userID)
+	var oldLedgerID uuid.UUID
+	err = db.QueryRowContext(context.Background(), "SELECT id FROM wallet_ledger WHERE user_id = $1 ORDER BY create_time ASC LIMIT 1", uid).Scan(&oldLedgerID)
+	if err != nil {
+		t.Fatalf("error querying wallet ledger id: %v", err.Error())
+	}
+
+	oldTime := time.Now().Add(-48 * time.Hour)
+	_, err = db.ExecContext(context.Background(), "UPDATE wallet_ledger SET create_time = $2 WHERE id = $1", oldLedgerID, oldTime)
+	if err != nil {
+		t.Fatalf("error updating wallet ledger create_time: %v", err.Error())
+	}
+
+	_, _, err = nk.WalletUpdate(context.Background(), userID, map[string]int64{"value": 1}, nil, true)
+	if err != nil {
+		t.Fatalf("error updating wallet: %v", err.Error())
+	}
+
+	var exists bool
+	err = db.QueryRowContext(context.Background(), "SELECT EXISTS (SELECT 1 FROM wallet_ledger WHERE id = $1)", oldLedgerID).Scan(&exists)
+	if err != nil {
+		t.Fatalf("error querying wallet ledger existence: %v", err.Error())
+	}
+	assert.False(t, exists)
+
+	var count int
+	err = db.QueryRowContext(context.Background(), "SELECT count(*) FROM wallet_ledger WHERE user_id = $1", uid).Scan(&count)
+	if err != nil {
+		t.Fatalf("error querying wallet ledger count: %v", err.Error())
+	}
+	assert.Equal(t, 2, count)
 }

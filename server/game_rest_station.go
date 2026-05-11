@@ -201,7 +201,7 @@ func sendRestStationOverflowEmail(ctx context.Context, logger *zap.Logger, db *s
 	}
 
 	content := &console.NoticeContent{
-		Description: "亲爱的指挥官，这是您自然恢复所溢出的体力资源，后勤部已帮您收集，请查收",
+		Description: "Dear Commander, these are the stamina resources overflowed from natural recovery. Our logistics team has collected them for you. Please claim them.",
 		Rewards:     []*game.Reward{reward},
 	}
 
@@ -214,7 +214,7 @@ func sendRestStationOverflowEmail(ctx context.Context, logger *zap.Logger, db *s
 	expiryTime := time.Now().UTC().Add(3 * 24 * time.Hour)
 	notification := &api.Notification{
 		Id:         uuid.Must(uuid.NewV4()).String(),
-		Subject:    "溢出的体力补发",
+		Subject:    "Overflow Stamina Compensation",
 		Content:    string(contentBytes),
 		Code:       NotificationSystemNotice,
 		SenderId:   uuid.Nil.String(),

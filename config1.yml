@@ -97,3 +97,9 @@ iap:
 
   cache:
     prefix: "nakama"
+
+ledger:
+  wallet_ledger_max_items: 3
+  wallet_ledger_max_age_days: 1
+  inventory_ledger_max_items: 3
+  inventory_ledger_max_age_days: 1

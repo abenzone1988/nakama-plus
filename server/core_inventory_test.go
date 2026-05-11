@@ -605,3 +605,106 @@ func TestUpdateInventoryMultipleItems(t *testing.T) {
 	assert.Equal(t, int64(10), result.Updated["potion_hp"], "potion_hp count should be 10")
 	assert.Equal(t, int64(1000), result.Updated["gold"], "gold count should be 1000")
 }
+
+func TestInventoryLedgerRetentionMaxItems(t *testing.T) {
+	db := NewDB(t)
+
+	prevMaxItems, prevMaxAgeDays := getInventoryLedgerRetention()
+	setInventoryLedgerRetention(10, 0)
+	defer setInventoryLedgerRetention(prevMaxItems, prevMaxAgeDays)
+
+	userID, _, _, err := AuthenticateCustom(context.Background(), logger, db, uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String(), true)
+	if err != nil {
+		t.Fatalf("error creating user: %v", err.Error())
+	}
+
+	userUUID := uuid.FromStringOrNil(userID)
+
+	for i := 0; i < 15; i++ {
+		updates := []*inventoryUpdate{
+			{
+				UserID:    userUUID,
+				Changeset: map[string]int64{"item_001": 1},
+				Metadata:  "{}",
+			},
+		}
+		_, err := UpdateInventories(context.Background(), logger, db, updates, true)
+		if err != nil {
+			t.Fatalf("error updating inventory: %v", err.Error())
+		}
+	}
+
+	var count int
+	err = db.QueryRowContext(context.Background(), "SELECT count(*) FROM inventory_ledger WHERE user_id = $1", userUUID).Scan(&count)
+	if err != nil {
+		t.Fatalf("error querying inventory ledger count: %v", err.Error())
+	}
+	assert.Equal(t, 10, count)
+}
+
+func TestInventoryLedgerRetentionMaxAgeDays(t *testing.T) {
+	db := NewDB(t)
+
+	prevMaxItems, prevMaxAgeDays := getInventoryLedgerRetention()
+	setInventoryLedgerRetention(0, 1)
+	defer setInventoryLedgerRetention(prevMaxItems, prevMaxAgeDays)
+
+	userID, _, _, err := AuthenticateCustom(context.Background(), logger, db, uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String(), true)
+	if err != nil {
+		t.Fatalf("error creating user: %v", err.Error())
+	}
+
+	userUUID := uuid.FromStringOrNil(userID)
+
+	for i := 0; i < 2; i++ {
+		updates := []*inventoryUpdate{
+			{
+				UserID:    userUUID,
+				Changeset: map[string]int64{"item_001": 1},
+				Metadata:  "{}",
+			},
+		}
+		_, err := UpdateInventories(context.Background(), logger, db, updates, true)
+		if err != nil {
+			t.Fatalf("error updating inventory: %v", err.Error())
+		}
+	}
+
+	var oldLedgerID uuid.UUID
+	err = db.QueryRowContext(context.Background(), "SELECT id FROM inventory_ledger WHERE user_id = $1 ORDER BY create_time ASC LIMIT 1", userUUID).Scan(&oldLedgerID)
+	if err != nil {
+		t.Fatalf("error querying inventory ledger id: %v", err.Error())
+	}
+
+	oldTime := time.Now().Add(-48 * time.Hour)
+	_, err = db.ExecContext(context.Background(), "UPDATE inventory_ledger SET create_time = $2 WHERE id = $1", oldLedgerID, oldTime)
+	if err != nil {
+		t.Fatalf("error updating inventory ledger create_time: %v", err.Error())
+	}
+
+	updates := []*inventoryUpdate{
+		{
+			UserID:    userUUID,
+			Changeset: map[string]int64{"item_001": 1},
+			Metadata:  "{}",
+		},
+	}
+	_, err = UpdateInventories(context.Background(), logger, db, updates, true)
+	if err != nil {
+		t.Fatalf("error updating inventory: %v", err.Error())
+	}
+
+	var exists bool
+	err = db.QueryRowContext(context.Background(), "SELECT EXISTS (SELECT 1 FROM inventory_ledger WHERE id = $1)", oldLedgerID).Scan(&exists)
+	if err != nil {
+		t.Fatalf("error querying inventory ledger existence: %v", err.Error())
+	}
+	assert.False(t, exists)
+
+	var count int
+	err = db.QueryRowContext(context.Background(), "SELECT count(*) FROM inventory_ledger WHERE user_id = $1", userUUID).Scan(&count)
+	if err != nil {
+		t.Fatalf("error querying inventory ledger count: %v", err.Error())
+	}
+	assert.Equal(t, 2, count)
+}

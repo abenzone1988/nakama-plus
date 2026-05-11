@@ -10,7 +10,6 @@ metadata:
   namespace: starhold
 data:
   nakama.yaml: |
-    name: "nakama-plus"
     data_dir: "/nakama/data"
 
     logger:
@@ -21,56 +20,28 @@ data:
       max_size: 100
       rotation: true
 
-    metrics:
-      reporting_freq_sec: 60
-      namespace: "nakama"
-      prometheus_port: 0
-
     database:
       address: [] # 留空，通过 StatefulSet 的启动参数 --database.address 动态注入
-      conn_max_lifetime_ms: 0
-      max_open_conns: 100
-      max_idle_conns: 100
-
+      
     runtime:
       path: "/nakama/data/modules"
-      http_key: "default_http_key"
+      http_key: "spark_http_key"
 
     socket:
-      server_key: "sparkgame"
-      port: 7350
-      max_message_size_bytes: 4096
-      read_timeout_ms: 30000
-      write_timeout_ms: 30000
-      idle_timeout_ms: 60000
-      write_wait_ms: 5000
-      pong_wait_ms: 25000
-      ping_period_ms: 15000
-      outgoing_queue_size: 16
+      server_key: "sparkgame" 
 
     session:
-      encryption_key: "default_encryption_key"
+      encryption_key: "spark_encryption_key"
       token_expiry_sec: 7200
-      refresh_encryption_key: "default_refresh_encryption_key"
+      refresh_encryption_key: "spark_refresh_encryption_key"
       refresh_token_expiry_sec: 2592000
       single_socket: true
 
-    social:
-      steam:
-        publisher_key: ""
-        app_id: 0
-
-    console:
-      port: 7351
+    console:   
       username: "admin"
       password: "S7@kP9#vX2"
-      signing_key: "default_signing_key"
-
-    matchmaker:
-      max_tickets: 2
-      interval_sec: 15
-      max_intervals: 3
-
+      signing_key: "spark_signing_key"
+  
     cluster:
       gossip_bindaddr: "0.0.0.0"
       gossip_bindport: 7335
@@ -80,10 +51,21 @@ data:
           - "etcd-client.starhold.svc.cluster.local:2379"
 
     grpc:
-      access_token: "default_grpc_token"
+      access_token: "spark_grpc_token"
       heartbeat_timeout: 15
       ca_cert: "/var/lib/nakama/certs/CA.pem"
       server_name_override: "starhold.uk"
 
-    cache:
-      prefix: "nakama"
+    iap:
+      apple:
+        shared_password: "a512ae481d344c5db921c8e049aef419"
+        server_api_key_id: "2DB4KVP297"
+        server_api_issuer_id: "31e310f9-da91-4a17-8709-e19e7da0dffa"
+        server_api_bundle_id: "com.zeusai.starhold"
+        server_api_private_key: |
+          -----BEGIN PRIVATE KEY-----
+          MIGTAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBHkwdwIBAQQgr09jpJ8+IsuYxnZS
+          AzF6q0XzltlbauCn2DUDttSrEUOgCgYIKoZIzj0DAQehRANCAASIFcQ19NguHay9
+          Y6ePjRo/rwHoHhS5kS1OuHic4c6s3BrjLOf5UdXJUJp1pAMqQJuXdRAPlPo8R0Vx
+          2hnUp9hg
+          -----END PRIVATE KEY-----
