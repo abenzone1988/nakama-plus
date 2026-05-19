@@ -61,10 +61,12 @@ $brand-dark-blue: #333564;
   color: rgba(255, 255, 255, 0.2); // match sidebar <hr> color
 }
 
+.user-menu {
+  float: right;
+}
+
 .user-menu-dropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
+  float: right;
   margin-top: 8px;
   min-width: 180px;
   background-color: #ffffff;
