@@ -474,13 +474,17 @@ func ImportAccount(ctx context.Context, logger *zap.Logger, db *sql.DB, statusRe
 	if err := ExecuteInTx(ctx, db, func(tx *sql.Tx) error {
 		account = nil
 
+		userExisted := false
+
 		// Check if importing a completely new account, and create it if needed.
 		if userID == uuid.Nil {
 			query := `
 INSERT INTO users (id, username, display_name, avatar_url, lang_tag, location, timezone, metadata, wallet, email, password, facebook_id, google_id, gamecenter_id, steam_id, custom_id, create_time, update_time, verify_time, disable_time)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)`
+			email := data.Account.Email
+			tx.ExecContext(ctx, "SAVEPOINT import_user")
 			_, err := tx.ExecContext(ctx, query, data.Account.User.Id, data.Account.User.Username, data.Account.User.DisplayName, data.Account.User.AvatarUrl, data.Account.User.LangTag,
-				data.Account.User.Location, data.Account.User.Timezone, data.Account.User.Metadata, data.Account.Wallet, data.Account.Email, "", data.Account.User.FacebookId,
+				data.Account.User.Location, data.Account.User.Timezone, data.Account.User.Metadata, data.Account.Wallet, email, "", data.Account.User.FacebookId,
 				data.Account.User.GoogleId, data.Account.User.GamecenterId, data.Account.User.SteamId, data.Account.CustomId, data.Account.User.CreateTime.AsTime(),
 				data.Account.User.UpdateTime.AsTime(), data.Account.VerifyTime.AsTime(), data.Account.DisableTime.AsTime())
 			if err != nil {
@@ -488,19 +492,32 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $
 					return err
 				}
 				var pgErr *pgconn.PgError
-				if errors.As(err, &pgErr) {
-					if pgErr.Code == dbErrorUniqueViolation && strings.Contains(pgErr.Message, "users_pkey") {
-						return errors.New("User identifier already exists.")
-					}
-					if pgErr.Code == dbErrorUniqueViolation && strings.Contains(pgErr.Message, "users_username_key") {
+				if errors.As(err, &pgErr) && pgErr.Code == dbErrorUniqueViolation {
+					if strings.Contains(pgErr.Message, "users_pkey") {
+						logger.Warn("User already exists, only importing storage")
+						userExisted = true
+						tx.ExecContext(ctx, "ROLLBACK TO SAVEPOINT import_user")
+						err = nil
+					} else if strings.Contains(pgErr.Message, "users_username_key") {
 						return errors.New("Username already in use.")
+					} else {
+						logger.Warn("Unique constraint violation, retrying import with cleared external IDs", zap.String("constraint", pgErr.Message))
+						tx.ExecContext(ctx, "ROLLBACK TO SAVEPOINT import_user")
+						_, err = tx.ExecContext(ctx, query, data.Account.User.Id, data.Account.User.Username, data.Account.User.DisplayName, data.Account.User.AvatarUrl, data.Account.User.LangTag,
+							data.Account.User.Location, data.Account.User.Timezone, data.Account.User.Metadata, data.Account.Wallet, nil, "", nil, nil, nil, nil, nil, data.Account.User.CreateTime.AsTime(),
+							data.Account.User.UpdateTime.AsTime(), data.Account.VerifyTime.AsTime(), data.Account.DisableTime.AsTime())
 					}
 				}
-				logger.Error("Error creating user account during import", zap.Error(err), zap.String("user_id", userID.String()))
-				return err
+				if err != nil {
+					if errors.Is(err, context.Canceled) {
+						return err
+					}
+					logger.Error("Error creating user account during import", zap.Error(err), zap.String("user_id", userID.String()))
+					return err
+				}
 			}
 
-			if len(data.Account.Devices) > 0 {
+			if !userExisted && len(data.Account.Devices) > 0 {
 				query = `INSERT INTO user_device (id, user_id)`
 				params := []interface{}{data.Account.User.Id}
 				for _, d := range data.Account.Devices {
@@ -511,6 +528,7 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $
 						query += fmt.Sprintf(", ($%v, $1)", l)
 					}
 				}
+				query += " ON CONFLICT (id) DO UPDATE SET user_id = EXCLUDED.user_id"
 
 				_, err := tx.ExecContext(ctx, query, params...)
 				if err != nil {
@@ -521,6 +539,7 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $
 					return err
 				}
 			}
+
 		} else {
 			query := "UPDATE users SET metadata = $1, wallet = $2 WHERE id = $3"
 			res, err := tx.ExecContext(ctx, query, data.Account.User.Metadata, data.Account.Wallet, userID.String())
@@ -538,10 +557,16 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $
 		}
 
 		// Ensure all storage objects for the user match what is in the data import.
-		if userID != uuid.Nil {
+		if userID != uuid.Nil || userExisted {
 			// First wipe out any existing storage.
 			query := "DELETE FROM storage WHERE user_id = $1"
-			_, err := tx.ExecContext(ctx, query, userID.String())
+			var deleteUserID string
+			if userID != uuid.Nil {
+				deleteUserID = userID.String()
+			} else {
+				deleteUserID = data.Account.User.Id
+			}
+			_, err := tx.ExecContext(ctx, query, deleteUserID)
 			if err != nil {
 				if errors.Is(err, context.Canceled) {
 					return err

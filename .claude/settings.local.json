@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(clear *)",
+      "Bash(sed -i '' 's/\"context\"/\"context\"\\\\n\\\\t\"fmt\"/' /tmp/api_purchase_edit.go)",
+      "Bash(sed -i '' 's/validation, err := ValidatePurchaseAppleServerAPI\\(ctx, logger, s.db, userID, s.config.GetIAP\\(\\).Apple, in.GetTransactionId\\(\\), in.GetProductId\\(\\), in.GetEnvironment\\(\\), persist\\)/validation, applePriceRaw, err := ValidatePurchaseAppleServerAPI\\(ctx, logger, s.db, userID, s.config.GetIAP\\(\\).Apple, in.GetTransactionId\\(\\), in.GetProductId\\(\\), in.GetEnvironment\\(\\), persist\\)/' /tmp/api_purchase_edit.go)",
+      "Bash(cmd.exe *)",
+      "Bash(cat -A \"D:\\\\\\\\GameServer\\\\\\\\nakama-cluster\\\\\\\\nakama-plus\\\\\\\\console\\\\\\\\ui\\\\\\\\src\\\\\\\\app\\\\\\\\account\\\\\\\\account.component.html\")",
+      "Bash(go build *)"
+    ]
+  }
+}

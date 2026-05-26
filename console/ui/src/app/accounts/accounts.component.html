@@ -31,6 +31,11 @@
       </form>
     </div>
     <div class="col-md-3 justify-content-end text-right">
+        <button *ngIf="importAllowed()" (click)="fileInput.click()" type="button" class="btn btn-outline-secondary mr-2">
+          <img class="mr-2" src="/static/svg/import.svg" alt="" width="13" height="13">
+          {{ 'Import' | translate }}
+        </button>
+        <input type="file" #fileInput hidden (change)="importAccount($event)" accept=".json" />
         <div class="btn-group page-btns" role="group" aria-label="Search">
           <button type="button" class="btn btn-outline-secondary" (click)="search(0)" [disabled]="accounts.length === 0"><img src="/static/svg/page-first.svg" alt="" width="20" height=""></button>
 <!--            <button type="button" class="btn btn-outline-secondary" (click)="search(-1)" [disabled]="prev_cursor === ''"><img src="/static/svg/page-prev.svg" alt="" width="20" height=""></button>-->

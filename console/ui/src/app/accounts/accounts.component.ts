@@ -14,7 +14,7 @@
 
 import {Component, Injectable, OnInit, OnDestroy} from '@angular/core';
 import {ActivatedRoute, ActivatedRouteSnapshot, Resolve, Router, RouterStateSnapshot} from '@angular/router';
-import {AccountList, ApiUser, ConsoleService, UserRole} from '../console.service';
+import {AccountList, ApiUser, ConsoleService, ImportAccountRequest, UserRole} from '../console.service';
 import {Observable, Subject} from 'rxjs';
 import {UntypedFormBuilder, UntypedFormGroup} from '@angular/forms';
 import {AuthenticationService} from '../authentication.service';
@@ -155,6 +155,41 @@ export class AccountListComponent implements OnInit, OnDestroy {
   deleteAllowed(): boolean {
     // only admin and developers are allowed.
     return this.authService.sessionRole <= UserRole.USER_ROLE_DEVELOPER;
+  }
+
+  importAccount(event): void {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result as string);
+        this.error = '';
+        this.consoleService.importAccountFull('', {data}).subscribe(() => {
+          this.search(0);
+        }, err => {
+          const userId = data.account?.user?.id;
+          if (userId && typeof err === 'string' && (err.includes('already exists') || err.includes('already in use'))) {
+            this.consoleService.importAccount('', userId, {data}).subscribe(() => {
+              this.search(0);
+            }, err2 => {
+              this.error = err2;
+            });
+          } else {
+            this.error = err;
+          }
+        });
+      } catch (err) {
+        this.error = 'Failed to parse import file: ' + err.message;
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+  }
+
+  importAllowed(): boolean {
+    return this.authService.sessionRole <= UserRole.USER_ROLE_MAINTAINER;
   }
 
   viewAccount(u: ApiUser): void {
