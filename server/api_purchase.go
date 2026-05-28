@@ -120,8 +120,21 @@ func (s *ApiServer) ValidatePurchaseAppleV2(ctx context.Context, in *game.Valida
 			}
 			tplPay := tplPays.Get(0)
 
-			// 复用现有发货逻辑：productID 使用内部支付ID（TplPay.ID）
-			if err := s.deliverProductToUser(ctx, userID, tplPay.ID, tplPay.Money, nil); err != nil {
+			// 从 Apple Server API 响应中提取实际支付价格（Apple 后台配置的价格）。
+			// Apple 价格是权威来源，优先于本地模板配置的价格。
+			applePriceRaw, _ := extractApplePriceFromRawResponse(vp.ProviderResponse)
+			price := tplPay.Money
+			if applePriceRaw > 0 {
+				price = formatApplePrice(applePriceRaw)
+				if price != tplPay.Money {
+					logger.Warn("Apple 价格与本地模板不一致，以 Apple 价格为准",
+						zap.String("local_price", tplPay.Money),
+						zap.String("apple_price", price),
+						zap.String("product_id", tplPay.ID))
+				}
+			}
+
+			if err := s.deliverProductToUser(ctx, userID, tplPay.ID, price, nil); err != nil {
 				logger.Error("Apple IAP 发货失败", zap.Error(err), zap.String("user_id", userID.String()), zap.String("pay_id", tplPay.ID), zap.String("ios_product_id", iosProductID), zap.String("transaction_id", vp.TransactionId))
 				return nil, status.Error(codes.Internal, "Purchase validated but delivery failed.")
 			}

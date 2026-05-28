@@ -361,9 +361,13 @@ func (s *ApiServer) validateProduct(productID string, price string) (*template.T
 	if err1 != nil || err2 != nil {
 		return nil, fmt.Errorf("商品价格解析失败: %s", productID)
 	}
-	// 允许浮点误差, 例如1分（0.01）以内认为相同
+	// 允许浮点误差, 例如1分（0.01）以内认为相同。
+	// 不一致时仅告警不阻断——实际支付价格以 Apple/支付平台为准，本地模板价格为参考。
 	if math.Abs(expectedPrice-actualPrice) > 0.01 {
-		return nil, fmt.Errorf("商品价格不匹配: %s", productID)
+		s.logger.Warn("商品价格与模板配置不一致，以实际支付价格为准",
+			zap.String("product_id", productID),
+			zap.String("template_price", tplPay.Money),
+			zap.String("actual_price", price))
 	}
 	return &tplPay, nil
 }

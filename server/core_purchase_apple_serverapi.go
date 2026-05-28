@@ -42,6 +42,8 @@ type appleJWSTransactionPayload struct {
 	PurchaseDate  int64  `json:"purchaseDate"` // milliseconds since epoch
 	BundleId      string `json:"bundleId"`
 	Environment   string `json:"environment"`
+	Price         int64  `json:"price"`    // 实际支付价格，单位为毫单位（如 990 = $0.99）
+	Currency      string `json:"currency"` // ISO 4217 货币代码
 }
 
 type appleJWSHeader struct {
@@ -235,6 +237,37 @@ func fetchAppleTransactionInfo(ctx context.Context, client *http.Client, baseURL
 	return out.SignedTransactionInfo, body, resp.StatusCode, nil
 }
 
+// extractApplePriceFromRawResponse 从 Apple Server API 的原始 HTTP 响应中提取实际支付价格。
+// rawResponse 是 /inApps/v1/transactions/{id} 接口返回的 JSON 响应体。
+// 返回 price（毫单位，如 990 = $0.99）和 currency（ISO 4217）。
+func extractApplePriceFromRawResponse(rawResponse string) (int64, string) {
+	if rawResponse == "" {
+		return 0, ""
+	}
+	var resp appleTransactionInfoResponse
+	if err := json.Unmarshal([]byte(rawResponse), &resp); err != nil {
+		return 0, ""
+	}
+	parts := strings.Split(resp.SignedTransactionInfo, ".")
+	if len(parts) != 3 {
+		return 0, ""
+	}
+	payloadBytes, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return 0, ""
+	}
+	var payload appleJWSTransactionPayload
+	if err := json.Unmarshal(payloadBytes, &payload); err != nil {
+		return 0, ""
+	}
+	return payload.Price, payload.Currency
+}
+
+// formatApplePrice 将 Apple 毫单位价格转换为显示字符串（如 990 → "0.99"）。
+func formatApplePrice(price int64) string {
+	return fmt.Sprintf("%.2f", float64(price)/1000.0)
+}
+
 func buildAppleServerAPIJWT(key *ecdsa.PrivateKey, keyID, issuerID, bundleID string) (string, error) {
 	now := time.Now()
 	claims := jwt.MapClaims{
@@ -397,4 +430,3 @@ func verifyJWSWithCert(alg string, signingInput, sig []byte, cert *x509.Certific
 	}
 	return nil
 }
-
