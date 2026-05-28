@@ -415,11 +415,36 @@ func NewFromBytes(b []byte) Permission {
 	return Permission{Bitmap: b}
 }
 
+var skippedResources = map[string]bool{
+	"HIRO_INVENTORY":   true,
+	"HIRO_PROGRESSION": true,
+	"HIRO_ECONOMY":     true,
+	"HIRO_STATS":       true,
+	"HIRO_ENERGY":      true,
+}
+
+func isSkippedResource(resource string) bool {
+	return skippedResources[resource]
+}
+
+func nonSkippedResourceCount() int {
+	count := 0
+	for name := range console.AclResources_value {
+		if !isSkippedResource(name) {
+			count++
+		}
+	}
+	return count
+}
+
 func (p Permission) ACL() map[string]*console.UserAcl {
 	acl := map[string]*console.UserAcl{}
 	curr := p
 
 	for i, resource := range console.AclResources_name {
+		if isSkippedResource(resource) {
+			continue
+		}
 		p := &console.UserAcl{}
 		if curr.HasAccess(NewPermission(ConsoleResource(i), PermissionRead)) {
 			p.Read = true
@@ -460,6 +485,9 @@ func NewFromJson(s string) (Permission, error) {
 
 	out := make(map[string]*console.UserAcl, len(console.AclResources_value))
 	for resource := range console.AclResources_value {
+		if isSkippedResource(resource) {
+			continue
+		}
 		p := dbAcl.Acl[resource]
 		out[resource] = &console.UserAcl{
 			Read:   p.Read,
@@ -488,7 +516,7 @@ func (p Permission) ToJson() (string, error) {
 		}
 	}
 
-	if allPermissionsKeyCount == len(console.AclResources_value) {
+	if allPermissionsKeyCount == nonSkippedResourceCount() {
 		out = dbPermission{Admin: true, Acl: nil}
 	}
 
