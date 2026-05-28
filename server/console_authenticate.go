@@ -285,7 +285,7 @@ func (s *ConsoleServer) Authenticate(ctx context.Context, in *console.Authentica
 
 	s.consoleSessionCache.Add(userId, exp, signedToken, 0, "")
 
-	return &console.ConsoleSession{Token: signedToken}, nil
+	return &console.ConsoleSession{Token: signedToken, Acl: userAcl.ACL()}, nil
 }
 
 func (s *ConsoleServer) AuthenticateLogout(ctx context.Context, in *console.AuthenticateLogoutRequest) (*emptypb.Empty, error) {

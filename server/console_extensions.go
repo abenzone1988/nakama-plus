@@ -16,58 +16,14 @@ package server
 
 import (
 	"context"
-	"strings"
 
 	"github.com/doublemo/nakama-plus/v3/console"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 func (s *ConsoleServer) RegisteredExtensions(ctx context.Context, in *emptypb.Empty) (*console.Extensions, error) {
-	var hiroRegistered bool
-	var hiroSystems *console.Extensions_HiroSystems
-	for _, handler := range s.runtime.consoleHttpHandlers {
-		if handler == nil {
-			continue
-		}
-		if !hiroRegistered && strings.HasPrefix(handler.PathPattern, "/v2/console/hiro/") {
-			hiroRegistered = true
-		}
-		if (hiroSystems == nil || !hiroSystems.EconomySystem) && strings.HasPrefix(handler.PathPattern, "/v2/console/hiro/economy/") {
-			if hiroSystems == nil {
-				hiroSystems = &console.Extensions_HiroSystems{}
-			}
-			hiroSystems.EconomySystem = true
-		}
-		if (hiroSystems == nil || !hiroSystems.InventorySystem) && strings.HasPrefix(handler.PathPattern, "/v2/console/hiro/inventory/") {
-			if hiroSystems == nil {
-				hiroSystems = &console.Extensions_HiroSystems{}
-			}
-			hiroSystems.InventorySystem = true
-		}
-		if (hiroSystems == nil || !hiroSystems.ProgressionSystem) && strings.HasPrefix(handler.PathPattern, "/v2/console/hiro/progression/") {
-			if hiroSystems == nil {
-				hiroSystems = &console.Extensions_HiroSystems{}
-			}
-			hiroSystems.ProgressionSystem = true
-		}
-		if (hiroSystems == nil || !hiroSystems.StatsSystem) && strings.HasPrefix(handler.PathPattern, "/v2/console/hiro/stats/") {
-			if hiroSystems == nil {
-				hiroSystems = &console.Extensions_HiroSystems{}
-			}
-			hiroSystems.StatsSystem = true
-		}
-		if (hiroSystems == nil || !hiroSystems.EnergySystem) && strings.HasPrefix(handler.PathPattern, "/v2/console/hiro/energy/") {
-			if hiroSystems == nil {
-				hiroSystems = &console.Extensions_HiroSystems{}
-			}
-			hiroSystems.EnergySystem = true
-		}
-	}
-
 	extensions := &console.Extensions{
-		Hiro:        hiroRegistered,
-		HiroSystems: hiroSystems,
-		Satori:      s.satori != nil,
+		Satori: s.satori != nil,
 	}
 
 	return extensions, nil

@@ -61,6 +61,7 @@
   "No groups found - change the filter criteria or add new user groups.": "未找到群组 - 请更改筛选条件或添加新群组。",
   "Logout": "退出登录",
   "Export": "导出",
+  "Import": "导入",
   "Ban": "封禁",
   "Unban": "解封",
   "Recorded delete": "逻辑删除",

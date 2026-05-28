@@ -17,7 +17,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
-	"net/http"
 	"strings"
 
 	"github.com/doublemo/nakama-plus/v3/console"
@@ -142,42 +141,9 @@ func NewPermissionFromString(resource string, level PermissionLevel) Permission 
 }
 
 func CheckACLHttp(method, path string, userPermissions Permission) bool {
-	var requiredPermissions Permission
-
-	switch {
-	case method == http.MethodGet && path == "/v2/console/hiro/inventory/{user_id}/codex": // HiroListInventoryItems
-		requiredPermissions = NewPermission(console.AclResources_HIRO_INVENTORY, PermissionRead)
-	case method == http.MethodGet && path == "/v2/console/hiro/inventory/{user_id}": // HiroListUserInventoryItems
-		requiredPermissions = NewPermission(console.AclResources_HIRO_INVENTORY, PermissionRead)
-	case method == http.MethodPost && path == "/v2/console/hiro/inventory/{user_id}": // HiroAddUserInventoryItems
-		requiredPermissions = NewPermission(console.AclResources_HIRO_INVENTORY, PermissionWrite)
-	case method == http.MethodPut && path == "/v2/console/hiro/inventory/{user_id}": // HiroDeleteUserInventoryItems
-		requiredPermissions = NewPermission(console.AclResources_HIRO_INVENTORY, PermissionDelete)
-	case method == http.MethodPatch && path == "/v2/console/hiro/inventory/{user_id}": // HiroUpdateUserInventoryItems
-		requiredPermissions = NewPermission(console.AclResources_HIRO_INVENTORY, PermissionWrite)
-	case method == http.MethodGet && path == "/v2/console/hiro/progression/{user_id}": // HiroListProgressions
-		requiredPermissions = NewPermission(console.AclResources_HIRO_PROGRESSION, PermissionRead)
-	case method == http.MethodDelete && path == "/v2/console/hiro/progression/{user_id}": // HiroResetProgressions
-		requiredPermissions = NewPermission(console.AclResources_HIRO_PROGRESSION, PermissionWrite)
-	case method == http.MethodPut && path == "/v2/console/hiro/progression/{user_id}": // HiroUnlockProgressions
-		requiredPermissions = NewPermission(console.AclResources_HIRO_PROGRESSION, PermissionWrite)
-	case method == http.MethodPatch && path == "/v2/console/hiro/progression/{user_id}": // HiroUpdateProgressions
-		requiredPermissions = NewPermission(console.AclResources_HIRO_PROGRESSION, PermissionWrite)
-	case method == http.MethodPost && path == "/v2/console/hiro/progression/{user_id}": // HiroPurchaseProgressions
-		requiredPermissions = NewPermission(console.AclResources_HIRO_PROGRESSION, PermissionWrite)
-	case method == http.MethodPost && path == "/v2/console/hiro/economy/{user_id}": // HiroEconomyGrant
-		requiredPermissions = NewPermission(console.AclResources_HIRO_ECONOMY, PermissionWrite)
-	case method == http.MethodGet && path == "/v2/console/hiro/stats/{user_id}": // HiroStatsList
-		requiredPermissions = NewPermission(console.AclResources_HIRO_STATS, PermissionRead)
-	case method == http.MethodPost && path == "/v2/console/hiro/stats/{user_id}": // HiroStatsUpdate
-		requiredPermissions = NewPermission(console.AclResources_HIRO_STATS, PermissionWrite)
-	case method == http.MethodPost && path == "/v2/console/hiro/energy/{user_id}": // HiroEnergyGrant
-		requiredPermissions = NewPermission(console.AclResources_HIRO_ENERGY, PermissionWrite)
-	default:
-		requiredPermissions = Admin()
-	}
-
-	return userPermissions.HasAccess(requiredPermissions)
+	// No custom HTTP ACL checks needed currently.
+	// All routes fall through to require Admin permissions.
+	return userPermissions.HasAccess(Admin())
 }
 
 func CheckACL(path string, userPermissions Permission) bool {
@@ -382,6 +348,16 @@ func CheckACL(path string, userPermissions Permission) bool {
 		requiredPermissions = NewPermission(console.AclResources_PERSONAL_NOTIFICATION, PermissionWrite)
 	case "/nakama.console.Console/ListPersonalNotificationLogs":
 		requiredPermissions = NewPermission(console.AclResources_PERSONAL_NOTIFICATION, PermissionRead)
+	case "/nakama.console.Console/AddVipAccount":
+		requiredPermissions = NewPermission(console.AclResources_VIP_MANAGER, PermissionWrite)
+	case "/nakama.console.Console/ListVipAccounts":
+		requiredPermissions = NewPermission(console.AclResources_VIP_MANAGER, PermissionRead)
+	case "/nakama.console.Console/RemoveVipAccount":
+		requiredPermissions = NewPermission(console.AclResources_VIP_MANAGER, PermissionDelete)
+	case "/nakama.console.Console/CheckVipStatus":
+		requiredPermissions = NewPermission(console.AclResources_VIP_MANAGER, PermissionRead)
+	case "/nakama.console.Console/SetVipExpiryAccount":
+		requiredPermissions = NewPermission(console.AclResources_VIP_MANAGER, PermissionWrite)
 	case "/v2/console/storage/import":
 		// Special case for non-grpc gateway endpoint.
 		requiredPermissions = NewPermission(console.AclResources_STORAGE_DATA_IMPORT, PermissionWrite)
