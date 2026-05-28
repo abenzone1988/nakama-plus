@@ -22,12 +22,14 @@ import {DeleteConfirmService} from '../shared/delete-confirm.service';
 import {takeUntil} from 'rxjs/operators';
 import {NgbModal, NgbModule} from '@ng-bootstrap/ng-bootstrap';
 import {CommonModule} from '@angular/common';
+import {TranslateModule} from '../shared/translate.module';
+import {TranslationService} from '../services/translation.service';
 
 @Component({
   templateUrl: './vip-accounts.component.html',
   styleUrls: ['./vip-accounts.component.scss'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NgbModule]
+  imports: [CommonModule, ReactiveFormsModule, NgbModule, TranslateModule]
 })
 export class VipAccountsComponent implements OnInit, OnDestroy {
   public error = '';
@@ -56,6 +58,7 @@ export class VipAccountsComponent implements OnInit, OnDestroy {
     private readonly formBuilder: UntypedFormBuilder,
     private readonly deleteConfirmService: DeleteConfirmService,
     private readonly modalService: NgbModal,
+    private readonly translationService: TranslationService,
   ) {}
 
   ngOnInit(): void {
@@ -174,7 +177,7 @@ export class VipAccountsComponent implements OnInit, OnDestroy {
       .filter((username: string) => username.trim() !== '');
 
     if (usernames.length === 0) {
-      this.error = '请输入有效的用户名';
+      this.error = this.translationService.translate('Please enter a valid username');
       return;
     }
 
@@ -222,10 +225,10 @@ export class VipAccountsComponent implements OnInit, OnDestroy {
     const totalCount = response.total_count || 0;
 
     if (failedCount === 0) {
-      this.success = `成功添加 ${successCount} 个VIP用户`;
+      this.success = this.translationService.translate('Successfully added') + ` ${successCount} ` + this.translationService.translate('VIP users');
       this.error = '';
     } else if (successCount === 0) {
-      this.error = `添加失败，所有 ${totalCount} 个用户都无法添加`;
+      this.error = this.translationService.translate('Failed to add') + `, ` + this.translationService.translate('all') + ` ${totalCount} ` + this.translationService.translate('users could not be added');
       this.success = '';
 
       // 显示详细的失败信息
@@ -233,11 +236,11 @@ export class VipAccountsComponent implements OnInit, OnDestroy {
         const failedDetails = response.failed_accounts.map(failed =>
           `${failed.username}: ${failed.error_message}`
         ).join('\n');
-        this.error = `添加失败的详细信息：\n${failedDetails}`;
+        this.error = this.translationService.translate('Add VIP failed details') + `\n${failedDetails}`;
       }
     } else {
-      this.success = `成功添加 ${successCount} 个VIP用户`;
-      this.error = `有 ${failedCount} 个用户添加失败`;
+      this.success = this.translationService.translate('Successfully added') + ` ${successCount} ` + this.translationService.translate('VIP users');
+      this.error = this.translationService.translate('Failed to add') + `: ${failedCount} ` + this.translationService.translate('users failed to add');
 
       // 显示详细的失败信息
       if (response.failed_accounts && response.failed_accounts.length > 0) {
@@ -256,7 +259,7 @@ export class VipAccountsComponent implements OnInit, OnDestroy {
         event.preventDefault();
         this.error = '';
         this.consoleService.removeVipAccount('', account.user_id || '').subscribe(() => {
-          this.success = '成功移除VIP用户';
+          this.success = this.translationService.translate('VIP user removed successfully');
           this.error = '';
           // 更新本地数据，将VIP设为失效
           this.vipAccounts[i].is_active = false;
@@ -267,7 +270,7 @@ export class VipAccountsComponent implements OnInit, OnDestroy {
           event.target.disabled = false;
         }, );
       }
-    ,undefined, "确认删除", "确认删除vip权限？");
+    ,undefined, this.translationService.translate('Confirm Delete'), this.translationService.translate('Confirm remove VIP permission?'));
   }
 
   openEditVipExpiryModal(content: any, account: VipAccount): void {
@@ -305,7 +308,7 @@ export class VipAccountsComponent implements OnInit, OnDestroy {
           this.vipAccounts[idx].is_active = vip.is_active;
         }
 
-        this.success = 'VIP到期时间已更新';
+        this.success = this.translationService.translate('VIP expiry time updated');
         this.error = '';
         this.modalService.dismissAll();
       },

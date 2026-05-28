@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { AnnouncementsService } from './announcements.service';
 import { DeleteConfirmService } from '../shared/delete-confirm.service';
+import { TranslationService } from '../services/translation.service';
 
 @Component({
   templateUrl: './announcements.component.html'
@@ -29,6 +30,7 @@ export class AnnouncementsComponent implements OnInit {
     private readonly modalService: NgbModal,
     private readonly fb: FormBuilder,
     private readonly deleteConfirmService: DeleteConfirmService,
+    private readonly translationService: TranslationService,
   ) {
     this.form = this.fb.group({
       title: ['', Validators.required],
@@ -133,25 +135,25 @@ export class AnnouncementsComponent implements OnInit {
     if (this.editingAnnouncement) {
       this.announcementsService.updateAnnouncement(this.editingAnnouncement.id || '', data).subscribe({
         next: () => {
-          alert('更新成功');
+          alert(this.translationService.translate('Update successful'));
           this.modalService.dismissAll();
           this.loadAnnouncements();
         },
         error: (error) => {
           console.error('更新失败', error);
-          alert('更新失败');
+          alert(this.translationService.translate('Update failed'));
         }
       });
     } else {
       this.announcementsService.createAnnouncement(data).subscribe({
         next: () => {
-          alert('创建成功');
+          alert(this.translationService.translate('Create successful'));
           this.modalService.dismissAll();
           this.loadAnnouncements();
         },
         error: (error) => {
           console.error('创建失败', error);
-          alert('创建失败');
+          alert(this.translationService.translate('Create failed'));
         }
       });
     }
@@ -162,18 +164,18 @@ export class AnnouncementsComponent implements OnInit {
       () => {
         this.announcementsService.deleteAnnouncement(announcement.id || '').subscribe({
           next: () => {
-            alert('删除成功');
+            alert(this.translationService.translate('Delete successful'));
             this.loadAnnouncements();
           },
           error: (error) => {
             console.error('删除失败', error);
-            alert('删除失败');
+            alert(this.translationService.translate('Delete failed'));
           }
         });
       },
       undefined,
-      '删除公告',
-      `确认删除标题为 "${announcement.title}" 的公告吗？`
+      this.translationService.translate('Delete Announcement'),
+      this.translationService.translate('Are you sure you want to delete the announcement:') + ` "${announcement.title}" ?`
     );
   }
 
@@ -220,12 +222,12 @@ export class AnnouncementsComponent implements OnInit {
   }
 
   getStatusText(status: number): string {
-    const statusMap = {
-      0: '草稿',
-      1: '已发布',
-      2: '已下线'
+    const statusMap: Record<number, string> = {
+      0: 'Draft',
+      1: 'Published',
+      2: 'Offline'
     };
-    return statusMap[status] || '未知';
+    return this.translationService.translate(statusMap[status] || 'Unknown');
   }
 
   getStatusClass(status: number): string {

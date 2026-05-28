@@ -28,6 +28,7 @@ import {SystemNotificationsService} from './system-notifications.service';
 import {DeleteConfirmService} from '../shared/delete-confirm.service';
 import {CommonModule} from '@angular/common';
 import {TranslateModule} from '../shared/translate.module';
+import {TranslationService} from '../services/translation.service';
 
 import {ModalDismissReasons} from '@ng-bootstrap/ng-bootstrap';
 
@@ -60,6 +61,7 @@ export class SystemNotificationsComponent implements OnInit {
     private readonly modalService: NgbModal,
     private readonly deleteConfirmService: DeleteConfirmService,
     private readonly calendar: NgbCalendar,
+    private readonly translationService: TranslationService,
   ) {
     this.today = this.calendar.getToday();
     this.items = this.formBuilder.array([]);
@@ -512,7 +514,7 @@ export class SystemNotificationsComponent implements OnInit {
       const effectiveUTC = effectiveDateTime.toISOString();
       const nowUTC = now.toISOString();
       if (effectiveUTC < nowUTC) {
-        this.showErrorModal('生效时间不能小于当前时间');
+        this.showErrorModal(this.translationService.translate('Effective time cannot be earlier than current time'));
         return;
       }
     }
@@ -541,7 +543,7 @@ export class SystemNotificationsComponent implements OnInit {
       const effectiveUTC = effectiveDateTime.toISOString();
       const expireUTC = expireDateTime.toISOString();
       if (expireUTC <= effectiveUTC) {
-        this.showErrorModal('过期时间必须大于生效时间');
+        this.showErrorModal(this.translationService.translate('Expiry time must be after effective time'));
         return;
       }
     }
@@ -582,7 +584,7 @@ export class SystemNotificationsComponent implements OnInit {
           console.log('更新成功:', response);
           this.showSuccess = true;
           this.showError = false;
-          this.errorMessage = '通知更新成功';
+          this.errorMessage = this.translationService.translate('Notification updated successfully');
           setTimeout(() => this.showSuccess = false, 3000);
           this.search(0);
           this.modalService.dismissAll();
@@ -591,7 +593,7 @@ export class SystemNotificationsComponent implements OnInit {
         error: (error) => {
           console.error('更新失败:', error);
           this.showSuccess = false;
-          this.showErrorModal('更新失败: ' + (error.error?.message || error.message || '未知错误'));
+          this.showErrorModal(this.translationService.translate('Update failed') + ': ' + (error.error?.message || error.message || this.translationService.translate('Unknown error')));
           this.search(0);
         }
       });
@@ -612,7 +614,7 @@ export class SystemNotificationsComponent implements OnInit {
         },
         error: (error) => {
           this.showSuccess = false;
-          this.showErrorModal('创建失败: ' + (error || '未知错误'));
+          this.showErrorModal(this.translationService.translate('Create failed') + ': ' + (error || this.translationService.translate('Unknown error')));
           this.search(0);
           console.error('创建失败', error);
         }
@@ -635,19 +637,19 @@ export class SystemNotificationsComponent implements OnInit {
           next: (response) => {
             console.log('删除成功:', response);
             this.showSuccess = true;
-            this.errorMessage = '通知删除成功';
+            this.errorMessage = this.translationService.translate('Notification deleted successfully');
             setTimeout(() => this.showSuccess = false, 3000);
             this.loadNotifications();
           },
           error: (error) => {
             console.error('删除失败:', error);
-            this.showErrorModal('删除失败: ' + (error.error?.message || error.message || '未知错误'));
+            this.showErrorModal(this.translationService.translate('Delete failed') + ': ' + (error.error?.message || error.message || this.translationService.translate('Unknown error')));
           }
         });
       },
       undefined,
-      '删除通知',
-      `确认删除标题为 "${notification.subject}" 的通知吗？`
+      this.translationService.translate('Delete Notification'),
+      this.translationService.translate('Are you sure you want to delete the notification:') + ` "${notification.subject}" ?`
     );
   }
 

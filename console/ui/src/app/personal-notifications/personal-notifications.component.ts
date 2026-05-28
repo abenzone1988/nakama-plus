@@ -34,6 +34,8 @@ import {NgbModal, NgbCalendar, NgbDateStruct, NgbTimeStruct, NgbDate, NgbAlert, 
 import {PersonalNotificationsService} from './personal-notifications.service';
 import {DeleteConfirmService} from '../shared/delete-confirm.service';
 import {CommonModule, NgOptimizedImage} from '@angular/common';
+import {TranslateModule} from '../shared/translate.module';
+import {TranslationService} from '../services/translation.service';
 
 import {ModalDismissReasons} from '@ng-bootstrap/ng-bootstrap';
 
@@ -48,7 +50,7 @@ interface NotificationResponse {
   templateUrl: './personal-notifications.component.html',
   styleUrls: ['./personal-notifications.component.scss'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NgbModule, NgOptimizedImage]
+  imports: [CommonModule, ReactiveFormsModule, NgbModule, NgOptimizedImage, TranslateModule]
 })
 export class PersonalNotificationsComponent implements OnInit {
   private today: NgbDate;
@@ -81,6 +83,7 @@ export class PersonalNotificationsComponent implements OnInit {
     private readonly modalService: NgbModal,
     private readonly deleteConfirmService: DeleteConfirmService,
     private readonly calendar: NgbCalendar,
+    private readonly translationService: TranslationService,
   ) {
     this.today = this.calendar.getToday();
     this.items = this.formBuilder.array([]);
@@ -167,7 +170,7 @@ export class PersonalNotificationsComponent implements OnInit {
 
   onSubmit(): void {
     if (!this.notificationForm.valid) {
-      this.error = '请填写完整的表单信息';
+      this.error = this.translationService.translate('Please fill in the form completely');
       return;
     }
 
@@ -228,7 +231,7 @@ export class PersonalNotificationsComponent implements OnInit {
       },
       error: (err) => {
         // 失败时显示错误modal
-        this.showErrorModal(err || '发送失败');
+        this.showErrorModal(err || this.translationService.translate('Send failed'));
       }
     });
   }

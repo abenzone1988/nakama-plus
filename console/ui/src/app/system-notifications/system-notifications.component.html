@@ -42,7 +42,7 @@
   <div class="modal-header bg-danger text-white">
     <h5 class="modal-title">
       <img src="/static/svg/red-triangle.svg" alt="" width="16" height="" class="mr-2">
-      错误
+      {{ 'Error' | translate }}
     </h5>
     <button type="button" class="close text-white" aria-label="Close" (click)="modal.dismiss()">
       <span aria-hidden="true">&times;</span>
@@ -52,7 +52,7 @@
     <p class="mb-0">{{errorMessage}}</p>
   </div>
   <div class="modal-footer">
-    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">确定</button>
+    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">{{ 'Confirm' | translate }}</button>
   </div>
 </ng-template>
 
@@ -61,12 +61,12 @@
     <thead class="thead-light">
       <tr>
         <th style="width: 80px">ID</th>
-        <th style="width: 120px">{{ '标题' | translate }}</th>
-        <th style="width: 300px">{{ '内容' | translate }}</th>
-        <th style="width: 150px">{{ '创建时间' | translate }}</th>
-        <th style="width: 150px">{{ '生效时间' | translate }}</th>
-        <th style="width: 150px">{{ '过期时间' | translate }}</th>
-        <th style="width: 120px" *ngIf="operateAllowed()">{{ '操作' | translate }}</th>
+        <th style="width: 120px">{{ 'Title' | translate }}</th>
+        <th style="width: 300px">{{ 'Content' | translate }}</th>
+        <th style="width: 150px">{{ 'Create Time' | translate }}</th>
+        <th style="width: 150px">{{ 'Effective Time' | translate }}</th>
+        <th style="width: 150px">{{ 'Expiry Time' | translate }}</th>
+        <th style="width: 120px" *ngIf="operateAllowed()">{{ 'Actions' | translate }}</th>
       </tr>
     </thead>
     <tbody>
@@ -79,7 +79,7 @@
         <td>
           <div>{{notification.content?.description}}</div>
           <div *ngIf="getRewardItems(notification).length > 0" class="mt-2">
-            <small class="text-muted font-weight-bold">{{ '奖励：' | translate }}</small>
+            <small class="text-muted font-weight-bold">{{ 'Rewards:' | translate }}</small>
             <div class="d-flex flex-wrap mt-1">
               <span *ngFor="let item of getRewardItems(notification)" class="badge badge-info mr-1 mb-1 d-flex align-items-center">
                 <img [src]="getIconById(item.id!)"
@@ -94,7 +94,7 @@
             </div>
           </div>
           <div *ngIf="getRewardItems(notification).length === 0" class="text-muted">
-            {{ '无附件' | translate }}
+            {{ 'No attachments' | translate }}
           </div>
         </td>
         <td>{{notification.create_time | date:'yyyy-MM-dd HH:mm:ss'}}</td>
@@ -106,16 +106,16 @@
                   [ngClass]="isNotificationEffective(notification) ? 'btn-secondary' : 'btn-primary'"
                   (click)="openModal(content, notification)"
                   [disabled]="isNotificationEffective(notification)"
-                  [title]="isNotificationEffective(notification) ? ('通知已生效，无法修改' | translate) : ('修改通知' | translate)">
-            {{ '修改' | translate }}
+                  [title]="isNotificationEffective(notification) ? ('Notification is effective and cannot be modified' | translate) : ('Edit Notification' | translate)">
+            {{ 'Edit' | translate }}
           </button>
           <button type="button"
                   class="btn btn-sm"
                   [ngClass]="isNotificationEffective(notification) ? 'btn-secondary' : 'btn-danger'"
                   (click)="deleteNotification(notification)"
                   [disabled]="isNotificationEffective(notification)"
-                  [title]="isNotificationEffective(notification) ? ('通知已生效，无法删除' | translate) : ('删除通知' | translate)">
-            {{ '删除' | translate }}
+                  [title]="isNotificationEffective(notification) ? ('Notification is effective and cannot be deleted' | translate) : ('Delete Notification' | translate)">
+            {{ 'Delete' | translate }}
           </button>
         </td>
       </tr>
@@ -126,7 +126,7 @@
 
 <ng-template #content let-modal>
   <div class="modal-header">
-    <h4 class="modal-title" id="modal-basic-title"> {{editingNotification ? ('编辑通知' | translate) : ('新增通知' | translate)}}</h4>
+    <h4 class="modal-title" id="modal-basic-title"> {{editingNotification ? ('Edit Notification' | translate) : ('Create Notification' | translate)}}</h4>
     <button type="button" class="close" aria-describedby="modal-title" (click)="modal.dismiss()">
       <span aria-hidden="true">&times;</span>
     </button>
@@ -134,7 +134,7 @@
   <div class="modal-body">
     <form  [formGroup]="notificationForm">
       <div class="mb-3 row align-items-center">
-        <label class="col-sm-2 col-form-label">{{ '标题' | translate }}</label>
+        <label class="col-sm-2 col-form-label">{{ 'Title' | translate }}</label>
         <div class="col-sm-10">
           <div class="input-group">
             <input class="form-control" formControlName="subject" />
@@ -144,7 +144,7 @@
         </div>
       </div>
       <div class="mb-3 row">
-        <label class="col-sm-2 col-form-label">{{ '详情' | translate }}</label>
+        <label class="col-sm-2 col-form-label">{{ 'Details' | translate }}</label>
         <div class="col-sm-10">
           <div class="input-group">
             <!-- 使用textarea代替input -->
@@ -155,7 +155,7 @@
         </div>
       </div>
       <div class="mb-3">
-        <label>{{ '附件' | translate }}</label>
+        <label>{{ 'Attachments' | translate }}</label>
         <div formArrayName="items">
           <div *ngFor="let item of n.items.controls; let i = index" [formGroupName]="i" class="input-group mb-2">
             <img class="item-icon form-spacing" [src]="getIconById(item.value.id)" alt="{{item.value.id}}">
@@ -169,24 +169,24 @@
           </div>
         </div>
         <div class="text-center mt-3">
-          <button type="button" class="btn btn-success" (click)="addItem()">{{ '添加道具' | translate }}</button>
+          <button type="button" class="btn btn-success" (click)="addItem()">{{ 'Add Item' | translate }}</button>
         </div>
       </div>
       <div class="mb-3 row align-items-center">
-        <label class="col-sm-3 col-form-label">{{ '立即生效' | translate }}</label>
+        <label class="col-sm-3 col-form-label">{{ 'Effective Immediately' | translate }}</label>
         <div class="col-sm-9">
           <input class="form-check-input" type="checkbox" formControlName="immediateSend">
-          <small class="form-text text-muted ml-2">{{ '选择后将以当前时间作为生效时间立即发送' | translate }}</small>
+          <small class="form-text text-muted ml-2">{{ 'Sends immediately using current time as effective time' | translate }}</small>
         </div>
       </div>
       <div class="mb-3 row align-items-center">
-        <label class="col-sm-3 col-form-label">{{ '设置过期时间' | translate }}</label>
+        <label class="col-sm-3 col-form-label">{{ 'Set Expiry' | translate }}</label>
         <div class="col-sm-9">
           <input class="form-check-input" type="checkbox" formControlName="enableExpiry">
         </div>
       </div>
       <div class="mb-3 row align-items-center" *ngIf="!n.immediateSend.value">
-        <label class="col-sm-2 col-form-label">{{ '生效时间' | translate }}</label>
+        <label class="col-sm-2 col-form-label">{{ 'Effective Time' | translate }}</label>
         <div class="input-group col-sm-5">
           <input
             id="dateOfEffective"
@@ -210,7 +210,7 @@
       </div>
       </div>
       <div class="mb-3 row align-items-center" *ngIf="n.enableExpiry.value">
-        <label class="col-sm-2 col-form-label">{{ '过期时间' | translate }}</label>
+        <label class="col-sm-2 col-form-label">{{ 'Expiry Time' | translate }}</label>
         <div class="input-group col-sm-5">
           <input
             id="dateOfExpire"
@@ -237,8 +237,8 @@
   </div>
 
   <div class="modal-footer">
-    <button type="button" class="btn btn-outline-dark" (click)="onSubmit()">{{ '确认' | translate }}</button>
-    <button type="button" class="btn btn-secondary ml-2" >{{ '取消' | translate }}</button>
+    <button type="button" class="btn btn-outline-dark" (click)="onSubmit()">{{ 'Confirm' | translate }}</button>
+    <button type="button" class="btn btn-secondary ml-2" >{{ 'Cancel' | translate }}</button>
   </div>
 </ng-template>
 

@@ -1,5 +1,5 @@
-<h2 class="pb-1">个人邮件发送</h2>
-<h6 class="pb-3">{{totalCount}} 条发送记录</h6>
+<h2 class="pb-1">{{ 'Personal Notifications' | translate }}</h2>
+<h6 class="pb-3">{{totalCount}} {{ 'send records found.' | translate }}</h6>
 
 <div class="row no-gutters mb-4">
   <div class="col d-flex justify-content-between no-gutters align-items-center">
@@ -23,40 +23,40 @@
 
 <div class="row no-gutters mb-4">
   <div class="col d-flex justify-content-between no-gutters align-items-center">
-    <button type="button" class="btn btn-success radius" (click)="openModal(content)">发送个人邮件</button>
+    <button type="button" class="btn btn-success radius" (click)="openModal(content)">{{ 'Send Personal Notification' | translate }}</button>
   </div>
 </div>
 
 <ngb-alert [dismissible]="false" type="danger" class="mb-3" *ngIf="error">
   <img src="/static/svg/red-triangle.svg" alt="" width="16" height="" class="mr-2">
-  <h6 class="mr-2 d-inline font-weight-bold">发送失败: {{error}}</h6>
+  <h6 class="mr-2 d-inline font-weight-bold">{{ 'Send failed:' | translate }} {{error}}</h6>
 </ngb-alert>
 
 <ngb-alert [dismissible]="false" type="primary" class="mb-3" *ngIf="showSuccess">
   <img src="/static/svg/mail.svg" alt="" width="16" height="" class="mr-2">
-  <h6 class="mr-2 d-inline font-weight-bold">个人通知发送成功!</h6>
+  <h6 class="mr-2 d-inline font-weight-bold">{{ 'Personal notification sent successfully!' | translate }}</h6>
 </ngb-alert>
 
 <div class="row no-gutters">
   <table class="table table-sm table-hover table-bordered">
     <thead class="thead-light">
       <tr>
-        <th style="width: 120px">标题</th>
-        <th style="width: 300px">内容</th>
-        <th style="width: 150px">发送时间</th>
-        <th style="width: 150px">目标用户</th>
+        <th style="width: 120px">{{ 'Title' | translate }}</th>
+        <th style="width: 300px">{{ 'Content' | translate }}</th>
+        <th style="width: 150px">{{ 'Send Time' | translate }}</th>
+        <th style="width: 150px">{{ 'Target Users' | translate }}</th>
       </tr>
     </thead>
     <tbody>
       <tr *ngIf="logs.length === 0">
-        <td colSpan="5" class="text-muted">暂无个人通知发送记录</td>
+        <td colSpan="4" class="text-muted">{{ 'No personal notification logs found.' | translate }}</td>
       </tr>
       <tr *ngFor="let log of logs; index as i;">
         <td>{{log.subject}}</td>
         <td>
           <div>{{log.content?.description}}</div>
           <div *ngIf="getRewardItems(log).length > 0" class="mt-2">
-            <small class="text-muted font-weight-bold">奖励：</small>
+            <small class="text-muted font-weight-bold">{{ 'Rewards:' | translate }}</small>
             <div class="d-flex flex-wrap mt-1">
               <span *ngFor="let item of getRewardItems(log)" class="badge badge-info mr-1 mb-1 d-flex align-items-center">
                 <img [src]="getIconById(item.id!)"
@@ -71,7 +71,7 @@
             </div>
           </div>
           <div *ngIf="getRewardItems(log).length === 0" class="text-muted">
-            无附件
+            {{ 'No attachments' | translate }}
           </div>
         </td>
         <td>{{log.send_time | date:'yyyy-MM-dd HH:mm:ss'}}</td>
@@ -89,7 +89,7 @@
 
 <ng-template #content let-modal>
   <div class="modal-header">
-    <h4 class="modal-title" id="modal-basic-title">发送个人通知</h4>
+    <h4 class="modal-title" id="modal-basic-title">{{ 'Send Personal Notification' | translate }}</h4>
     <button type="button" class="close" aria-describedby="modal-title" (click)="modal.dismiss()">
       <span aria-hidden="true">&times;</span>
     </button>
@@ -98,7 +98,7 @@
     <form [formGroup]="notificationForm">
 
       <div class="mb-3 row align-items-center">
-        <label class="col-sm-2 col-form-label">标题</label>
+        <label class="col-sm-2 col-form-label">{{ 'Title' | translate }}</label>
         <div class="col-sm-10">
           <div class="input-group">
             <input class="form-control" formControlName="subject" />
@@ -107,7 +107,7 @@
         </div>
       </div>
       <div class="mb-3 row">
-        <label class="col-sm-2 col-form-label">详情</label>
+        <label class="col-sm-2 col-form-label">{{ 'Details' | translate }}</label>
         <div class="col-sm-10">
           <div class="input-group">
             <textarea class="form-control" formControlName="desc"></textarea>
@@ -117,46 +117,46 @@
       </div>
 
       <div class="mb-3">
-        <label>目标用户</label>
+        <label>{{ 'Target Users' | translate }}</label>
         <textarea class="form-control" formControlName="targetUsers" rows="3"
-                  placeholder="输入目标用户名，多个用户名用空格分隔"></textarea>
+                  placeholder="{{ 'Enter usernames separated by spaces' | translate }}"></textarea>
         <small class="form-text text-muted">
-          请输入目标用户名，多个用户名之间用空格分隔。不存在的用户名将被忽略。
+          {{ 'Usernames that do not exist will be ignored.' | translate }}
         </small>
       </div>
 
       <div class="mb-3">
-        <label>附件</label>
+        <label>{{ 'Attachments' | translate }}</label>
         <div formArrayName="items">
           <div *ngFor="let item of getItemsControls(); let i = index" [formGroupName]="i" class="input-group mb-2">
             <img *ngIf="item.value.id" class="item-icon form-spacing" [src]="getIconById(item.value.id)" alt="{{item.value.id}}" width="20" height="20" style="object-fit: contain;" (error)="onImageError($event)">
             <select formControlName="id" class="form-control form-spacing">
-              <option value="">请选择道具</option>
+              <option value="">{{ 'Select Item' | translate }}</option>
               <option *ngFor="let defaultItem of defaultItems" [value]="defaultItem.id">
                 {{ defaultItem.name }}
               </option>
             </select>
             <input type="number" class="form-control form-spacing" formControlName="num">
-            <button type="button" class="btn btn-danger" (click)="removeItem(i)">Remove</button>
+            <button type="button" class="btn btn-danger" (click)="removeItem(i)">{{ 'Remove' | translate }}</button>
           </div>
         </div>
         <div class="text-center mt-3">
-          <button type="button" class="btn btn-success" (click)="addItem()">添加道具</button>
+          <button type="button" class="btn btn-success" (click)="addItem()">{{ 'Add Item' | translate }}</button>
         </div>
       </div>
     </form>
   </div>
 
   <div class="modal-footer">
-    <button type="button" class="btn btn-outline-dark" (click)="onSubmit()">确认</button>
-    <button type="button" class="btn btn-secondary ml-2" (click)="modal.dismiss()">取消</button>
+    <button type="button" class="btn btn-outline-dark" (click)="onSubmit()">{{ 'Confirm' | translate }}</button>
+    <button type="button" class="btn btn-secondary ml-2" (click)="modal.dismiss()">{{ 'Cancel' | translate }}</button>
   </div>
 </ng-template>
 
 <!-- 错误信息Modal -->
 <ng-template #errorModalTemplate let-modal>
   <div class="modal-header">
-    <h4 class="modal-title" id="error-modal-title">发送失败</h4>
+    <h4 class="modal-title" id="error-modal-title">{{ 'Send Failed' | translate }}</h4>
     <button type="button" class="close" aria-describedby="modal-title" (click)="modal.dismiss()">
       <span aria-hidden="true">&times;</span>
     </button>
@@ -168,6 +168,6 @@
     </div>
   </div>
   <div class="modal-footer">
-    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">确定</button>
+    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">{{ 'Confirm' | translate }}</button>
   </div>
 </ng-template>

@@ -1,5 +1,5 @@
-<h2 class="pb-1">公告管理</h2>
-<h6 class="pb-3">总计: {{totalCount}} 条记录</h6>
+<h2 class="pb-1">{{ 'Announcements' | translate }}</h2>
+<h6 class="pb-3">{{ 'Total' | translate }}: {{totalCount}} {{ 'records found.' | translate }}</h6>
 
 <div class="row no-gutters mb-4">
   <div class="col">
@@ -8,10 +8,10 @@
         <div class="d-flex align-items-center gap-3">
           <!-- 状态筛选 -->
           <select class="form-select" style="width: 120px;" [(ngModel)]="statusFilter" (change)="onStatusFilterChange()">
-            <option value="">全部状态</option>
-            <option value="0">草稿</option>
-            <option value="1">已发布</option>
-            <option value="2">已下线</option>
+            <option value="">{{ 'All Statuses' | translate }}</option>
+            <option value="0">{{ 'Draft' | translate }}</option>
+            <option value="1">{{ 'Published' | translate }}</option>
+            <option value="2">{{ 'Offline' | translate }}</option>
           </select>
         </div>
         <div class="d-flex gap-3">
@@ -19,19 +19,19 @@
           <div class="input-group" style="width: 300px;">
             <input type="text" class="form-control"
                    [(ngModel)]="searchQuery"
-                   placeholder="搜索公告标题或内容..."
+                   placeholder="{{ 'Search announcements...' | translate }}"
                    (keyup.enter)="onSearch()">
             <button class="btn btn-outline-secondary" type="button" (click)="clearSearch()"
                     *ngIf="searchQuery">
-              <i class="bi bi-x"></i> 清除
+              <i class="bi bi-x"></i> {{ 'Clear' | translate }}
             </button>
             <button class="btn btn-outline-primary" type="button" (click)="onSearch()">
-              <i class="bi bi-search"></i> 搜索
+              <i class="bi bi-search"></i> {{ 'Search' | translate }}
             </button>
           </div>
           <!-- 新增按钮 -->
           <button class="btn btn-primary" (click)="openModal(announcementModal)">
-            新增公告
+            {{ 'Create Announcement' | translate }}
           </button>
         </div>
       </div>
@@ -42,18 +42,18 @@
             <thead class="thead-light">
               <tr>
                 <th>ID</th>
-                <th>标题</th>
-                <th>内容</th>
-                <th>图片</th>
-                <th>状态</th>
-                <th style="width: 180px">创建时间</th>
-                <th style="width: 180px">修改时间</th>
-                <th style="width: 120px">操作</th>
+                <th>{{ 'Title' | translate }}</th>
+                <th>{{ 'Content' | translate }}</th>
+                <th>{{ 'Image' | translate }}</th>
+                <th>{{ 'Status' | translate }}</th>
+                <th style="width: 180px">{{ 'Create Time' | translate }}</th>
+                <th style="width: 180px">{{ 'Update Time' | translate }}</th>
+                <th style="width: 120px">{{ 'Actions' | translate }}</th>
               </tr>
             </thead>
             <tbody>
               <tr *ngIf="announcements.length === 0">
-                <td colspan="6" class="text-muted text-center">暂无公告数据</td>
+                <td colspan="8" class="text-muted text-center">{{ 'No announcements found.' | translate }}</td>
               </tr>
               <tr *ngFor="let announcement of announcements">
                 <td style="max-width: 200px;">{{announcement.id}}</td>
@@ -78,11 +78,11 @@
                   <div class="btn-group">
                     <button class="btn btn-sm btn-outline-primary"
                             (click)="openModal(announcementModal, announcement)">
-                      编辑
+                      {{ 'Edit' | translate }}
                     </button>
                     <button class="btn btn-sm btn-outline-danger"
                             (click)="deleteAnnouncement(announcement)">
-                      删除
+                      {{ 'Delete' | translate }}
                     </button>
                   </div>
                 </td>
@@ -108,46 +108,46 @@
 <!-- 新增/编辑公告模态框 -->
 <ng-template #announcementModal let-modal>
   <div class="modal-header">
-    <h4 class="modal-title">{{editingAnnouncement ? '编辑公告' : '新增公告'}}</h4>
+    <h4 class="modal-title">{{editingAnnouncement ? ('Edit Announcement' | translate) : ('Create Announcement' | translate)}}</h4>
     <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
   </div>
   <div class="modal-body">
     <form [formGroup]="form" (ngSubmit)="onSubmit()">
       <div class="mb-3">
-        <label class="form-label">标题</label>
+        <label class="form-label">{{ 'Title' | translate }}</label>
         <input type="text" class="form-control" formControlName="title">
         <div class="invalid-feedback" *ngIf="form.get('title')?.errors?.required">
-          请输入标题
+          {{ 'Title is required' | translate }}
         </div>
       </div>
 
       <div class="mb-3">
-        <label class="form-label">内容</label>
+        <label class="form-label">{{ 'Content' | translate }}</label>
         <textarea class="form-control" rows="4" formControlName="content"></textarea>
         <div class="invalid-feedback" *ngIf="form.get('content')?.errors?.required">
-          请输入内容
+          {{ 'Content is required' | translate }}
         </div>
       </div>
 
       <div class="mb-3">
-        <label class="form-label">图片URL</label>
+        <label class="form-label">{{ 'Image URL' | translate }}</label>
         <input type="text" class="form-control" formControlName="img">
-        <small class="form-text text-muted">可选，支持图片URL地址</small>
+        <small class="form-text text-muted">{{ 'Optional, image URL' | translate }}</small>
       </div>
 
       <div class="mb-3">
-        <label class="form-label">状态</label>
+        <label class="form-label">{{ 'Status' | translate }}</label>
         <select class="form-select" formControlName="status">
-          <option [value]="0">草稿</option>
-          <option [value]="1">已发布</option>
-          <option [value]="2">已下线</option>
+          <option [value]="0">{{ 'Draft' | translate }}</option>
+          <option [value]="1">{{ 'Published' | translate }}</option>
+          <option [value]="2">{{ 'Offline' | translate }}</option>
         </select>
       </div>
     </form>
   </div>
   <div class="modal-footer">
-    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">取消</button>
+    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">{{ 'Cancel' | translate }}</button>
     <button type="button" class="btn btn-primary" (click)="onSubmit()"
-            [disabled]="form.invalid">确定</button>
+            [disabled]="form.invalid">{{ 'Confirm' | translate }}</button>
   </div>
 </ng-template>
