@@ -1237,3 +1237,64 @@ message BuyChallengeBattleTimesResponse {
   Wallet wallet_updated = 6;     // 钱包更新结果（扣除钻石或广告券）
 }
 
+// ==================== GetLaunchBootstrapData ====================
+// 聚合接口：鉴权后1个RPC取回进入主城所需的全部只读数据。
+// 原则：已有 code/msg 的 response 类型直接复用（子结构原样沿用现有 RPC 返回）；
+//       仅有基础 data 类型（无 code/msg）时才增加轻量 wrapper。
+
+// Account 快照：wallet/inventory 透传 Nakama JSON 字符串，客户端按现有逻辑反序列化。
+message BootstrapAccount {
+  int32 code = 1;
+  string msg = 2;
+  string wallet = 3;       // Nakama wallet JSON string（原样透传）
+  string inventory = 4;    // Nakama inventory JSON string（原样透传）
+  string create_time = 5;  // ISO8601
+  string user_id = 6;
+}
+
+message GetLaunchBootstrapDataResponse {
+  int32 schema_version = 1;
+
+  // -- 关键模块 --
+  BootstrapAccount account = 2;
+  string server_time = 3;                          // ISO8601
+
+  int32 stamina_code = 4;                          // StaminaData 无 code，用独立字段
+  string stamina_msg = 5;
+  StaminaData stamina = 6;
+
+  map<string, string> storage = 7;                 // collection→rawJSON; 缺失 key 不返回（新号客户端兜底）
+
+  int32 equip_code = 8;                            // EquipData 无 code
+  string equip_msg = 9;
+  EquipData equip = 10;
+
+  GetCrystalEquipmentsResponse crystal_equipments = 11;  // 已有 code/msg，直接复用
+  GetCrystalSkinsResponse crystal_skins = 12;            // 已有 code/msg，直接复用
+
+  int32 player_level_code = 13;                    // PlayerLevelData 无 code
+  string player_level_msg = 14;
+  PlayerLevelData player_level = 15;
+
+  // -- 延迟模块 --
+  int32 shops_code = 16;                           // ShopData / BoxShopData / ChapterShopData / GemShopData 均无 code
+  string shops_msg = 17;
+  ShopData normal_shop = 18;
+  BoxShopData box_shop = 19;
+  ChapterShopData chapter_shop = 20;
+  GemShopData gem_shop = 21;
+
+  GetSignInRewardResponse sign_in_daily = 22;      // 已有 code/msg，直接复用
+  GetSevenDaySignInResponse sign_in_seven_day = 23;// 已有 code/msg，直接复用
+
+  int32 vip_code = 24;                             // CheckVipStatusResponse 无 code
+  string vip_msg = 25;
+  CheckVipStatusResponse vip = 26;
+
+  GetMonthlyCardStatusResponse monthly_pass = 27;  // 已有 code/msg，直接复用
+  GetSevenDayStatusResponse seven_day_card = 28;    // 已有 code/msg，直接复用
+  GetFirstChargeStatusResponse first_charge = 29;   // 已有 code/msg，直接复用
+
+  bool partial = 30;                               // true if any module failed（客户端降级处理）
+}
+

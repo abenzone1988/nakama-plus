@@ -10822,6 +10822,369 @@ func (x *BuyChallengeBattleTimesResponse) GetWalletUpdated() *Wallet {
 	return nil
 }
 
+// Account 快照：wallet/inventory 透传 Nakama JSON 字符串，客户端按现有逻辑反序列化。
+type BootstrapAccount struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Code          int32                  `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
+	Msg           string                 `protobuf:"bytes,2,opt,name=msg,proto3" json:"msg,omitempty"`
+	Wallet        string                 `protobuf:"bytes,3,opt,name=wallet,proto3" json:"wallet,omitempty"`                           // Nakama wallet JSON string（原样透传）
+	Inventory     string                 `protobuf:"bytes,4,opt,name=inventory,proto3" json:"inventory,omitempty"`                     // Nakama inventory JSON string（原样透传）
+	CreateTime    string                 `protobuf:"bytes,5,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"` // ISO8601
+	UserId        string                 `protobuf:"bytes,6,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BootstrapAccount) Reset() {
+	*x = BootstrapAccount{}
+	mi := &file_msg_proto_msgTypes[169]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BootstrapAccount) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BootstrapAccount) ProtoMessage() {}
+
+func (x *BootstrapAccount) ProtoReflect() protoreflect.Message {
+	mi := &file_msg_proto_msgTypes[169]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BootstrapAccount.ProtoReflect.Descriptor instead.
+func (*BootstrapAccount) Descriptor() ([]byte, []int) {
+	return file_msg_proto_rawDescGZIP(), []int{169}
+}
+
+func (x *BootstrapAccount) GetCode() int32 {
+	if x != nil {
+		return x.Code
+	}
+	return 0
+}
+
+func (x *BootstrapAccount) GetMsg() string {
+	if x != nil {
+		return x.Msg
+	}
+	return ""
+}
+
+func (x *BootstrapAccount) GetWallet() string {
+	if x != nil {
+		return x.Wallet
+	}
+	return ""
+}
+
+func (x *BootstrapAccount) GetInventory() string {
+	if x != nil {
+		return x.Inventory
+	}
+	return ""
+}
+
+func (x *BootstrapAccount) GetCreateTime() string {
+	if x != nil {
+		return x.CreateTime
+	}
+	return ""
+}
+
+func (x *BootstrapAccount) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+type GetLaunchBootstrapDataResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SchemaVersion int32                  `protobuf:"varint,1,opt,name=schema_version,json=schemaVersion,proto3" json:"schema_version,omitempty"`
+	// -- 关键模块 --
+	Account           *BootstrapAccount             `protobuf:"bytes,2,opt,name=account,proto3" json:"account,omitempty"`
+	ServerTime        string                        `protobuf:"bytes,3,opt,name=server_time,json=serverTime,proto3" json:"server_time,omitempty"`     // ISO8601
+	StaminaCode       int32                         `protobuf:"varint,4,opt,name=stamina_code,json=staminaCode,proto3" json:"stamina_code,omitempty"` // StaminaData 无 code，用独立字段
+	StaminaMsg        string                        `protobuf:"bytes,5,opt,name=stamina_msg,json=staminaMsg,proto3" json:"stamina_msg,omitempty"`
+	Stamina           *StaminaData                  `protobuf:"bytes,6,opt,name=stamina,proto3" json:"stamina,omitempty"`
+	Storage           map[string]string             `protobuf:"bytes,7,rep,name=storage,proto3" json:"storage,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"` // collection→rawJSON; 缺失 key 不返回（新号客户端兜底）
+	EquipCode         int32                         `protobuf:"varint,8,opt,name=equip_code,json=equipCode,proto3" json:"equip_code,omitempty"`                                                     // EquipData 无 code
+	EquipMsg          string                        `protobuf:"bytes,9,opt,name=equip_msg,json=equipMsg,proto3" json:"equip_msg,omitempty"`
+	Equip             *EquipData                    `protobuf:"bytes,10,opt,name=equip,proto3" json:"equip,omitempty"`
+	CrystalEquipments *GetCrystalEquipmentsResponse `protobuf:"bytes,11,opt,name=crystal_equipments,json=crystalEquipments,proto3" json:"crystal_equipments,omitempty"` // 已有 code/msg，直接复用
+	CrystalSkins      *GetCrystalSkinsResponse      `protobuf:"bytes,12,opt,name=crystal_skins,json=crystalSkins,proto3" json:"crystal_skins,omitempty"`                // 已有 code/msg，直接复用
+	PlayerLevelCode   int32                         `protobuf:"varint,13,opt,name=player_level_code,json=playerLevelCode,proto3" json:"player_level_code,omitempty"`    // PlayerLevelData 无 code
+	PlayerLevelMsg    string                        `protobuf:"bytes,14,opt,name=player_level_msg,json=playerLevelMsg,proto3" json:"player_level_msg,omitempty"`
+	PlayerLevel       *PlayerLevelData              `protobuf:"bytes,15,opt,name=player_level,json=playerLevel,proto3" json:"player_level,omitempty"`
+	// -- 延迟模块 --
+	ShopsCode      int32                         `protobuf:"varint,16,opt,name=shops_code,json=shopsCode,proto3" json:"shops_code,omitempty"` // ShopData / BoxShopData / ChapterShopData / GemShopData 均无 code
+	ShopsMsg       string                        `protobuf:"bytes,17,opt,name=shops_msg,json=shopsMsg,proto3" json:"shops_msg,omitempty"`
+	NormalShop     *ShopData                     `protobuf:"bytes,18,opt,name=normal_shop,json=normalShop,proto3" json:"normal_shop,omitempty"`
+	BoxShop        *BoxShopData                  `protobuf:"bytes,19,opt,name=box_shop,json=boxShop,proto3" json:"box_shop,omitempty"`
+	ChapterShop    *ChapterShopData              `protobuf:"bytes,20,opt,name=chapter_shop,json=chapterShop,proto3" json:"chapter_shop,omitempty"`
+	GemShop        *GemShopData                  `protobuf:"bytes,21,opt,name=gem_shop,json=gemShop,proto3" json:"gem_shop,omitempty"`
+	SignInDaily    *GetSignInRewardResponse      `protobuf:"bytes,22,opt,name=sign_in_daily,json=signInDaily,proto3" json:"sign_in_daily,omitempty"`            // 已有 code/msg，直接复用
+	SignInSevenDay *GetSevenDaySignInResponse    `protobuf:"bytes,23,opt,name=sign_in_seven_day,json=signInSevenDay,proto3" json:"sign_in_seven_day,omitempty"` // 已有 code/msg，直接复用
+	VipCode        int32                         `protobuf:"varint,24,opt,name=vip_code,json=vipCode,proto3" json:"vip_code,omitempty"`                         // CheckVipStatusResponse 无 code
+	VipMsg         string                        `protobuf:"bytes,25,opt,name=vip_msg,json=vipMsg,proto3" json:"vip_msg,omitempty"`
+	Vip            *CheckVipStatusResponse       `protobuf:"bytes,26,opt,name=vip,proto3" json:"vip,omitempty"`
+	MonthlyPass    *GetMonthlyCardStatusResponse `protobuf:"bytes,27,opt,name=monthly_pass,json=monthlyPass,proto3" json:"monthly_pass,omitempty"`      // 已有 code/msg，直接复用
+	SevenDayCard   *GetSevenDayStatusResponse    `protobuf:"bytes,28,opt,name=seven_day_card,json=sevenDayCard,proto3" json:"seven_day_card,omitempty"` // 已有 code/msg，直接复用
+	FirstCharge    *GetFirstChargeStatusResponse `protobuf:"bytes,29,opt,name=first_charge,json=firstCharge,proto3" json:"first_charge,omitempty"`      // 已有 code/msg，直接复用
+	Partial        bool                          `protobuf:"varint,30,opt,name=partial,proto3" json:"partial,omitempty"`                                // true if any module failed（客户端降级处理）
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *GetLaunchBootstrapDataResponse) Reset() {
+	*x = GetLaunchBootstrapDataResponse{}
+	mi := &file_msg_proto_msgTypes[170]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetLaunchBootstrapDataResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetLaunchBootstrapDataResponse) ProtoMessage() {}
+
+func (x *GetLaunchBootstrapDataResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_msg_proto_msgTypes[170]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetLaunchBootstrapDataResponse.ProtoReflect.Descriptor instead.
+func (*GetLaunchBootstrapDataResponse) Descriptor() ([]byte, []int) {
+	return file_msg_proto_rawDescGZIP(), []int{170}
+}
+
+func (x *GetLaunchBootstrapDataResponse) GetSchemaVersion() int32 {
+	if x != nil {
+		return x.SchemaVersion
+	}
+	return 0
+}
+
+func (x *GetLaunchBootstrapDataResponse) GetAccount() *BootstrapAccount {
+	if x != nil {
+		return x.Account
+	}
+	return nil
+}
+
+func (x *GetLaunchBootstrapDataResponse) GetServerTime() string {
+	if x != nil {
+		return x.ServerTime
+	}
+	return ""
+}
+
+func (x *GetLaunchBootstrapDataResponse) GetStaminaCode() int32 {
+	if x != nil {
+		return x.StaminaCode
+	}
+	return 0
+}
+
+func (x *GetLaunchBootstrapDataResponse) GetStaminaMsg() string {
+	if x != nil {
+		return x.StaminaMsg
+	}
+	return ""
+}
+
+func (x *GetLaunchBootstrapDataResponse) GetStamina() *StaminaData {
+	if x != nil {
+		return x.Stamina
+	}
+	return nil
+}
+
+func (x *GetLaunchBootstrapDataResponse) GetStorage() map[string]string {
+	if x != nil {
+		return x.Storage
+	}
+	return nil
+}
+
+func (x *GetLaunchBootstrapDataResponse) GetEquipCode() int32 {
+	if x != nil {
+		return x.EquipCode
+	}
+	return 0
+}
+
+func (x *GetLaunchBootstrapDataResponse) GetEquipMsg() string {
+	if x != nil {
+		return x.EquipMsg
+	}
+	return ""
+}
+
+func (x *GetLaunchBootstrapDataResponse) GetEquip() *EquipData {
+	if x != nil {
+		return x.Equip
+	}
+	return nil
+}
+
+func (x *GetLaunchBootstrapDataResponse) GetCrystalEquipments() *GetCrystalEquipmentsResponse {
+	if x != nil {
+		return x.CrystalEquipments
+	}
+	return nil
+}
+
+func (x *GetLaunchBootstrapDataResponse) GetCrystalSkins() *GetCrystalSkinsResponse {
+	if x != nil {
+		return x.CrystalSkins
+	}
+	return nil
+}
+
+func (x *GetLaunchBootstrapDataResponse) GetPlayerLevelCode() int32 {
+	if x != nil {
+		return x.PlayerLevelCode
+	}
+	return 0
+}
+
+func (x *GetLaunchBootstrapDataResponse) GetPlayerLevelMsg() string {
+	if x != nil {
+		return x.PlayerLevelMsg
+	}
+	return ""
+}
+
+func (x *GetLaunchBootstrapDataResponse) GetPlayerLevel() *PlayerLevelData {
+	if x != nil {
+		return x.PlayerLevel
+	}
+	return nil
+}
+
+func (x *GetLaunchBootstrapDataResponse) GetShopsCode() int32 {
+	if x != nil {
+		return x.ShopsCode
+	}
+	return 0
+}
+
+func (x *GetLaunchBootstrapDataResponse) GetShopsMsg() string {
+	if x != nil {
+		return x.ShopsMsg
+	}
+	return ""
+}
+
+func (x *GetLaunchBootstrapDataResponse) GetNormalShop() *ShopData {
+	if x != nil {
+		return x.NormalShop
+	}
+	return nil
+}
+
+func (x *GetLaunchBootstrapDataResponse) GetBoxShop() *BoxShopData {
+	if x != nil {
+		return x.BoxShop
+	}
+	return nil
+}
+
+func (x *GetLaunchBootstrapDataResponse) GetChapterShop() *ChapterShopData {
+	if x != nil {
+		return x.ChapterShop
+	}
+	return nil
+}
+
+func (x *GetLaunchBootstrapDataResponse) GetGemShop() *GemShopData {
+	if x != nil {
+		return x.GemShop
+	}
+	return nil
+}
+
+func (x *GetLaunchBootstrapDataResponse) GetSignInDaily() *GetSignInRewardResponse {
+	if x != nil {
+		return x.SignInDaily
+	}
+	return nil
+}
+
+func (x *GetLaunchBootstrapDataResponse) GetSignInSevenDay() *GetSevenDaySignInResponse {
+	if x != nil {
+		return x.SignInSevenDay
+	}
+	return nil
+}
+
+func (x *GetLaunchBootstrapDataResponse) GetVipCode() int32 {
+	if x != nil {
+		return x.VipCode
+	}
+	return 0
+}
+
+func (x *GetLaunchBootstrapDataResponse) GetVipMsg() string {
+	if x != nil {
+		return x.VipMsg
+	}
+	return ""
+}
+
+func (x *GetLaunchBootstrapDataResponse) GetVip() *CheckVipStatusResponse {
+	if x != nil {
+		return x.Vip
+	}
+	return nil
+}
+
+func (x *GetLaunchBootstrapDataResponse) GetMonthlyPass() *GetMonthlyCardStatusResponse {
+	if x != nil {
+		return x.MonthlyPass
+	}
+	return nil
+}
+
+func (x *GetLaunchBootstrapDataResponse) GetSevenDayCard() *GetSevenDayStatusResponse {
+	if x != nil {
+		return x.SevenDayCard
+	}
+	return nil
+}
+
+func (x *GetLaunchBootstrapDataResponse) GetFirstCharge() *GetFirstChargeStatusResponse {
+	if x != nil {
+		return x.FirstCharge
+	}
+	return nil
+}
+
+func (x *GetLaunchBootstrapDataResponse) GetPartial() bool {
+	if x != nil {
+		return x.Partial
+	}
+	return false
+}
+
 var File_msg_proto protoreflect.FileDescriptor
 
 const file_msg_proto_rawDesc = "" +
@@ -11644,7 +12007,55 @@ const file_msg_proto_rawDesc = "" +
 	"\x0fremaining_times\x18\x03 \x01(\x05R\x0eremainingTimes\x12,\n" +
 	"\x12ad_times_remaining\x18\x04 \x01(\x05R\x10adTimesRemaining\x12.\n" +
 	"\x13gem_times_remaining\x18\x05 \x01(\x05R\x11gemTimesRemaining\x123\n" +
-	"\x0ewallet_updated\x18\x06 \x01(\v2\f.game.WalletR\rwalletUpdated*S\n" +
+	"\x0ewallet_updated\x18\x06 \x01(\v2\f.game.WalletR\rwalletUpdated\"\xa8\x01\n" +
+	"\x10BootstrapAccount\x12\x12\n" +
+	"\x04code\x18\x01 \x01(\x05R\x04code\x12\x10\n" +
+	"\x03msg\x18\x02 \x01(\tR\x03msg\x12\x16\n" +
+	"\x06wallet\x18\x03 \x01(\tR\x06wallet\x12\x1c\n" +
+	"\tinventory\x18\x04 \x01(\tR\tinventory\x12\x1f\n" +
+	"\vcreate_time\x18\x05 \x01(\tR\n" +
+	"createTime\x12\x17\n" +
+	"\auser_id\x18\x06 \x01(\tR\x06userId\"\x83\f\n" +
+	"\x1eGetLaunchBootstrapDataResponse\x12%\n" +
+	"\x0eschema_version\x18\x01 \x01(\x05R\rschemaVersion\x120\n" +
+	"\aaccount\x18\x02 \x01(\v2\x16.game.BootstrapAccountR\aaccount\x12\x1f\n" +
+	"\vserver_time\x18\x03 \x01(\tR\n" +
+	"serverTime\x12!\n" +
+	"\fstamina_code\x18\x04 \x01(\x05R\vstaminaCode\x12\x1f\n" +
+	"\vstamina_msg\x18\x05 \x01(\tR\n" +
+	"staminaMsg\x12+\n" +
+	"\astamina\x18\x06 \x01(\v2\x11.game.StaminaDataR\astamina\x12K\n" +
+	"\astorage\x18\a \x03(\v21.game.GetLaunchBootstrapDataResponse.StorageEntryR\astorage\x12\x1d\n" +
+	"\n" +
+	"equip_code\x18\b \x01(\x05R\tequipCode\x12\x1b\n" +
+	"\tequip_msg\x18\t \x01(\tR\bequipMsg\x12%\n" +
+	"\x05equip\x18\n" +
+	" \x01(\v2\x0f.game.EquipDataR\x05equip\x12Q\n" +
+	"\x12crystal_equipments\x18\v \x01(\v2\".game.GetCrystalEquipmentsResponseR\x11crystalEquipments\x12B\n" +
+	"\rcrystal_skins\x18\f \x01(\v2\x1d.game.GetCrystalSkinsResponseR\fcrystalSkins\x12*\n" +
+	"\x11player_level_code\x18\r \x01(\x05R\x0fplayerLevelCode\x12(\n" +
+	"\x10player_level_msg\x18\x0e \x01(\tR\x0eplayerLevelMsg\x128\n" +
+	"\fplayer_level\x18\x0f \x01(\v2\x15.game.PlayerLevelDataR\vplayerLevel\x12\x1d\n" +
+	"\n" +
+	"shops_code\x18\x10 \x01(\x05R\tshopsCode\x12\x1b\n" +
+	"\tshops_msg\x18\x11 \x01(\tR\bshopsMsg\x12/\n" +
+	"\vnormal_shop\x18\x12 \x01(\v2\x0e.game.ShopDataR\n" +
+	"normalShop\x12,\n" +
+	"\bbox_shop\x18\x13 \x01(\v2\x11.game.BoxShopDataR\aboxShop\x128\n" +
+	"\fchapter_shop\x18\x14 \x01(\v2\x15.game.ChapterShopDataR\vchapterShop\x12,\n" +
+	"\bgem_shop\x18\x15 \x01(\v2\x11.game.GemShopDataR\agemShop\x12A\n" +
+	"\rsign_in_daily\x18\x16 \x01(\v2\x1d.game.GetSignInRewardResponseR\vsignInDaily\x12J\n" +
+	"\x11sign_in_seven_day\x18\x17 \x01(\v2\x1f.game.GetSevenDaySignInResponseR\x0esignInSevenDay\x12\x19\n" +
+	"\bvip_code\x18\x18 \x01(\x05R\avipCode\x12\x17\n" +
+	"\avip_msg\x18\x19 \x01(\tR\x06vipMsg\x12.\n" +
+	"\x03vip\x18\x1a \x01(\v2\x1c.game.CheckVipStatusResponseR\x03vip\x12E\n" +
+	"\fmonthly_pass\x18\x1b \x01(\v2\".game.GetMonthlyCardStatusResponseR\vmonthlyPass\x12E\n" +
+	"\x0eseven_day_card\x18\x1c \x01(\v2\x1f.game.GetSevenDayStatusResponseR\fsevenDayCard\x12E\n" +
+	"\ffirst_charge\x18\x1d \x01(\v2\".game.GetFirstChargeStatusResponseR\vfirstCharge\x12\x18\n" +
+	"\apartial\x18\x1e \x01(\bR\apartial\x1a:\n" +
+	"\fStorageEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01*S\n" +
 	"\n" +
 	"BattleType\x12\x16\n" +
 	"\x12BATTLE_TYPE_NORMAL\x10\x00\x12\x16\n" +
@@ -11678,7 +12089,7 @@ func file_msg_proto_rawDescGZIP() []byte {
 }
 
 var file_msg_proto_enumTypes = make([]protoimpl.EnumInfo, 6)
-var file_msg_proto_msgTypes = make([]protoimpl.MessageInfo, 174)
+var file_msg_proto_msgTypes = make([]protoimpl.MessageInfo, 177)
 var file_msg_proto_goTypes = []any{
 	(BattleType)(0),                              // 0: game.BattleType
 	(PayType)(0),                                 // 1: game.PayType
@@ -11855,26 +12266,29 @@ var file_msg_proto_goTypes = []any{
 	(*GetChallengeBattleTimesResponse)(nil),      // 172: game.GetChallengeBattleTimesResponse
 	(*BuyChallengeBattleTimesRequest)(nil),       // 173: game.BuyChallengeBattleTimesRequest
 	(*BuyChallengeBattleTimesResponse)(nil),      // 174: game.BuyChallengeBattleTimesResponse
-	nil,                                          // 175: game.GetLevelBoxResponse.ClaimedBoxesEntry
-	nil,                                          // 176: game.EquipData.UnlockEquipsEntry
-	nil,                                          // 177: game.EquipData.CrystalSlotsEntry
-	nil,                                          // 178: game.EndBattleRequest.MonstersEntry
-	nil,                                          // 179: game.GetEquipExchangeResponse.ExchangeInfosEntry
-	(*wrapperspb.BoolValue)(nil),                 // 180: google.protobuf.BoolValue
-	(*timestamppb.Timestamp)(nil),                // 181: google.protobuf.Timestamp
+	(*BootstrapAccount)(nil),                     // 175: game.BootstrapAccount
+	(*GetLaunchBootstrapDataResponse)(nil),       // 176: game.GetLaunchBootstrapDataResponse
+	nil,                                          // 177: game.GetLevelBoxResponse.ClaimedBoxesEntry
+	nil,                                          // 178: game.EquipData.UnlockEquipsEntry
+	nil,                                          // 179: game.EquipData.CrystalSlotsEntry
+	nil,                                          // 180: game.EndBattleRequest.MonstersEntry
+	nil,                                          // 181: game.GetEquipExchangeResponse.ExchangeInfosEntry
+	nil,                                          // 182: game.GetLaunchBootstrapDataResponse.StorageEntry
+	(*wrapperspb.BoolValue)(nil),                 // 183: google.protobuf.BoolValue
+	(*timestamppb.Timestamp)(nil),                // 184: google.protobuf.Timestamp
 }
 var file_msg_proto_depIdxs = []int32{
-	180, // 0: game.ValidatePurchaseAppleV2Request.persist:type_name -> google.protobuf.BoolValue
+	183, // 0: game.ValidatePurchaseAppleV2Request.persist:type_name -> google.protobuf.BoolValue
 	32,  // 1: game.ClaimInviteRewardResponse.reward:type_name -> game.Reward
 	30,  // 2: game.ClaimInviteRewardResponse.wallet_updated:type_name -> game.Wallet
 	31,  // 3: game.ClaimInviteRewardResponse.inventory_updated:type_name -> game.Item
-	175, // 4: game.GetLevelBoxResponse.claimed_boxes:type_name -> game.GetLevelBoxResponse.ClaimedBoxesEntry
-	181, // 5: game.GetGameTimeResponse.game_time:type_name -> google.protobuf.Timestamp
-	181, // 6: game.AnnouncementInfo.create_time:type_name -> google.protobuf.Timestamp
-	181, // 7: game.AnnouncementInfo.update_time:type_name -> google.protobuf.Timestamp
+	177, // 4: game.GetLevelBoxResponse.claimed_boxes:type_name -> game.GetLevelBoxResponse.ClaimedBoxesEntry
+	184, // 5: game.GetGameTimeResponse.game_time:type_name -> google.protobuf.Timestamp
+	184, // 6: game.AnnouncementInfo.create_time:type_name -> google.protobuf.Timestamp
+	184, // 7: game.AnnouncementInfo.update_time:type_name -> google.protobuf.Timestamp
 	21,  // 8: game.ListPublishedAnnouncementsResponse.announcements:type_name -> game.AnnouncementInfo
-	176, // 9: game.EquipData.unlock_equips:type_name -> game.EquipData.UnlockEquipsEntry
-	177, // 10: game.EquipData.crystal_slots:type_name -> game.EquipData.CrystalSlotsEntry
+	178, // 9: game.EquipData.unlock_equips:type_name -> game.EquipData.UnlockEquipsEntry
+	179, // 10: game.EquipData.crystal_slots:type_name -> game.EquipData.CrystalSlotsEntry
 	30,  // 11: game.Reward.wallet:type_name -> game.Wallet
 	31,  // 12: game.Reward.items:type_name -> game.Item
 	30,  // 13: game.WalletUpdateResult.previous:type_name -> game.Wallet
@@ -11883,7 +12297,7 @@ var file_msg_proto_depIdxs = []int32{
 	31,  // 16: game.InventoryUpdateResult.updated:type_name -> game.Item
 	0,   // 17: game.StartBattleRequest.type:type_name -> game.BattleType
 	23,  // 18: game.StartBattleResponse.stamina:type_name -> game.StaminaData
-	178, // 19: game.EndBattleRequest.monsters:type_name -> game.EndBattleRequest.MonstersEntry
+	180, // 19: game.EndBattleRequest.monsters:type_name -> game.EndBattleRequest.MonstersEntry
 	32,  // 20: game.EndBattleResponse.reward:type_name -> game.Reward
 	30,  // 21: game.EndBattleResponse.wallet_updated:type_name -> game.Wallet
 	31,  // 22: game.EndBattleResponse.inventory_updated:type_name -> game.Item
@@ -11923,7 +12337,7 @@ var file_msg_proto_depIdxs = []int32{
 	32,  // 56: game.ExchangeEquipResponse.reward:type_name -> game.Reward
 	30,  // 57: game.ExchangeEquipResponse.wallet_updated:type_name -> game.Wallet
 	31,  // 58: game.ExchangeEquipResponse.inventory_updated:type_name -> game.Item
-	179, // 59: game.GetEquipExchangeResponse.exchange_infos:type_name -> game.GetEquipExchangeResponse.ExchangeInfosEntry
+	181, // 59: game.GetEquipExchangeResponse.exchange_infos:type_name -> game.GetEquipExchangeResponse.ExchangeInfosEntry
 	32,  // 60: game.ClaimMonthlyCardRewardResponse.reward:type_name -> game.Reward
 	30,  // 61: game.ClaimMonthlyCardRewardResponse.wallet_updated:type_name -> game.Wallet
 	31,  // 62: game.ClaimMonthlyCardRewardResponse.inventory_updated:type_name -> game.Item
@@ -12011,15 +12425,15 @@ var file_msg_proto_depIdxs = []int32{
 	157, // 144: game.UpgradeCrystalSkinResponse.skin:type_name -> game.CrystalSkinInfo
 	30,  // 145: game.UpgradeCrystalSkinResponse.wallet_updated:type_name -> game.Wallet
 	31,  // 146: game.UpgradeCrystalSkinResponse.inventory_updated:type_name -> game.Item
-	181, // 147: game.Challenge.open:type_name -> google.protobuf.Timestamp
-	181, // 148: game.Challenge.close:type_name -> google.protobuf.Timestamp
-	181, // 149: game.Challenge.end:type_name -> google.protobuf.Timestamp
-	181, // 150: game.Challenge.over:type_name -> google.protobuf.Timestamp
-	181, // 151: game.JoinChallengeStatus.joined:type_name -> google.protobuf.Timestamp
-	181, // 152: game.JoinChallengeStatus.over:type_name -> google.protobuf.Timestamp
-	181, // 153: game.JoinChallengeStatus.open:type_name -> google.protobuf.Timestamp
-	181, // 154: game.JoinChallengeStatus.close:type_name -> google.protobuf.Timestamp
-	181, // 155: game.JoinChallengeStatus.end:type_name -> google.protobuf.Timestamp
+	184, // 147: game.Challenge.open:type_name -> google.protobuf.Timestamp
+	184, // 148: game.Challenge.close:type_name -> google.protobuf.Timestamp
+	184, // 149: game.Challenge.end:type_name -> google.protobuf.Timestamp
+	184, // 150: game.Challenge.over:type_name -> google.protobuf.Timestamp
+	184, // 151: game.JoinChallengeStatus.joined:type_name -> google.protobuf.Timestamp
+	184, // 152: game.JoinChallengeStatus.over:type_name -> google.protobuf.Timestamp
+	184, // 153: game.JoinChallengeStatus.open:type_name -> google.protobuf.Timestamp
+	184, // 154: game.JoinChallengeStatus.close:type_name -> google.protobuf.Timestamp
+	184, // 155: game.JoinChallengeStatus.end:type_name -> google.protobuf.Timestamp
 	162, // 156: game.GetChallengeResponse.challenges:type_name -> game.Challenge
 	163, // 157: game.GetChallengeResponse.joined:type_name -> game.JoinChallengeStatus
 	162, // 158: game.JoinChallengeResponse.challenge:type_name -> game.Challenge
@@ -12029,13 +12443,30 @@ var file_msg_proto_depIdxs = []int32{
 	169, // 162: game.GetChallengeTopStatsResponse.stats:type_name -> game.TopThreeStats
 	3,   // 163: game.BuyChallengeBattleTimesRequest.type:type_name -> game.BuyChallengeBattleTimesType
 	30,  // 164: game.BuyChallengeBattleTimesResponse.wallet_updated:type_name -> game.Wallet
-	16,  // 165: game.GetLevelBoxResponse.ClaimedBoxesEntry.value:type_name -> game.LevelBoxInfo
-	71,  // 166: game.GetEquipExchangeResponse.ExchangeInfosEntry.value:type_name -> game.EquipExchangeInfo
-	167, // [167:167] is the sub-list for method output_type
-	167, // [167:167] is the sub-list for method input_type
-	167, // [167:167] is the sub-list for extension type_name
-	167, // [167:167] is the sub-list for extension extendee
-	0,   // [0:167] is the sub-list for field type_name
+	175, // 165: game.GetLaunchBootstrapDataResponse.account:type_name -> game.BootstrapAccount
+	23,  // 166: game.GetLaunchBootstrapDataResponse.stamina:type_name -> game.StaminaData
+	182, // 167: game.GetLaunchBootstrapDataResponse.storage:type_name -> game.GetLaunchBootstrapDataResponse.StorageEntry
+	24,  // 168: game.GetLaunchBootstrapDataResponse.equip:type_name -> game.EquipData
+	152, // 169: game.GetLaunchBootstrapDataResponse.crystal_equipments:type_name -> game.GetCrystalEquipmentsResponse
+	156, // 170: game.GetLaunchBootstrapDataResponse.crystal_skins:type_name -> game.GetCrystalSkinsResponse
+	25,  // 171: game.GetLaunchBootstrapDataResponse.player_level:type_name -> game.PlayerLevelData
+	103, // 172: game.GetLaunchBootstrapDataResponse.normal_shop:type_name -> game.ShopData
+	108, // 173: game.GetLaunchBootstrapDataResponse.box_shop:type_name -> game.BoxShopData
+	111, // 174: game.GetLaunchBootstrapDataResponse.chapter_shop:type_name -> game.ChapterShopData
+	114, // 175: game.GetLaunchBootstrapDataResponse.gem_shop:type_name -> game.GemShopData
+	78,  // 176: game.GetLaunchBootstrapDataResponse.sign_in_daily:type_name -> game.GetSignInRewardResponse
+	80,  // 177: game.GetLaunchBootstrapDataResponse.sign_in_seven_day:type_name -> game.GetSevenDaySignInResponse
+	35,  // 178: game.GetLaunchBootstrapDataResponse.vip:type_name -> game.CheckVipStatusResponse
+	67,  // 179: game.GetLaunchBootstrapDataResponse.monthly_pass:type_name -> game.GetMonthlyCardStatusResponse
+	61,  // 180: game.GetLaunchBootstrapDataResponse.seven_day_card:type_name -> game.GetSevenDayStatusResponse
+	57,  // 181: game.GetLaunchBootstrapDataResponse.first_charge:type_name -> game.GetFirstChargeStatusResponse
+	16,  // 182: game.GetLevelBoxResponse.ClaimedBoxesEntry.value:type_name -> game.LevelBoxInfo
+	71,  // 183: game.GetEquipExchangeResponse.ExchangeInfosEntry.value:type_name -> game.EquipExchangeInfo
+	184, // [184:184] is the sub-list for method output_type
+	184, // [184:184] is the sub-list for method input_type
+	184, // [184:184] is the sub-list for extension type_name
+	184, // [184:184] is the sub-list for extension extendee
+	0,   // [0:184] is the sub-list for field type_name
 }
 
 func init() { file_msg_proto_init() }
@@ -12049,7 +12480,7 @@ func file_msg_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_msg_proto_rawDesc), len(file_msg_proto_rawDesc)),
 			NumEnums:      6,
-			NumMessages:   174,
+			NumMessages:   177,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

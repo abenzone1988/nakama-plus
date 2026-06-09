@@ -1310,6 +1310,11 @@ service Nakama {
     };
   }
 
+  // GetLaunchBootstrapData — 聚合接口：鉴权后1个RPC取回进入主城所需的全部只读数据
+  rpc GetLaunchBootstrapData(google.protobuf.Empty) returns (game.GetLaunchBootstrapDataResponse) {
+    option (google.api.http).get = "/v2/game/bootstrap";
+  }
+
   // Execute Call services on the server.
   rpc Any (api.AnyRequest) returns (api.AnyResponseWriter) {
     option (google.api.http) = {
@@ -1333,4 +1338,6 @@ service Nakama {
       }
     };
   }
+
+
 }

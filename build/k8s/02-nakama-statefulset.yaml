@@ -26,7 +26,7 @@ spec:
       terminationGracePeriodSeconds: 60
       initContainers:
         - name: nakama-migration
-          image: 746669197317.dkr.ecr.us-east-1.amazonaws.com/starhold-us/nakama-plus:1.1.0
+          image: 746669197317.dkr.ecr.us-east-1.amazonaws.com/starhold-us/nakama-plus:1.3.5
           command: ["/bin/sh", "-c"]
           args:
             - |           
@@ -64,7 +64,7 @@ spec:
               subPath: nakama.yaml
       containers:
         - name: nakama
-          image: 746669197317.dkr.ecr.us-east-1.amazonaws.com/starhold-us/nakama-plus:1.1.0
+          image: 746669197317.dkr.ecr.us-east-1.amazonaws.com/starhold-us/nakama-plus:1.3.5
           imagePullPolicy: Always
           command: ["/bin/sh", "-c"]
           args:
@@ -169,6 +169,7 @@ spec:
         resources:
           requests:
             storage: 5Gi
+
 
 
 

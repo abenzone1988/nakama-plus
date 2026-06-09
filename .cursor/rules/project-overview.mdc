@@ -1,0 +1,58 @@
+---
+description: nakama-plus 项目总体说明，包含架构、目录结构及开发规范
+alwaysApply: true
+---
+
+# nakama-plus 项目说明
+
+## 项目简介
+
+**nakama-plus** 是基于 [Nakama](https://github.com/heroiclabs/nakama) 扩展的分布式游戏服务器，在原版基础上增加了**集群支持**和**微服务架构**能力。使用 Go 语言编写，通过 Gossip 协议在集群节点间同步数据，支持自动服务发现。
+
+## 核心目录结构
+
+| 目录 | 说明 |
+|------|------|
+| `apigrpc/` | gRPC + REST API 定义（Proto 文件及生成代码） |
+| `server/` | 服务器核心实现（API 处理、配置、集群逻辑） |
+| `game/` | 游戏消息定义（Proto + 生成代码） |
+| `console/` | 管理后台（API + 前端静态资源） |
+| `inner_module/` | 内部微服务模块 |
+| `social/` | 社交功能扩展 |
+| `iap/` | 内购验证 |
+| `build/k8s/` | Kubernetes 部署配置 |
+| `vendor/` | Go vendor 依赖 |
+
+## 关键文件
+
+- `main.go` — 程序入口
+- `apigrpc/apigrpc.proto` — 主要 API 接口定义文件
+- `config.sample.yml` — 配置文件模板
+- `generate-proto.bat` — Proto 文件代码生成脚本
+
+## 添加新接口的规范
+
+**每次新增或修改 gRPC/REST 接口时，必须执行以下步骤：**
+
+1. 在 `apigrpc/apigrpc.proto` 中定义新的 message 和 rpc 方法
+2. 在项目根目录运行 `generate-proto.bat` 生成对应的 Go 代码：
+   ```
+   .\generate-proto.bat
+   ```
+3. 脚本会依次生成：
+   - `vendor/github.com/doublemo/nakama-common/api` — 公共 API
+   - `game/` — 游戏消息
+   - `apigrpc/` — 主 API（生成 `.pb.go`、`.pb.gw.go`、`_grpc.pb.go`）
+   - `console/` — 后台接口
+4. 生成完成后，在 `server/` 目录中实现对应的接口方法
+
+> 不要手动编辑 `apigrpc/*.pb.go`、`apigrpc/*.pb.gw.go`、`apigrpc/*_grpc.pb.go` 等自动生成文件，这些文件由 `generate-proto.bat` 自动覆盖生成。
+
+## 技术栈
+
+- **语言**: Go
+- **协议**: gRPC + HTTP/REST（grpc-gateway）
+- **序列化**: Protocol Buffers (proto3)
+- **数据库**: CockroachDB / PostgreSQL
+- **集群**: 基于 Gossip 的节点发现与数据同步
+- **部署**: Docker / Kubernetes

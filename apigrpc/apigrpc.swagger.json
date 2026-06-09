@@ -2088,6 +2088,29 @@
         ]
       }
     },
+    "/v2/game/bootstrap": {
+      "get": {
+        "summary": "GetLaunchBootstrapData — 聚合接口：鉴权后1个RPC取回进入主城所需的全部只读数据",
+        "operationId": "Nakama_GetLaunchBootstrapData",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gameGetLaunchBootstrapDataResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "Nakama"
+        ]
+      }
+    },
     "/v2/game/challenges": {
       "get": {
         "summary": "==================== Challenge ====================\nGet Challenge",
@@ -8113,6 +8136,34 @@
       ],
       "default": "BATTLE_TYPE_NORMAL"
     },
+    "gameBootstrapAccount": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "msg": {
+          "type": "string"
+        },
+        "wallet": {
+          "type": "string",
+          "title": "Nakama wallet JSON string（原样透传）"
+        },
+        "inventory": {
+          "type": "string",
+          "title": "Nakama inventory JSON string（原样透传）"
+        },
+        "createTime": {
+          "type": "string",
+          "title": "ISO8601"
+        },
+        "userId": {
+          "type": "string"
+        }
+      },
+      "title": "Account 快照：wallet/inventory 透传 Nakama JSON 字符串，客户端按现有逻辑反序列化。"
+    },
     "gameBoxShopData": {
       "type": "object",
       "properties": {
@@ -9714,6 +9765,127 @@
             "type": "object",
             "$ref": "#/definitions/gameItem"
           }
+        }
+      }
+    },
+    "gameGetLaunchBootstrapDataResponse": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "account": {
+          "$ref": "#/definitions/gameBootstrapAccount",
+          "title": "-- 关键模块 --"
+        },
+        "serverTime": {
+          "type": "string",
+          "title": "ISO8601"
+        },
+        "staminaCode": {
+          "type": "integer",
+          "format": "int32",
+          "title": "StaminaData 无 code，用独立字段"
+        },
+        "staminaMsg": {
+          "type": "string"
+        },
+        "stamina": {
+          "$ref": "#/definitions/gameStaminaData"
+        },
+        "storage": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "collection→rawJSON; 缺失 key 不返回（新号客户端兜底）"
+        },
+        "equipCode": {
+          "type": "integer",
+          "format": "int32",
+          "title": "EquipData 无 code"
+        },
+        "equipMsg": {
+          "type": "string"
+        },
+        "equip": {
+          "$ref": "#/definitions/gameEquipData"
+        },
+        "crystalEquipments": {
+          "$ref": "#/definitions/gameGetCrystalEquipmentsResponse",
+          "title": "已有 code/msg，直接复用"
+        },
+        "crystalSkins": {
+          "$ref": "#/definitions/gameGetCrystalSkinsResponse",
+          "title": "已有 code/msg，直接复用"
+        },
+        "playerLevelCode": {
+          "type": "integer",
+          "format": "int32",
+          "title": "PlayerLevelData 无 code"
+        },
+        "playerLevelMsg": {
+          "type": "string"
+        },
+        "playerLevel": {
+          "$ref": "#/definitions/gamePlayerLevelData"
+        },
+        "shopsCode": {
+          "type": "integer",
+          "format": "int32",
+          "description": "ShopData / BoxShopData / ChapterShopData / GemShopData 均无 code",
+          "title": "-- 延迟模块 --"
+        },
+        "shopsMsg": {
+          "type": "string"
+        },
+        "normalShop": {
+          "$ref": "#/definitions/gameShopData"
+        },
+        "boxShop": {
+          "$ref": "#/definitions/gameBoxShopData"
+        },
+        "chapterShop": {
+          "$ref": "#/definitions/gameChapterShopData"
+        },
+        "gemShop": {
+          "$ref": "#/definitions/gameGemShopData"
+        },
+        "signInDaily": {
+          "$ref": "#/definitions/gameGetSignInRewardResponse",
+          "title": "已有 code/msg，直接复用"
+        },
+        "signInSevenDay": {
+          "$ref": "#/definitions/gameGetSevenDaySignInResponse",
+          "title": "已有 code/msg，直接复用"
+        },
+        "vipCode": {
+          "type": "integer",
+          "format": "int32",
+          "title": "CheckVipStatusResponse 无 code"
+        },
+        "vipMsg": {
+          "type": "string"
+        },
+        "vip": {
+          "$ref": "#/definitions/gameCheckVipStatusResponse"
+        },
+        "monthlyPass": {
+          "$ref": "#/definitions/gameGetMonthlyCardStatusResponse",
+          "title": "已有 code/msg，直接复用"
+        },
+        "sevenDayCard": {
+          "$ref": "#/definitions/gameGetSevenDayStatusResponse",
+          "title": "已有 code/msg，直接复用"
+        },
+        "firstCharge": {
+          "$ref": "#/definitions/gameGetFirstChargeStatusResponse",
+          "title": "已有 code/msg，直接复用"
+        },
+        "partial": {
+          "type": "boolean",
+          "title": "true if any module failed（客户端降级处理）"
         }
       }
     },

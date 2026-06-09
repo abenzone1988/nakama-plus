@@ -201,6 +201,7 @@ const (
 	Nakama_GetChallengeTopStats_FullMethodName              = "/nakama.api.Nakama/GetChallengeTopStats"
 	Nakama_GetChallengeBattleTimes_FullMethodName           = "/nakama.api.Nakama/GetChallengeBattleTimes"
 	Nakama_BuyChallengeBattleTimes_FullMethodName           = "/nakama.api.Nakama/BuyChallengeBattleTimes"
+	Nakama_GetLaunchBootstrapData_FullMethodName            = "/nakama.api.Nakama/GetLaunchBootstrapData"
 	Nakama_Any_FullMethodName                               = "/nakama.api.Nakama/Any"
 )
 
@@ -528,6 +529,8 @@ type NakamaClient interface {
 	GetChallengeBattleTimes(ctx context.Context, in *game.GetChallengeBattleTimesRequest, opts ...grpc.CallOption) (*game.GetChallengeBattleTimesResponse, error)
 	// Buy Challenge Battle Times
 	BuyChallengeBattleTimes(ctx context.Context, in *game.BuyChallengeBattleTimesRequest, opts ...grpc.CallOption) (*game.BuyChallengeBattleTimesResponse, error)
+	// GetLaunchBootstrapData — 聚合接口：鉴权后1个RPC取回进入主城所需的全部只读数据
+	GetLaunchBootstrapData(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*game.GetLaunchBootstrapDataResponse, error)
 	// Execute Call services on the server.
 	Any(ctx context.Context, in *api.AnyRequest, opts ...grpc.CallOption) (*api.AnyResponseWriter, error)
 }
@@ -2160,6 +2163,16 @@ func (c *nakamaClient) BuyChallengeBattleTimes(ctx context.Context, in *game.Buy
 	return out, nil
 }
 
+func (c *nakamaClient) GetLaunchBootstrapData(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*game.GetLaunchBootstrapDataResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(game.GetLaunchBootstrapDataResponse)
+	err := c.cc.Invoke(ctx, Nakama_GetLaunchBootstrapData_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *nakamaClient) Any(ctx context.Context, in *api.AnyRequest, opts ...grpc.CallOption) (*api.AnyResponseWriter, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(api.AnyResponseWriter)
@@ -2494,6 +2507,8 @@ type NakamaServer interface {
 	GetChallengeBattleTimes(context.Context, *game.GetChallengeBattleTimesRequest) (*game.GetChallengeBattleTimesResponse, error)
 	// Buy Challenge Battle Times
 	BuyChallengeBattleTimes(context.Context, *game.BuyChallengeBattleTimesRequest) (*game.BuyChallengeBattleTimesResponse, error)
+	// GetLaunchBootstrapData — 聚合接口：鉴权后1个RPC取回进入主城所需的全部只读数据
+	GetLaunchBootstrapData(context.Context, *emptypb.Empty) (*game.GetLaunchBootstrapDataResponse, error)
 	// Execute Call services on the server.
 	Any(context.Context, *api.AnyRequest) (*api.AnyResponseWriter, error)
 	mustEmbedUnimplementedNakamaServer()
@@ -2991,6 +3006,9 @@ func (UnimplementedNakamaServer) GetChallengeBattleTimes(context.Context, *game.
 }
 func (UnimplementedNakamaServer) BuyChallengeBattleTimes(context.Context, *game.BuyChallengeBattleTimesRequest) (*game.BuyChallengeBattleTimesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BuyChallengeBattleTimes not implemented")
+}
+func (UnimplementedNakamaServer) GetLaunchBootstrapData(context.Context, *emptypb.Empty) (*game.GetLaunchBootstrapDataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLaunchBootstrapData not implemented")
 }
 func (UnimplementedNakamaServer) Any(context.Context, *api.AnyRequest) (*api.AnyResponseWriter, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Any not implemented")
@@ -5932,6 +5950,24 @@ func _Nakama_BuyChallengeBattleTimes_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Nakama_GetLaunchBootstrapData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NakamaServer).GetLaunchBootstrapData(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Nakama_GetLaunchBootstrapData_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NakamaServer).GetLaunchBootstrapData(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Nakama_Any_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(api.AnyRequest)
 	if err := dec(in); err != nil {
@@ -6604,6 +6640,10 @@ var Nakama_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "BuyChallengeBattleTimes",
 			Handler:    _Nakama_BuyChallengeBattleTimes_Handler,
+		},
+		{
+			MethodName: "GetLaunchBootstrapData",
+			Handler:    _Nakama_GetLaunchBootstrapData_Handler,
 		},
 		{
 			MethodName: "Any",
