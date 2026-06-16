@@ -17,10 +17,10 @@ func (s *ApiServer) GetMonthlyCardStatus(ctx context.Context, in *game.GetMonthl
 
 	vipAccount, isVip, err := VipAccountCheck(ctx, s.logger, s.db, userID)
 	if err != nil {
-		s.logger.Error("检查VIP状态失败", zap.Error(err))
+		s.logger.Error("Failed to check VIP status", zap.Error(err))
 		return &game.GetMonthlyCardStatusResponse{
 			Code: 1,
-			Msg:  "检查VIP状态失败",
+			Msg:  "Failed to check VIP status",
 		}, nil
 	}
 
@@ -41,7 +41,7 @@ func (s *ApiServer) GetMonthlyCardStatus(ctx context.Context, in *game.GetMonthl
 	if tplPays == nil {
 		return &game.GetMonthlyCardStatusResponse{
 			Code: 2,
-			Msg:  fmt.Sprintf("商品不存在: %s", MonthlyCardID),
+			Msg:  fmt.Sprintf("Item not found: %s", MonthlyCardID),
 		}, nil
 	}
 	tplPay := tplPays.Get(0)
@@ -82,14 +82,14 @@ func (s *ApiServer) ClaimMonthlyCardReward(ctx context.Context, in *game.ClaimMo
 		if monthlyCardData.PurchaseRewardClaimed {
 			return &game.ClaimMonthlyCardRewardResponse{
 				Code: 1,
-				Msg:  "购买奖励已领取",
+				Msg:  "Purchase reward already claimed",
 			}, nil
 		}
 
 		if monthlyCardData.PurchaseTime == "" {
 			return &game.ClaimMonthlyCardRewardResponse{
 				Code: 2,
-				Msg:  "尚未购买月卡",
+				Msg:  "Monthly pass not purchased",
 			}, nil
 		}
 
@@ -98,7 +98,7 @@ func (s *ApiServer) ClaimMonthlyCardReward(ctx context.Context, in *game.ClaimMo
 			s.logger.Error("月卡购买奖励配置不存在", zap.String("reward_id", MonthlyPassReward00ID))
 			return &game.ClaimMonthlyCardRewardResponse{
 				Code: 3,
-				Msg:  "奖励配置不存在",
+				Msg:  "Reward config not found",
 			}, nil
 		}
 
@@ -108,7 +108,7 @@ func (s *ApiServer) ClaimMonthlyCardReward(ctx context.Context, in *game.ClaimMo
 			s.logger.Error("发放月卡购买奖励失败", zap.Error(err))
 			return &game.ClaimMonthlyCardRewardResponse{
 				Code: 4,
-				Msg:  "发放奖励失败",
+				Msg:  "Failed to grant reward",
 			}, nil
 		}
 
@@ -117,7 +117,7 @@ func (s *ApiServer) ClaimMonthlyCardReward(ctx context.Context, in *game.ClaimMo
 			s.logger.Error("保存月卡数据失败", zap.Error(err))
 			return &game.ClaimMonthlyCardRewardResponse{
 				Code: 5,
-				Msg:  "更新数据失败",
+				Msg:  "Failed to update data",
 			}, nil
 		}
 
@@ -145,24 +145,24 @@ func (s *ApiServer) ClaimMonthlyCardReward(ctx context.Context, in *game.ClaimMo
 	// 领取每日奖励（IsPurchaseReward = false）
 	vipAccount, isVip, err := VipAccountCheck(ctx, s.logger, s.db, userID)
 	if err != nil {
-		s.logger.Error("检查VIP状态失败", zap.Error(err))
+		s.logger.Error("Failed to check VIP status", zap.Error(err))
 		return &game.ClaimMonthlyCardRewardResponse{
 			Code: 1,
-			Msg:  "检查VIP状态失败",
+			Msg:  "Failed to check VIP status",
 		}, nil
 	}
 
 	if !isVip {
 		return &game.ClaimMonthlyCardRewardResponse{
 			Code: 2,
-			Msg:  "月卡已过期或未购买",
+			Msg:  "Monthly pass expired or not purchased",
 		}, nil
 	}
 
 	if vipAccount.ExpiryTime == nil {
 		return &game.ClaimMonthlyCardRewardResponse{
 			Code: 3,
-			Msg:  "VIP数据异常",
+			Msg:  "Invalid VIP data",
 		}, nil
 	}
 
@@ -170,7 +170,7 @@ func (s *ApiServer) ClaimMonthlyCardReward(ctx context.Context, in *game.ClaimMo
 	if !monthlyCardData.LastClaimTime.IsZero() && IsSameDay(ctx, monthlyCardData.LastClaimTime, now) {
 		return &game.ClaimMonthlyCardRewardResponse{
 			Code: 4,
-			Msg:  "今日奖励已领取",
+			Msg:  "Daily reward already claimed",
 		}, nil
 	}
 
@@ -179,7 +179,7 @@ func (s *ApiServer) ClaimMonthlyCardReward(ctx context.Context, in *game.ClaimMo
 		s.logger.Error("月卡每日奖励配置不存在", zap.String("reward_id", MonthlyPassReward01ID))
 		return &game.ClaimMonthlyCardRewardResponse{
 			Code: 5,
-			Msg:  "奖励配置不存在",
+			Msg:  "Reward config not found",
 		}, nil
 	}
 
@@ -189,7 +189,7 @@ func (s *ApiServer) ClaimMonthlyCardReward(ctx context.Context, in *game.ClaimMo
 		s.logger.Error("发放月卡每日奖励失败", zap.Error(err))
 		return &game.ClaimMonthlyCardRewardResponse{
 			Code: 6,
-			Msg:  "发放奖励失败",
+			Msg:  "Failed to grant reward",
 		}, nil
 	}
 
@@ -198,7 +198,7 @@ func (s *ApiServer) ClaimMonthlyCardReward(ctx context.Context, in *game.ClaimMo
 		s.logger.Error("保存月卡数据失败", zap.Error(err))
 		return &game.ClaimMonthlyCardRewardResponse{
 			Code: 7,
-			Msg:  "更新数据失败",
+			Msg:  "Failed to update data",
 		}, nil
 	}
 

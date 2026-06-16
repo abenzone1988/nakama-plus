@@ -54,7 +54,7 @@ func (s *ApiServer) ClaimFirstChargeReward(ctx context.Context, in *game.ClaimFi
 	if len(in.Days) == 0 {
 		return &game.ClaimFirstChargeRewardResponse{
 			Code: 1,
-			Msg:  "天数参数不能为空",
+			Msg:  "Day parameter cannot be empty",
 		}, nil
 	}
 
@@ -65,7 +65,7 @@ func (s *ApiServer) ClaimFirstChargeReward(ctx context.Context, in *game.ClaimFi
 		if day < 1 || day > 3 {
 			return &game.ClaimFirstChargeRewardResponse{
 				Code: 1,
-				Msg:  fmt.Sprintf("无效的天数参数: %d（有效范围：1-3）", day),
+				Msg:  fmt.Sprintf("Invalid day parameter: %d (valid range: 1-3)", day),
 			}, nil
 		}
 		if _, exists := daySet[day]; !exists {
@@ -85,7 +85,7 @@ func (s *ApiServer) ClaimFirstChargeReward(ctx context.Context, in *game.ClaimFi
 	if !firstChargeData.IsCharged {
 		return &game.ClaimFirstChargeRewardResponse{
 			Code: 2,
-			Msg:  "尚未首冲",
+			Msg:  "First charge not completed",
 		}, nil
 	}
 
@@ -112,7 +112,7 @@ func (s *ApiServer) ClaimFirstChargeReward(ctx context.Context, in *game.ClaimFi
 		if day > availableDays {
 			return &game.ClaimFirstChargeRewardResponse{
 				Code: 4,
-				Msg:  fmt.Sprintf("第%d天的奖励尚未解锁，当前只能领取第%d天及之前的奖励", day, availableDays),
+				Msg:  fmt.Sprintf("Day %d reward not unlocked yet, only day %d and earlier are available", day, availableDays),
 			}, nil
 		}
 
@@ -123,7 +123,7 @@ func (s *ApiServer) ClaimFirstChargeReward(ctx context.Context, in *game.ClaimFi
 	if len(toClaimDays) == 0 {
 		return &game.ClaimFirstChargeRewardResponse{
 			Code: 3,
-			Msg:  fmt.Sprintf("这些奖励已领取: %v", alreadyClaimedDays),
+			Msg:  fmt.Sprintf("These rewards already claimed: %v", alreadyClaimedDays),
 		}, nil
 	}
 
@@ -135,7 +135,7 @@ func (s *ApiServer) ClaimFirstChargeReward(ctx context.Context, in *game.ClaimFi
 			s.logger.Error("获取首冲奖励配置失败", zap.Error(err), zap.Int32("day", day))
 			return &game.ClaimFirstChargeRewardResponse{
 				Code: 5,
-				Msg:  fmt.Sprintf("第%d天的奖励配置不存在", day),
+				Msg:  fmt.Sprintf("Day %d reward config not found", day),
 			}, nil
 		}
 		allRewards = append(allRewards, reward)
@@ -156,7 +156,7 @@ func (s *ApiServer) ClaimFirstChargeReward(ctx context.Context, in *game.ClaimFi
 				s.logger.Error("发放首冲奖励失败", zap.Error(err), zap.Int32s("days", toClaimDays))
 				return &game.ClaimFirstChargeRewardResponse{
 					Code: 6,
-					Msg:  "发放奖励失败",
+					Msg:  "Failed to grant reward",
 				}, nil
 			}
 			walletUpdateResult = wResult
@@ -170,7 +170,7 @@ func (s *ApiServer) ClaimFirstChargeReward(ctx context.Context, in *game.ClaimFi
 		s.logger.Error("保存首冲数据失败", zap.Error(err))
 		return &game.ClaimFirstChargeRewardResponse{
 			Code: 7,
-			Msg:  "更新数据失败",
+			Msg:  "Failed to update data",
 		}, nil
 	}
 

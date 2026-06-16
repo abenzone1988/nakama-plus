@@ -23,13 +23,13 @@ func (s *ApiServer) GetRestStation(ctx context.Context, in *emptypb.Empty) (*gam
 		s.logger.Error("获取休息站数据失败", zap.Error(err))
 		return &game.GetRestStationResponse{
 			Code: 1,
-			Msg:  "获取休息站数据失败",
+			Msg:  "Failed to get rest station data",
 		}, nil
 	}
 
 	return &game.GetRestStationResponse{
 		Code: 0,
-		Msg:  "成功",
+		Msg:  "Success",
 		Data: data,
 	}, nil
 }
@@ -87,14 +87,14 @@ func (s *ApiServer) ClaimRestStationStamina(ctx context.Context, in *game.ClaimR
 	if err != nil {
 		return &game.ClaimRestStationStaminaResponse{
 			Code: 1,
-			Msg:  "获取休息站数据失败",
+			Msg:  "Failed to get rest station data",
 		}, nil
 	}
 
 	if restData.StaminaCount <= 0 {
 		return &game.ClaimRestStationStaminaResponse{
 			Code: 2,
-			Msg:  "休息站没有可领取的体力",
+			Msg:  "No stamina available at rest station",
 		}, nil
 	}
 
@@ -105,7 +105,7 @@ func (s *ApiServer) ClaimRestStationStamina(ctx context.Context, in *game.ClaimR
 	if claimCount > restData.StaminaCount {
 		return &game.ClaimRestStationStaminaResponse{
 			Code: 3,
-			Msg:  "领取数量超过可用数量",
+			Msg:  "Claim amount exceeds available amount",
 		}, nil
 	}
 
@@ -116,7 +116,7 @@ func (s *ApiServer) ClaimRestStationStamina(ctx context.Context, in *game.ClaimR
 		s.logger.Error("补充体力失败", zap.Error(err))
 		return &game.ClaimRestStationStaminaResponse{
 			Code: 4,
-			Msg:  "补充体力失败",
+			Msg:  "Failed to refill stamina",
 		}, nil
 	}
 
@@ -124,7 +124,7 @@ func (s *ApiServer) ClaimRestStationStamina(ctx context.Context, in *game.ClaimR
 	if err != nil {
 		return &game.ClaimRestStationStaminaResponse{
 			Code: 1,
-			Msg:  "获取用户数据失败",
+			Msg:  "Failed to get user data",
 		}, nil
 	}
 
@@ -133,7 +133,7 @@ func (s *ApiServer) ClaimRestStationStamina(ctx context.Context, in *game.ClaimR
 		s.logger.Error("保存休息站数据失败", zap.Error(err))
 		return &game.ClaimRestStationStaminaResponse{
 			Code: 5,
-			Msg:  "保存数据失败",
+			Msg:  "Failed to save data",
 		}, nil
 	}
 
@@ -149,7 +149,7 @@ func (s *ApiServer) ClaimRestStationStamina(ctx context.Context, in *game.ClaimR
 
 	return &game.ClaimRestStationStaminaResponse{
 		Code:        0,
-		Msg:         "领取成功",
+		Msg:         "Success",
 		RestStation: updatedRestData,
 		Stamina:     staminaData,
 	}, nil

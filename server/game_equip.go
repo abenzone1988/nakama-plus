@@ -192,8 +192,8 @@ func (s *ApiServer) handleEquipUpgrade(ctx context.Context, userID uuid.UUID, eq
 		},
 	}, true)
 	if err != nil {
-		s.logger.Warn("材料不足", zap.String("equip", equipID), zap.Int32("拥有", costDebrisNum), zap.Int32("需要", nextEquip.CostItemNum))
-		return nil, nil, errors.New("材料不足")
+		s.logger.Warn("Insufficient materials", zap.String("equip", equipID), zap.Int32("拥有", costDebrisNum), zap.Int32("需要", nextEquip.CostItemNum))
+		return nil, nil, errors.New("Insufficient materials")
 	}
 
 	var inventoryUpdateResult *game.InventoryUpdateResult
@@ -227,7 +227,7 @@ func (s *ApiServer) handleEquipUpgrade(ctx context.Context, userID uuid.UUID, eq
 		}, true)
 		if err != nil {
 			s.logger.Error("扣除费用失败", zap.Error(err))
-			return nil, nil, errors.New("货币不足")
+			return nil, nil, errors.New("Insufficient currency")
 		}
 		if len(results1) > 0 && results1[0] != nil {
 			walletUpdateResult = &game.WalletUpdateResult{

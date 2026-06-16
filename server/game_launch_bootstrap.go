@@ -14,11 +14,15 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-// bootstrapStorageEntry 表示启动时需要读取的一个 storage 条目
+// bootstrapStorageEntry 表示启动时需要读取的一个 storage 条目。
+// MapKey 与客户端一致，格式为 "{Collection}/{RecordKey}"（如 "Home/EquipGroupData"）。
 type bootstrapStorageEntry struct {
-	MapKey     string // 响应 map 中的 key 名（如 "EquipGroup", "Home"）
 	Collection string // storage collection
 	RecordKey  string // storage object key within the collection
+}
+
+func (e bootstrapStorageEntry) MapKey() string {
+	return e.Collection + "/" + e.RecordKey
 }
 
 // bootstrapStorageKeys 列出 GetLaunchBootstrapData 需要读取的 14 个 storage keys。
@@ -26,21 +30,19 @@ type bootstrapStorageEntry struct {
 // 关键路径 7 个 + 延迟路径 7 个。缺失的 key 不返回，客户端走 CreateModel 兜底。
 var bootstrapStorageKeys = []bootstrapStorageEntry{
 	// 关键路径
-	{MapKey: "EquipGroup", Collection: "EquipGroup", RecordKey: "data"},
-	{MapKey: "Unlock", Collection: "Unlock", RecordKey: "data"},
-	{MapKey: "Home", Collection: "Home", RecordKey: "data"},
-	{MapKey: "Guide", Collection: "Guide", RecordKey: "data"},
-	{MapKey: "Reconnect", Collection: "Reconnect", RecordKey: "data"},
-	{MapKey: "User", Collection: "User", RecordKey: "data"},
-	{MapKey: "Player", Collection: "Player", RecordKey: "data"},
+	{Collection: "Home", RecordKey: "EquipGroupData"},
+	{Collection: "Home", RecordKey: "Unlock"},
+	{Collection: "Home", RecordKey: "HomeData"},
+	{Collection: "Common", RecordKey: "Guide"},
+	{Collection: "Battle", RecordKey: "Reconnect"},
+	{Collection: "Home", RecordKey: "UserData"},
+	{Collection: "Common", RecordKey: "PlayerData"},
 	// 延迟路径
-	{MapKey: "Tasks", Collection: "Tasks", RecordKey: "data"},
-	{MapKey: "Bag", Collection: "Bag", RecordKey: "data"},
-	{MapKey: "Activity", Collection: "Activity", RecordKey: "data"},
-	{MapKey: "HomeTreasure", Collection: "HomeTreasure", RecordKey: "data"},
-	{MapKey: "UnlockMonster", Collection: "UnlockMonster", RecordKey: "data"},
-	{MapKey: "SubGame", Collection: "SubGame", RecordKey: "data"},
-	{MapKey: "ByteGame", Collection: "ByteGame", RecordKey: "data"},
+	{Collection: "Common", RecordKey: "Tasks"},
+	{Collection: "Common", RecordKey: "Bag"},
+	{Collection: "Home", RecordKey: "Activity"},
+	{Collection: "Home", RecordKey: "HomeTreasureData"},
+	{Collection: "Battle", RecordKey: "UnlockMonster"},
 }
 
 // getTplPayPrice 辅助函数：从模板中查询商品价格（人民币字符串）
@@ -69,6 +71,7 @@ func (s *ApiServer) GetLaunchBootstrapData(ctx context.Context, in *emptypb.Empt
 		resp.Partial = true
 	} else {
 		createTime := ""
+
 		if account.User != nil && account.User.CreateTime != nil {
 			createTime = account.User.CreateTime.AsTime().Format(time.RFC3339)
 		}
@@ -101,6 +104,20 @@ func (s *ApiServer) GetLaunchBootstrapData(ctx context.Context, in *emptypb.Empt
 	// ==================== 4. Storage (14 keys) ====================
 	resp.Storage = readBootstrapStorage(ctx, s.logger, s.db, userID)
 
+	// 日志: 确认 storage 返回内容
+	homeDataJSON, hasHomeData := resp.Storage["Home/HomeData"]
+	if hasHomeData {
+		s.logger.Info("bootstrap: Storage[Home/HomeData] 有数据",
+			zap.String("uid", userID.String()),
+			zap.String("value", homeDataJSON))
+	} else {
+		s.logger.Warn("bootstrap: Storage[Home/HomeData] 缺失，客户端将使用 InitModel() 默认值",
+			zap.String("uid", userID.String()))
+	}
+	s.logger.Info("bootstrap: Storage 返回 key 总数",
+		zap.String("uid", userID.String()),
+		zap.Int("count", len(resp.Storage)))
+
 	// ==================== 5. Equip ====================
 	equipData := &EquipData{}
 	if err := LoadUserData(ctx, s.logger, s.db, equipData); err != nil {
@@ -109,6 +126,18 @@ func (s *ApiServer) GetLaunchBootstrapData(ctx context.Context, in *emptypb.Empt
 		resp.EquipMsg = err.Error()
 		resp.Partial = true
 	} else {
+		if len(equipData.UnlockEquips) == 0 {
+			initializeEquipData(equipData, s.templateManager)
+			if err := SaveUserData(ctx, s.logger, s.db, s.metrics, s.storageIndex, equipData); err != nil {
+				s.logger.Error("bootstrap: 保存初始化的装备数据失败", zap.Error(err))
+			}
+		}
+		if len(equipData.CrystalSlots) == 0 {
+			initializeCrystalSlots(equipData)
+			if err := SaveUserData(ctx, s.logger, s.db, s.metrics, s.storageIndex, equipData); err != nil {
+				s.logger.Error("bootstrap: 保存初始化的水晶槽位数据失败", zap.Error(err))
+			}
+		}
 		resp.EquipCode = 0
 		resp.EquipMsg = "ok"
 		resp.Equip = &game.EquipData{
@@ -355,11 +384,20 @@ func readBootstrapStorage(ctx context.Context, logger *zap.Logger, db *sql.DB, u
 		return nil
 	}
 
-	// objectIDs[i] 对应 bootstrapStorageKeys[i]，也对应 storageObjects.Objects[i]
+	// 注意：StorageReadObjects 不保证返回顺序与请求顺序一致！
+	// 必须用返回对象自带的 Collection + Key 做映射，不能依赖索引。
+	keySet := make(map[string]bool, len(bootstrapStorageKeys))
+	for _, entry := range bootstrapStorageKeys {
+		keySet[entry.MapKey()] = true
+	}
 	result := make(map[string]string, len(storageObjects.Objects))
-	for i, obj := range storageObjects.Objects {
-		if obj != nil && obj.Value != "" && i < len(bootstrapStorageKeys) {
-			result[bootstrapStorageKeys[i].MapKey] = obj.Value
+	for _, obj := range storageObjects.Objects {
+		if obj == nil || obj.Value == "" {
+			continue
+		}
+		mapKey := obj.Collection + "/" + obj.Key
+		if keySet[mapKey] {
+			result[mapKey] = obj.Value
 		}
 	}
 	return result

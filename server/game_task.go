@@ -45,7 +45,7 @@ func (s *ApiServer) GetTask(ctx context.Context, in *game.GetTaskRequest) (*game
 
 	return &game.GetTaskResponse{
 		Code:                         0,
-		Msg:                          "获取成功",
+		Msg:                          "Success",
 		DailyLiveness:                taskData.DailyLiveness,
 		WeeklyLiveness:               taskData.WeeklyLiveness,
 		ClaimedDailyTasks:            taskData.ClaimedDailyTasks,
@@ -65,7 +65,7 @@ func (s *ApiServer) ClaimTaskReward(ctx context.Context, in *game.ClaimTaskRewar
 	if len(taskIDs) == 0 {
 		return &game.ClaimTaskRewardResponse{
 			Code: 1,
-			Msg:  "任务ID列表不能为空",
+			Msg:  "Task ID list cannot be empty",
 		}, nil
 	}
 
@@ -124,7 +124,7 @@ func (s *ApiServer) ClaimTaskReward(ctx context.Context, in *game.ClaimTaskRewar
 	if len(toClaimTaskIDs) == 0 {
 		return &game.ClaimTaskRewardResponse{
 			Code: 3,
-			Msg:  "所有任务奖励已经领取过了",
+			Msg:  "All task rewards already claimed",
 		}, nil
 	}
 
@@ -164,7 +164,7 @@ func (s *ApiServer) ClaimTaskReward(ctx context.Context, in *game.ClaimTaskRewar
 	if len(validTaskIDs) == 0 {
 		return &game.ClaimTaskRewardResponse{
 			Code: 2,
-			Msg:  "没有有效的任务",
+			Msg:  "No valid tasks",
 		}, nil
 	}
 
@@ -183,7 +183,7 @@ func (s *ApiServer) ClaimTaskReward(ctx context.Context, in *game.ClaimTaskRewar
 				s.logger.Error("发放任务奖励失败", zap.Error(err))
 				return &game.ClaimTaskRewardResponse{
 					Code: 4,
-					Msg:  "发放奖励失败: " + err.Error(),
+					Msg:  "Failed to grant reward: " + err.Error(),
 				}, nil
 			}
 			walletUpdateResult = wResult
@@ -222,7 +222,7 @@ func (s *ApiServer) ClaimTaskReward(ctx context.Context, in *game.ClaimTaskRewar
 		s.logger.Error("保存任务数据失败", zap.Error(err))
 		return &game.ClaimTaskRewardResponse{
 			Code: 5,
-			Msg:  "保存数据失败",
+			Msg:  "Failed to save data",
 		}, nil
 	}
 
@@ -247,7 +247,7 @@ func (s *ApiServer) ClaimTaskReward(ctx context.Context, in *game.ClaimTaskRewar
 
 	return &game.ClaimTaskRewardResponse{
 		Code:             0,
-		Msg:              "领取成功",
+		Msg:              "Success",
 		Reward:           mergedReward,
 		WalletUpdated:    walletUpdated,
 		InventoryUpdated: inventoryUpdated,
@@ -263,7 +263,7 @@ func (s *ApiServer) ClaimLivenessReward(ctx context.Context, in *game.ClaimLiven
 	if len(rewardIDs) == 0 {
 		return &game.ClaimLivenessRewardResponse{
 			Code: 1,
-			Msg:  "奖励ID列表不能为空",
+			Msg:  "Reward ID list cannot be empty",
 		}, nil
 	}
 
@@ -273,7 +273,7 @@ func (s *ApiServer) ClaimLivenessReward(ctx context.Context, in *game.ClaimLiven
 		s.logger.Warn("加载任务数据失败", zap.Error(err))
 		return &game.ClaimLivenessRewardResponse{
 			Code: 3,
-			Msg:  "获取任务数据失败",
+			Msg:  "Failed to get task data",
 		}, nil
 	}
 
@@ -288,7 +288,7 @@ func (s *ApiServer) ClaimLivenessReward(ctx context.Context, in *game.ClaimLiven
 		// 重置后每日活跃度为0，无法领取每日奖励
 		return &game.ClaimLivenessRewardResponse{
 			Code: 4,
-			Msg:  "活跃度不足",
+			Msg:  "Insufficient liveness",
 		}, nil
 	}
 
@@ -329,7 +329,7 @@ func (s *ApiServer) ClaimLivenessReward(ctx context.Context, in *game.ClaimLiven
 	if len(toClaimRewardIDs) == 0 {
 		return &game.ClaimLivenessRewardResponse{
 			Code: 6,
-			Msg:  "所有活跃度奖励已经领取过了",
+			Msg:  "All liveness rewards already claimed",
 		}, nil
 	}
 
@@ -380,7 +380,7 @@ func (s *ApiServer) ClaimLivenessReward(ctx context.Context, in *game.ClaimLiven
 	if len(validRewardIDs) == 0 {
 		return &game.ClaimLivenessRewardResponse{
 			Code: 5,
-			Msg:  "没有可领取的活跃度奖励（活跃度不足或配置不存在）",
+			Msg:  "No claimable liveness rewards (insufficient liveness or config not found)",
 		}, nil
 	}
 
@@ -399,7 +399,7 @@ func (s *ApiServer) ClaimLivenessReward(ctx context.Context, in *game.ClaimLiven
 				s.logger.Error("发放活跃度奖励失败", zap.Error(err))
 				return &game.ClaimLivenessRewardResponse{
 					Code: 7,
-					Msg:  "发放奖励失败: " + err.Error(),
+					Msg:  "Failed to grant reward: " + err.Error(),
 				}, nil
 			}
 			walletUpdateResult = wResult
@@ -432,7 +432,7 @@ func (s *ApiServer) ClaimLivenessReward(ctx context.Context, in *game.ClaimLiven
 		s.logger.Error("保存任务数据失败", zap.Error(err))
 		return &game.ClaimLivenessRewardResponse{
 			Code: 8,
-			Msg:  "保存数据失败",
+			Msg:  "Failed to save data",
 		}, nil
 	}
 
@@ -455,7 +455,7 @@ func (s *ApiServer) ClaimLivenessReward(ctx context.Context, in *game.ClaimLiven
 
 	return &game.ClaimLivenessRewardResponse{
 		Code:             0,
-		Msg:              "领取成功",
+		Msg:              "Success",
 		Reward:           mergedReward,
 		WalletUpdated:    walletUpdated,
 		InventoryUpdated: inventoryUpdated,

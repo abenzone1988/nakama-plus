@@ -39,7 +39,7 @@ func (s *ApiServer) GetMineData(ctx context.Context, in *game.GetMineDataRequest
 		s.logger.Error("加载挖矿数据失败", zap.Error(err))
 		return &game.GetMineDataResponse{
 			Code: 1,
-			Msg:  "加载数据失败",
+			Msg:  "Failed to load data",
 		}, nil
 	}
 
@@ -54,7 +54,7 @@ func (s *ApiServer) GetMineData(ctx context.Context, in *game.GetMineDataRequest
 
 	return &game.GetMineDataResponse{
 		Code: 0,
-		Msg:  "获取成功",
+		Msg:  "Success",
 		Data: &game.MineData{
 			DailyMineCount:    mineData.DailyMineCount,
 			LastRefreshDate:   mineData.LastRefreshDate,
@@ -76,7 +76,7 @@ func (s *ApiServer) BuyMineCount(ctx context.Context, in *game.BuyMineCountReque
 		s.logger.Error("加载挖矿数据失败", zap.Error(err))
 		return &game.BuyMineCountResponse{
 			Code: 1,
-			Msg:  "加载数据失败",
+			Msg:  "Failed to load data",
 		}, nil
 	}
 
@@ -87,7 +87,7 @@ func (s *ApiServer) BuyMineCount(ctx context.Context, in *game.BuyMineCountReque
 	if mineData.BuyCount >= MaxBuyMineCount {
 		return &game.BuyMineCountResponse{
 			Code: 2,
-			Msg:  "今日购买次数已达上限",
+			Msg:  "Daily purchase limit reached",
 		}, nil
 	}
 
@@ -107,7 +107,7 @@ func (s *ApiServer) BuyMineCount(ctx context.Context, in *game.BuyMineCountReque
 		s.logger.Error("扣除宝石失败", zap.Error(err))
 		return &game.BuyMineCountResponse{
 			Code: 3,
-			Msg:  "宝石不足",
+			Msg:  "Insufficient gems",
 		}, nil
 	}
 
@@ -128,7 +128,7 @@ func (s *ApiServer) BuyMineCount(ctx context.Context, in *game.BuyMineCountReque
 		s.logger.Error("保存挖矿数据失败", zap.Error(err))
 		return &game.BuyMineCountResponse{
 			Code: 4,
-			Msg:  "保存数据失败",
+			Msg:  "Failed to save data",
 		}, nil
 	}
 
@@ -143,7 +143,7 @@ func (s *ApiServer) BuyMineCount(ctx context.Context, in *game.BuyMineCountReque
 
 	return &game.BuyMineCountResponse{
 		Code:           0,
-		Msg:            "购买成功",
+		Msg:            "Success",
 		BuyCount:       mineData.BuyCount,
 		DailyMineCount: mineData.DailyMineCount,
 		WalletUpdated:  walletUpdated,
@@ -158,7 +158,7 @@ func (s *ApiServer) DoMine(ctx context.Context, in *game.DoMineRequest) (*game.D
 		s.logger.Error("加载挖矿数据失败", zap.Error(err))
 		return &game.DoMineResponse{
 			Code: 1,
-			Msg:  "加载数据失败",
+			Msg:  "Failed to load data",
 		}, nil
 	}
 
@@ -169,7 +169,7 @@ func (s *ApiServer) DoMine(ctx context.Context, in *game.DoMineRequest) (*game.D
 	if mineData.IsCompleted {
 		return &game.DoMineResponse{
 			Code: 2,
-			Msg:  "矿产已挖完，请升级到下一等级",
+			Msg:  "Mine depleted, upgrade to next level",
 		}, nil
 	}
 
@@ -177,7 +177,7 @@ func (s *ApiServer) DoMine(ctx context.Context, in *game.DoMineRequest) (*game.D
 	if mineData.DailyMineCount <= 0 {
 		return &game.DoMineResponse{
 			Code: 3,
-			Msg:  "今日挖矿次数已用完",
+			Msg:  "Daily mining limit reached",
 		}, nil
 	}
 
@@ -189,7 +189,7 @@ func (s *ApiServer) DoMine(ctx context.Context, in *game.DoMineRequest) (*game.D
 		s.logger.Error("未找到矿产配置", zap.Int32("level", mineData.CurrentLevel))
 		return &game.DoMineResponse{
 			Code: 4,
-			Msg:  "矿产配置不存在",
+			Msg:  "Mine config not found",
 		}, nil
 	}
 
@@ -241,7 +241,7 @@ func (s *ApiServer) DoMine(ctx context.Context, in *game.DoMineRequest) (*game.D
 		s.logger.Error("发放挖矿奖励失败", zap.Error(err))
 		return &game.DoMineResponse{
 			Code: 5,
-			Msg:  "发放奖励失败",
+			Msg:  "Failed to grant reward",
 		}, nil
 	}
 
@@ -250,7 +250,7 @@ func (s *ApiServer) DoMine(ctx context.Context, in *game.DoMineRequest) (*game.D
 		s.logger.Error("保存挖矿数据失败", zap.Error(err))
 		return &game.DoMineResponse{
 			Code: 6,
-			Msg:  "保存数据失败",
+			Msg:  "Failed to save data",
 		}, nil
 	}
 
@@ -264,7 +264,7 @@ func (s *ApiServer) DoMine(ctx context.Context, in *game.DoMineRequest) (*game.D
 		inventoryUpdated = inventoryUpdateResult.Updated
 	}
 
-	s.logger.Info("挖矿成功",
+	s.logger.Info("Success",
 		zap.Int32("level", mineData.CurrentLevel),
 		zap.Int32("gained", actualGained),
 		zap.Int32("current_mined", mineData.CurrentMinedCount),
@@ -273,7 +273,7 @@ func (s *ApiServer) DoMine(ctx context.Context, in *game.DoMineRequest) (*game.D
 
 	return &game.DoMineResponse{
 		Code:              0,
-		Msg:               "挖矿成功",
+		Msg:               "Success",
 		Gained:            actualGained,
 		IsCrit:            minedCount == mineConfig.Critcount,
 		CurrentMinedCount: mineData.CurrentMinedCount,
@@ -293,7 +293,7 @@ func (s *ApiServer) UpgradeMine(ctx context.Context, in *game.UpgradeMineRequest
 		s.logger.Error("加载挖矿数据失败", zap.Error(err))
 		return &game.UpgradeMineResponse{
 			Code: 1,
-			Msg:  "加载数据失败",
+			Msg:  "Failed to load data",
 		}, nil
 	}
 
@@ -301,7 +301,7 @@ func (s *ApiServer) UpgradeMine(ctx context.Context, in *game.UpgradeMineRequest
 	if !mineData.IsCompleted {
 		return &game.UpgradeMineResponse{
 			Code: 2,
-			Msg:  "当前矿产尚未挖完，无法升级",
+			Msg:  "Current mine not depleted, cannot upgrade",
 		}, nil
 	}
 
@@ -328,7 +328,7 @@ func (s *ApiServer) UpgradeMine(ctx context.Context, in *game.UpgradeMineRequest
 		s.logger.Error("保存挖矿数据失败", zap.Error(err))
 		return &game.UpgradeMineResponse{
 			Code: 4,
-			Msg:  "保存数据失败",
+			Msg:  "Failed to save data",
 		}, nil
 	}
 
@@ -337,7 +337,7 @@ func (s *ApiServer) UpgradeMine(ctx context.Context, in *game.UpgradeMineRequest
 
 	return &game.UpgradeMineResponse{
 		Code:  0,
-		Msg:   "升级成功",
+		Msg:   "Success",
 		Level: mineData.CurrentLevel,
 	}, nil
 }

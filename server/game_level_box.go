@@ -15,14 +15,14 @@ func (s *ApiServer) ClaimLevelBox(ctx context.Context, in *game.ClaimLevelBoxReq
 	if in.GetLevelId() == "" {
 		return &game.ClaimLevelBoxResponse{
 			Code: 1,
-			Msg:  "关卡ID不能为空",
+			Msg:  "Level ID cannot be empty",
 		}, nil
 	}
 
 	if len(in.GetBoxIds()) == 0 {
 		return &game.ClaimLevelBoxResponse{
 			Code: 2,
-			Msg:  "请选择要领取的宝箱",
+			Msg:  "Select a chest to claim",
 		}, nil
 	}
 
@@ -31,7 +31,7 @@ func (s *ApiServer) ClaimLevelBox(ctx context.Context, in *game.ClaimLevelBoxReq
 		if boxId < 1 || boxId > 3 {
 			return &game.ClaimLevelBoxResponse{
 				Code: 3,
-				Msg:  "宝箱ID无效，只能是1、2或3",
+				Msg:  "Invalid chest ID, must be 1, 2, or 3",
 			}, nil
 		}
 	}
@@ -41,7 +41,7 @@ func (s *ApiServer) ClaimLevelBox(ctx context.Context, in *game.ClaimLevelBoxReq
 	if !exist {
 		return &game.ClaimLevelBoxResponse{
 			Code: 4,
-			Msg:  "关卡不存在",
+			Msg:  "Level not found",
 		}, nil
 	}
 
@@ -55,7 +55,7 @@ func (s *ApiServer) ClaimLevelBox(ctx context.Context, in *game.ClaimLevelBoxReq
 	if !isLevelPassed(in.GetLevelId(), battleData.MaxEnterLevelId) {
 		return &game.ClaimLevelBoxResponse{
 			Code: 6,
-			Msg:  "宝箱不可领取，关卡未打过",
+			Msg:  "Chest unavailable, level not cleared",
 		}, nil
 	}
 
@@ -84,7 +84,7 @@ func (s *ApiServer) ClaimLevelBox(ctx context.Context, in *game.ClaimLevelBoxReq
 	if len(toClaimBoxIds) == 0 {
 		return &game.ClaimLevelBoxResponse{
 			Code: 8,
-			Msg:  "宝箱已经领取过了",
+			Msg:  "Chest already claimed",
 		}, nil
 	}
 
@@ -117,7 +117,7 @@ func (s *ApiServer) ClaimLevelBox(ctx context.Context, in *game.ClaimLevelBoxReq
 	if len(allRewards) == 0 {
 		return &game.ClaimLevelBoxResponse{
 			Code: 9,
-			Msg:  "没有可发放的奖励",
+			Msg:  "No rewards to grant",
 		}, nil
 	}
 
@@ -131,7 +131,7 @@ func (s *ApiServer) ClaimLevelBox(ctx context.Context, in *game.ClaimLevelBoxReq
 		s.logger.Error("发放宝箱奖励失败", zap.Error(err), zap.String("level_id", in.GetLevelId()))
 		return &game.ClaimLevelBoxResponse{
 			Code: 9,
-			Msg:  "发放奖励失败: " + err.Error(),
+			Msg:  "Failed to grant reward: " + err.Error(),
 		}, nil
 	}
 
@@ -148,7 +148,7 @@ func (s *ApiServer) ClaimLevelBox(ctx context.Context, in *game.ClaimLevelBoxReq
 		s.logger.Error("保存宝箱数据失败", zap.Error(err))
 		return &game.ClaimLevelBoxResponse{
 			Code: 10,
-			Msg:  "保存数据失败",
+			Msg:  "Failed to save data",
 		}, nil
 	}
 
@@ -170,7 +170,7 @@ func (s *ApiServer) ClaimLevelBox(ctx context.Context, in *game.ClaimLevelBoxReq
 
 	return &game.ClaimLevelBoxResponse{
 		Code:             0,
-		Msg:              "领取成功",
+		Msg:              "Success",
 		Rewards:          mergedReward,
 		WalletUpdated:    walletUpdated,
 		InventoryUpdated: inventoryUpdated,
@@ -194,7 +194,7 @@ func (s *ApiServer) GetLevelBox(ctx context.Context, in *game.GetLevelBoxRequest
 		// 如果没有指定关卡ID，返回空数据
 		return &game.GetLevelBoxResponse{
 			Code:         0,
-			Msg:          "获取成功",
+			Msg:          "Success",
 			ClaimedBoxes: claimedBoxes,
 		}, nil
 	}
@@ -215,7 +215,7 @@ func (s *ApiServer) GetLevelBox(ctx context.Context, in *game.GetLevelBoxRequest
 
 	return &game.GetLevelBoxResponse{
 		Code:         0,
-		Msg:          "获取成功",
+		Msg:          "Success",
 		ClaimedBoxes: claimedBoxes,
 	}, nil
 }

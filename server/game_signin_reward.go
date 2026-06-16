@@ -27,7 +27,7 @@ func (s *ApiServer) ClaimSignInReward(ctx context.Context, in *game.ClaimSignInR
 	if signInData.LastClaimDate != "" && signInData.LastClaimDate == today {
 		return &game.ClaimSignInRewardResponse{
 			Code: 2,
-			Msg:  "今日已领取",
+			Msg:  "Already claimed today",
 		}, nil
 	}
 
@@ -42,7 +42,7 @@ func (s *ApiServer) ClaimSignInReward(ctx context.Context, in *game.ClaimSignInR
 		s.logger.Error("获取每日签到奖励失败", zap.Error(err), zap.Int32("day", nextDay))
 		return &game.ClaimSignInRewardResponse{
 			Code: 3,
-			Msg:  "奖励配置不存在",
+			Msg:  "Reward config not found",
 		}, nil
 	}
 
@@ -52,7 +52,7 @@ func (s *ApiServer) ClaimSignInReward(ctx context.Context, in *game.ClaimSignInR
 		s.logger.Error("发放每日签到奖励失败", zap.Error(err), zap.Int32("day", nextDay))
 		return &game.ClaimSignInRewardResponse{
 			Code: 4,
-			Msg:  "发放奖励失败",
+			Msg:  "Failed to grant reward",
 		}, nil
 	}
 
@@ -60,7 +60,7 @@ func (s *ApiServer) ClaimSignInReward(ctx context.Context, in *game.ClaimSignInR
 	if signInData.LastClaimDate != "" && signInData.LastClaimDate == today {
 		return &game.ClaimSignInRewardResponse{
 			Code: 2,
-			Msg:  "今日已领取",
+			Msg:  "Already claimed today",
 		}, nil
 	}
 
@@ -71,7 +71,7 @@ func (s *ApiServer) ClaimSignInReward(ctx context.Context, in *game.ClaimSignInR
 		s.logger.Error("保存签到数据失败", zap.Error(err))
 		return &game.ClaimSignInRewardResponse{
 			Code: 5,
-			Msg:  "更新数据失败",
+			Msg:  "Failed to update data",
 		}, nil
 	}
 
@@ -180,7 +180,7 @@ func (s *ApiServer) ClaimSevenDaySignIn(ctx context.Context, in *game.ClaimSeven
 	if sevenDayData.LastClaimDate != "" && sevenDayData.LastClaimDate == today {
 		return &game.ClaimSevenDaySignInResponse{
 			Code: 2,
-			Msg:  "今日已领取",
+			Msg:  "Already claimed today",
 		}, nil
 	}
 
@@ -188,7 +188,7 @@ func (s *ApiServer) ClaimSevenDaySignIn(ctx context.Context, in *game.ClaimSeven
 	if sevenDayData.ClaimedDay >= SevenDaySignInTotalDays {
 		return &game.ClaimSevenDaySignInResponse{
 			Code: 3,
-			Msg:  "已领取完所有奖励",
+			Msg:  "All rewards already claimed",
 		}, nil
 	}
 
@@ -201,7 +201,7 @@ func (s *ApiServer) ClaimSevenDaySignIn(ctx context.Context, in *game.ClaimSeven
 		s.logger.Error("获取7天登录奖励失败", zap.Error(err), zap.Int32("day", nextDay))
 		return &game.ClaimSevenDaySignInResponse{
 			Code: 4,
-			Msg:  "奖励配置不存在",
+			Msg:  "Reward config not found",
 		}, nil
 	}
 
@@ -212,7 +212,7 @@ func (s *ApiServer) ClaimSevenDaySignIn(ctx context.Context, in *game.ClaimSeven
 		s.logger.Error("发放7天登录奖励失败", zap.Error(err), zap.Int32("day", nextDay))
 		return &game.ClaimSevenDaySignInResponse{
 			Code: 5,
-			Msg:  "发放奖励失败",
+			Msg:  "Failed to grant reward",
 		}, nil
 	}
 
@@ -220,7 +220,7 @@ func (s *ApiServer) ClaimSevenDaySignIn(ctx context.Context, in *game.ClaimSeven
 	if sevenDayData.LastClaimDate != "" && sevenDayData.LastClaimDate == today {
 		return &game.ClaimSevenDaySignInResponse{
 			Code: 2,
-			Msg:  "今日已领取",
+			Msg:  "Already claimed today",
 		}, nil
 	}
 
@@ -231,7 +231,7 @@ func (s *ApiServer) ClaimSevenDaySignIn(ctx context.Context, in *game.ClaimSeven
 		s.logger.Error("保存7天登录数据失败", zap.Error(err))
 		return &game.ClaimSevenDaySignInResponse{
 			Code: 6,
-			Msg:  "更新数据失败",
+			Msg:  "Failed to update data",
 		}, nil
 	}
 

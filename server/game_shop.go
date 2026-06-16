@@ -22,7 +22,7 @@ func (s *ApiServer) GetShopData(ctx context.Context, in *emptypb.Empty) (*game.S
 
 	shopData := &ShopData{}
 	if err := LoadUserData(ctx, s.logger, s.db, shopData); err != nil {
-		s.logger.Error("加载商店数据失败", zap.Error(err))
+		s.logger.Error("Failed to load shop data", zap.Error(err))
 		return nil, err
 	}
 
@@ -32,7 +32,7 @@ func (s *ApiServer) GetShopData(ctx context.Context, in *emptypb.Empty) (*game.S
 	s.initCommonShop(ctx, userID, shopData.Shops, game.ShopType_SHOP_STRENGTH, "Strength")
 
 	if err := SaveUserData(ctx, s.logger, s.db, s.metrics, s.storageIndex, shopData); err != nil {
-		s.logger.Error("保存商店数据失败", zap.Error(err))
+		s.logger.Error("Failed to save shop data", zap.Error(err))
 		return nil, err
 	}
 
@@ -72,7 +72,7 @@ func (s *ApiServer) initCommonShop(ctx context.Context, userID uuid.UUID, shops 
 		// 从配置表中读取商店配置
 		tplShop, ok := s.templateManager.GetTplShop().FindByKey(configKey)
 		if !ok {
-			s.logger.Error("未找到商店配置", zap.String("shop_config_key", configKey))
+			s.logger.Error("Shop config not found", zap.String("shop_config_key", configKey))
 			return
 		}
 
@@ -407,29 +407,29 @@ func (s *ApiServer) BuyShopItem(ctx context.Context, in *game.BuyShopItemRequest
 	// 加载商店数据
 	shopData := &ShopData{}
 	if err := LoadUserData(ctx, s.logger, s.db, shopData); err != nil {
-		s.logger.Error("加载商店数据失败", zap.Error(err))
-		return &game.BuyShopItemResponse{Code: -1, Msg: "加载商店数据失败"}, nil
+		s.logger.Error("Failed to load shop data", zap.Error(err))
+		return &game.BuyShopItemResponse{Code: -1, Msg: "Failed to load shop data"}, nil
 	}
 
 	key := in.ShopType
 	shop, ok := shopData.Shops[key]
 	if !ok {
-		return &game.BuyShopItemResponse{Code: 1, Msg: "商店不存在"}, nil
+		return &game.BuyShopItemResponse{Code: 1, Msg: "Shop not found"}, nil
 	}
 
 	// 通过 index 查找商品
 	index := int(in.Index)
 	if index < 0 || index >= len(shop.Items) {
-		return &game.BuyShopItemResponse{Code: 2, Msg: "商品不存在"}, nil
+		return &game.BuyShopItemResponse{Code: 2, Msg: "Item not found"}, nil
 	}
 	item := shop.Items[index]
 	if item == nil {
-		return &game.BuyShopItemResponse{Code: 2, Msg: "商品不存在"}, nil
+		return &game.BuyShopItemResponse{Code: 2, Msg: "Item not found"}, nil
 	}
 
 	// 检查购买次数
 	if item.MaxBuyCount > 0 && item.BoughtCount >= item.MaxBuyCount {
-		return &game.BuyShopItemResponse{Code: 3, Msg: "购买次数已达上限"}, nil
+		return &game.BuyShopItemResponse{Code: 3, Msg: "Purchase limit reached"}, nil
 	}
 
 	// 计算消耗和奖励
@@ -462,13 +462,13 @@ func (s *ApiServer) BuyShopItem(ctx context.Context, in *game.BuyShopItemRequest
 
 	// 保存商店数据
 	if err := SaveUserData(ctx, s.logger, s.db, s.metrics, s.storageIndex, shopData); err != nil {
-		s.logger.Error("保存商店数据失败", zap.Error(err))
-		return &game.BuyShopItemResponse{Code: 6, Msg: "保存商店数据失败"}, nil
+		s.logger.Error("Failed to save shop data", zap.Error(err))
+		return &game.BuyShopItemResponse{Code: 6, Msg: "Failed to save shop data"}, nil
 	}
 
 	response := &game.BuyShopItemResponse{
 		Code:     0,
-		Msg:      "购买成功",
+		Msg:      "Success",
 		Reward:   reward,
 		ShopItem: convertToProtoShopItem(item, in.Index),
 	}
@@ -491,29 +491,29 @@ func (s *ApiServer) RefreshShop(ctx context.Context, in *game.RefreshShopRequest
 	// 加载商店数据
 	shopData := &ShopData{}
 	if err := LoadUserData(ctx, s.logger, s.db, shopData); err != nil {
-		s.logger.Error("加载商店数据失败", zap.Error(err))
-		return &game.RefreshShopResponse{Code: -1, Msg: "加载商店数据失败"}, nil
+		s.logger.Error("Failed to load shop data", zap.Error(err))
+		return &game.RefreshShopResponse{Code: -1, Msg: "Failed to load shop data"}, nil
 	}
 
 	shop, ok := shopData.Shops[in.ShopType]
 	if !ok {
-		return &game.RefreshShopResponse{Code: 1, Msg: "商店不存在"}, nil
+		return &game.RefreshShopResponse{Code: 1, Msg: "Shop not found"}, nil
 	}
 
 	// 检查是否支持手动刷新
 	if !shop.CanRefresh {
-		return &game.RefreshShopResponse{Code: 2, Msg: "该商店不支持手动刷新"}, nil
+		return &game.RefreshShopResponse{Code: 2, Msg: "Shop does not support manual refresh"}, nil
 	}
 
 	tplShop, found := s.templateManager.GetTplShop().FindByKey("Daily")
 
 	if !found {
-		return &game.RefreshShopResponse{Code: 4, Msg: "未找到商店配置"}, nil
+		return &game.RefreshShopResponse{Code: 4, Msg: "Shop config not found"}, nil
 	}
 
 	// 检查刷新次数限制
 	if shop.RefreshCount <= 0 {
-		return &game.RefreshShopResponse{Code: 5, Msg: "已达到最大刷新次数"}, nil
+		return &game.RefreshShopResponse{Code: 5, Msg: "Max refresh count reached"}, nil
 	}
 
 	// 执行刷新（强制刷新商店）
@@ -524,13 +524,13 @@ func (s *ApiServer) RefreshShop(ctx context.Context, in *game.RefreshShopRequest
 
 	// 保存商店数据
 	if err := SaveUserData(ctx, s.logger, s.db, s.metrics, s.storageIndex, shopData); err != nil {
-		s.logger.Error("保存商店数据失败", zap.Error(err))
-		return &game.RefreshShopResponse{Code: 6, Msg: "保存商店数据失败"}, nil
+		s.logger.Error("Failed to save shop data", zap.Error(err))
+		return &game.RefreshShopResponse{Code: 6, Msg: "Failed to save shop data"}, nil
 	}
 
 	return &game.RefreshShopResponse{
 		Code:     0,
-		Msg:      "刷新成功",
+		Msg:      "Success",
 		ShopData: convertToProtoSingleShop(shop),
 	}, nil
 }
@@ -753,7 +753,7 @@ func (s *ApiServer) processPaymentAndReward(ctx context.Context, cost *game.Wall
 
 		results, err := UpdateWallets(ctx, s.logger, s.db, walletUpdates, true)
 		if err != nil {
-			return nil, nil, fmt.Errorf("货币不足")
+			return nil, nil, fmt.Errorf("Insufficient currency")
 		}
 
 		if len(results) > 0 {

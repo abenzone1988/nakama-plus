@@ -19,13 +19,13 @@ func (s *ApiServer) RedeemGift(ctx context.Context, in *game.RedeemGiftRequest) 
 
 	giftCode := in.GetGiftCode()
 	if _, found := s.templateManager.GetTplRedemption().FindByKey(giftCode); !found {
-		s.logger.Info("兑换码无效", zap.String("gift_code", in.GiftCode))
-		return &game.RedeemGiftResponse{Code: 2, Msg: "兑换码无效"}, nil
+		s.logger.Info("Invalid gift code", zap.String("gift_code", in.GiftCode))
+		return &game.RedeemGiftResponse{Code: 2, Msg: "Invalid gift code"}, nil
 	}
 	// 检查兑换码是否已经领取
 	if _, exists := redeemHistory.Records[giftCode]; exists {
-		s.logger.Info("兑换码已被领取", zap.String("gift_code", in.GiftCode))
-		return &game.RedeemGiftResponse{Code: 1, Msg: "兑换码已被领取"}, nil
+		s.logger.Info("Gift code already redeemed", zap.String("gift_code", in.GiftCode))
+		return &game.RedeemGiftResponse{Code: 1, Msg: "Gift code already redeemed"}, nil
 	}
 
 	// 添加新的领取记录
@@ -40,5 +40,5 @@ func (s *ApiServer) RedeemGift(ctx context.Context, in *game.RedeemGiftRequest) 
 		return nil, err
 	}
 
-	return &game.RedeemGiftResponse{Code: 0, Msg: "领取成功"}, nil
+	return &game.RedeemGiftResponse{Code: 0, Msg: "Success"}, nil
 }

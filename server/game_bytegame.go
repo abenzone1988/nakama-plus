@@ -17,7 +17,7 @@ func (s *ApiServer) ClaimByteReward(ctx context.Context, in *game.ClaimByteRewar
 	if rewardID != TTShortcutRewardID && rewardID != TTEntryRewardID && rewardID != TTDirectPlayRewardID {
 		return &game.ClaimByteRewardResponse{
 			Code: 1,
-			Msg:  "无效的奖励ID",
+			Msg:  "Invalid reward ID",
 		}, nil
 	}
 
@@ -34,7 +34,7 @@ func (s *ApiServer) ClaimByteReward(ctx context.Context, in *game.ClaimByteRewar
 		if rewardData.ShortcutRewardClaimed {
 			return &game.ClaimByteRewardResponse{
 				Code: 2,
-				Msg:  "该奖励已经领取过了",
+				Msg:  "Reward already claimed",
 			}, nil
 		}
 		rewardData.ShortcutRewardClaimed = true
@@ -46,7 +46,7 @@ func (s *ApiServer) ClaimByteReward(ctx context.Context, in *game.ClaimByteRewar
 		if rewardData.EntryRewardLastDate == today {
 			return &game.ClaimByteRewardResponse{
 				Code: 3,
-				Msg:  "今天已经领取过了，请明天再来",
+				Msg:  "Already claimed today, come back tomorrow",
 			}, nil
 		}
 		rewardData.EntryRewardLastDate = today
@@ -55,7 +55,7 @@ func (s *ApiServer) ClaimByteReward(ctx context.Context, in *game.ClaimByteRewar
 	if rewardID == TTDirectPlayRewardID && rewardData.GetDirectPlayReward {
 		return &game.ClaimByteRewardResponse{
 			Code: 4,
-			Msg:  "今天已经领取过了，请明天再来领取",
+			Msg:  "Already claimed today, come back tomorrow to claim",
 		}, nil
 	} else if rewardID == TTDirectPlayRewardID {
 		rewardData.GetDirectPlayReward = true
@@ -64,10 +64,10 @@ func (s *ApiServer) ClaimByteReward(ctx context.Context, in *game.ClaimByteRewar
 	// 获取奖励配置
 	reward := GetReward(rewardID, s.templateManager.GetTplReward(), s.logger)
 	if reward == nil {
-		s.logger.Warn("奖励配置不存在", zap.String("reward_id", rewardID))
+		s.logger.Warn("Reward config not found", zap.String("reward_id", rewardID))
 		return &game.ClaimByteRewardResponse{
 			Code: 4,
-			Msg:  "奖励配置不存在",
+			Msg:  "Reward config not found",
 		}, nil
 	}
 
@@ -78,7 +78,7 @@ func (s *ApiServer) ClaimByteReward(ctx context.Context, in *game.ClaimByteRewar
 		s.logger.Error("发放抖音奖励失败", zap.Error(err), zap.String("reward_id", rewardID))
 		return &game.ClaimByteRewardResponse{
 			Code: 5,
-			Msg:  fmt.Sprintf("发放奖励失败: %v", err),
+			Msg:  fmt.Sprintf("Failed to grant reward: %v", err),
 		}, nil
 	}
 
@@ -87,7 +87,7 @@ func (s *ApiServer) ClaimByteReward(ctx context.Context, in *game.ClaimByteRewar
 		s.logger.Error("保存抖音奖励数据失败", zap.Error(err))
 		return &game.ClaimByteRewardResponse{
 			Code: 6,
-			Msg:  "保存数据失败",
+			Msg:  "Failed to save data",
 		}, nil
 	}
 
@@ -107,7 +107,7 @@ func (s *ApiServer) ClaimByteReward(ctx context.Context, in *game.ClaimByteRewar
 
 	return &game.ClaimByteRewardResponse{
 		Code:             0,
-		Msg:              "领取成功",
+		Msg:              "Success",
 		Reward:           reward,
 		WalletUpdated:    walletUpdated,
 		InventoryUpdated: inventoryUpdated,

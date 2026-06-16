@@ -90,13 +90,13 @@ func (s *ApiServer) ClaimVipReward(ctx context.Context, in *game.ClaimVipRewardR
 	// 确认用户当前是VIP
 	_, isVip, err := VipAccountCheck(ctx, s.logger, s.db, userID)
 	if err != nil {
-		s.logger.Error("检查VIP状态失败", zap.String("user_id", userID.String()), zap.Error(err))
+		s.logger.Error("Failed to check VIP status", zap.String("user_id", userID.String()), zap.Error(err))
 		return nil, status.Error(codes.Internal, "Failed to check VIP status.")
 	}
 	if !isVip {
 		return &game.ClaimVipRewardResponse{
 			Code: 1,
-			Msg:  "尚未购买VIP",
+			Msg:  "VIP not purchased",
 		}, nil
 	}
 
@@ -109,7 +109,7 @@ func (s *ApiServer) ClaimVipReward(ctx context.Context, in *game.ClaimVipRewardR
 	if vipRewardData.RewardClaimed {
 		return &game.ClaimVipRewardResponse{
 			Code:          2,
-			Msg:           "奖励已领取",
+			Msg:           "Reward already claimed",
 			RewardClaimed: true,
 		}, nil
 	}
@@ -120,7 +120,7 @@ func (s *ApiServer) ClaimVipReward(ctx context.Context, in *game.ClaimVipRewardR
 		s.logger.Error("VIP奖励配置不存在", zap.String("reward_id", VipRewardID))
 		return &game.ClaimVipRewardResponse{
 			Code: 3,
-			Msg:  "奖励配置不存在",
+			Msg:  "Reward config not found",
 		}, nil
 	}
 
@@ -130,7 +130,7 @@ func (s *ApiServer) ClaimVipReward(ctx context.Context, in *game.ClaimVipRewardR
 		s.logger.Error("发放VIP奖励失败", zap.String("user_id", userID.String()), zap.Error(err))
 		return &game.ClaimVipRewardResponse{
 			Code: 4,
-			Msg:  "发放奖励失败",
+			Msg:  "Failed to grant reward",
 		}, nil
 	}
 

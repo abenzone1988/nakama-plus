@@ -22,12 +22,12 @@ func (s *ApiServer) BuyBoxItem(ctx context.Context, in *game.BuyBoxItemRequest) 
 
 	// 验证购买数量
 	if in.Count < 1 {
-		return &game.BuyBoxItemResponse{Code: 1, Msg: "购买数量必须大于0"}, nil
+		return &game.BuyBoxItemResponse{Code: 1, Msg: "Purchase quantity must be greater than 0"}, nil
 	}
 
 	// 如果使用货币购买，数量只能是1或10
 	if !in.UseKey && in.Count != 1 && in.Count != 10 {
-		return &game.BuyBoxItemResponse{Code: 1, Msg: "货币购买数量只能是1或10"}, nil
+		return &game.BuyBoxItemResponse{Code: 1, Msg: "Currency purchase quantity must be 1 or 10"}, nil
 	}
 
 	boxShopData := &BoxShopData{}
@@ -42,15 +42,15 @@ func (s *ApiServer) BuyBoxItem(ctx context.Context, in *game.BuyBoxItemRequest) 
 	boxShopData.RefreshFreeAdState()
 
 	if boxShopData.BoxItemID == "" {
-		return &game.BuyBoxItemResponse{Code: 2, Msg: "宝箱商店未初始化"}, nil
+		return &game.BuyBoxItemResponse{Code: 2, Msg: "Box shop not initialized"}, nil
 	}
 
 	if in.UseFreeAd {
 		if boxShopData.FreeAdUsed {
-			return &game.BuyBoxItemResponse{Code: 3, Msg: "当日广告免费购买已用完"}, nil
+			return &game.BuyBoxItemResponse{Code: 3, Msg: "Daily free ad purchase used up"}, nil
 		}
 		if in.Count != 1 {
-			return &game.BuyBoxItemResponse{Code: 1, Msg: "广告免费购买仅支持单次开启"}, nil
+			return &game.BuyBoxItemResponse{Code: 1, Msg: "Free ad purchase supports single open only"}, nil
 		}
 		boxShopData.FreeAdUsed = true
 	}
@@ -107,7 +107,7 @@ func (s *ApiServer) BuyBoxItem(ctx context.Context, in *game.BuyBoxItemRequest) 
 
 		results, err := UpdateWallets(ctx, s.logger, s.db, walletUpdates, true)
 		if err != nil {
-			return &game.BuyBoxItemResponse{Code: 5, Msg: "货币不足"}, nil
+			return &game.BuyBoxItemResponse{Code: 5, Msg: "Insufficient currency"}, nil
 		}
 
 		if len(results) > 0 {
@@ -146,7 +146,7 @@ func (s *ApiServer) BuyBoxItem(ctx context.Context, in *game.BuyBoxItemRequest) 
 		walletResult, invResult, err := GrantReward(ctx, s.logger, s.db, s.templateManager, s.metrics, s.storageIndex, rewardCopy, "box_shop")
 		if err != nil {
 			s.logger.Error("发放宝箱奖励失败", zap.Error(err))
-			return &game.BuyBoxItemResponse{Code: 6, Msg: "发放奖励失败: " + err.Error()}, nil
+			return &game.BuyBoxItemResponse{Code: 6, Msg: "Failed to grant reward: " + err.Error()}, nil
 		}
 
 		// 合并钱包更新结果（使用最后一次的结果，因为 GrantReward 会返回最终状态）
@@ -176,7 +176,7 @@ func (s *ApiServer) BuyBoxItem(ctx context.Context, in *game.BuyBoxItemRequest) 
 	// 保存商店数据
 	if err := SaveUserData(ctx, s.logger, s.db, s.metrics, s.storageIndex, boxShopData); err != nil {
 		s.logger.Error("保存宝箱商店数据失败", zap.Error(err))
-		return &game.BuyBoxItemResponse{Code: 6, Msg: "保存商店数据失败"}, nil
+		return &game.BuyBoxItemResponse{Code: 6, Msg: "Failed to save shop data"}, nil
 	}
 
 	// 合并所有发放后的奖励（转换后的奖励）
@@ -190,7 +190,7 @@ func (s *ApiServer) BuyBoxItem(ctx context.Context, in *game.BuyBoxItemRequest) 
 
 	response := &game.BuyBoxItemResponse{
 		Code:        0,
-		Msg:         "购买成功",
+		Msg:         "Success",
 		Reward:      mergedReward,
 		BoxShopData: convertToProtoBoxShop(boxShopData),
 		BoxLevelUp:  boxLevelUp,

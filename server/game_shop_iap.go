@@ -62,7 +62,7 @@ func (s *ApiServer) ClaimChapterItem(ctx context.Context, in *game.ClaimChapterI
 	chapterShopData := &ChapterShopData{}
 	if err := LoadUserData(ctx, s.logger, s.db, chapterShopData); err != nil {
 		s.logger.Error("加载章节商店数据失败", zap.Error(err))
-		return &game.ClaimChapterItemResponse{Code: -1, Msg: "加载商店数据失败"}, nil
+		return &game.ClaimChapterItemResponse{Code: -1, Msg: "Failed to load shop data"}, nil
 	}
 
 	// 确保 BoughtCounts 不为 nil
@@ -73,7 +73,7 @@ func (s *ApiServer) ClaimChapterItem(ctx context.Context, in *game.ClaimChapterI
 	// 通过 id 查找商品
 	tplItem, ok := s.templateManager.GetTplShopChapterItem().FindByKey(in.Id)
 	if !ok {
-		return &game.ClaimChapterItemResponse{Code: 1, Msg: "商品不存在"}, nil
+		return &game.ClaimChapterItemResponse{Code: 1, Msg: "Item not found"}, nil
 	}
 
 	shopItemID := tplItem.ID
@@ -91,7 +91,7 @@ func (s *ApiServer) ClaimChapterItem(ctx context.Context, in *game.ClaimChapterI
 	claimedCount := chapterShopData.ClaimedCounts[shopItemID]
 
 	if boughtCount <= claimedCount {
-		return &game.ClaimChapterItemResponse{Code: 2, Msg: "没有可领取的商品"}, nil
+		return &game.ClaimChapterItemResponse{Code: 2, Msg: "No claimable items"}, nil
 	}
 
 	// 处理章节商品购买逻辑
@@ -112,7 +112,7 @@ func (s *ApiServer) ClaimChapterItem(ctx context.Context, in *game.ClaimChapterI
 	// 保存商店数据
 	if err := SaveUserData(ctx, s.logger, s.db, s.metrics, s.storageIndex, chapterShopData); err != nil {
 		s.logger.Error("保存章节商店数据失败", zap.Error(err))
-		return &game.ClaimChapterItemResponse{Code: 6, Msg: "保存商店数据失败"}, nil
+		return &game.ClaimChapterItemResponse{Code: 6, Msg: "Failed to save shop data"}, nil
 	}
 
 	// 获取价格
@@ -136,7 +136,7 @@ func (s *ApiServer) ClaimChapterItem(ctx context.Context, in *game.ClaimChapterI
 
 	response := &game.ClaimChapterItemResponse{
 		Code:     0,
-		Msg:      "领取成功",
+		Msg:      "Success",
 		Reward:   reward,
 		ShopItem: shopChapterItem,
 	}
@@ -153,7 +153,7 @@ func (s *ApiServer) ClaimGemItem(ctx context.Context, in *game.ClaimGemItemReque
 	gemShopData := &GemShopData{}
 	if err := LoadUserData(ctx, s.logger, s.db, gemShopData); err != nil {
 		s.logger.Error("加载钻石商店数据失败", zap.Error(err))
-		return &game.ClaimGemItemResponse{Code: -1, Msg: "加载商店数据失败"}, nil
+		return &game.ClaimGemItemResponse{Code: -1, Msg: "Failed to load shop data"}, nil
 	}
 
 	// 确保 BoughtCounts 不为 nil
@@ -164,7 +164,7 @@ func (s *ApiServer) ClaimGemItem(ctx context.Context, in *game.ClaimGemItemReque
 	// 通过 id 查找商品
 	tplItem, ok := s.templateManager.GetTplShopGemItem().FindByKey(in.Id)
 	if !ok {
-		return &game.ClaimGemItemResponse{Code: 1, Msg: "商品不存在"}, nil
+		return &game.ClaimGemItemResponse{Code: 1, Msg: "Item not found"}, nil
 	}
 
 	shopItemID := tplItem.ID
@@ -182,7 +182,7 @@ func (s *ApiServer) ClaimGemItem(ctx context.Context, in *game.ClaimGemItemReque
 	claimedCount := gemShopData.ClaimedCounts[shopItemID]
 
 	if boughtCount <= claimedCount {
-		return &game.ClaimGemItemResponse{Code: 2, Msg: "没有可领取的商品"}, nil
+		return &game.ClaimGemItemResponse{Code: 2, Msg: "No claimable items"}, nil
 	}
 
 	// 处理钻石商品购买逻辑（首次购买有额外奖励）
@@ -203,7 +203,7 @@ func (s *ApiServer) ClaimGemItem(ctx context.Context, in *game.ClaimGemItemReque
 	// 保存商店数据
 	if err := SaveUserData(ctx, s.logger, s.db, s.metrics, s.storageIndex, gemShopData); err != nil {
 		s.logger.Error("保存钻石商店数据失败", zap.Error(err))
-		return &game.ClaimGemItemResponse{Code: 6, Msg: "保存商店数据失败"}, nil
+		return &game.ClaimGemItemResponse{Code: 6, Msg: "Failed to save shop data"}, nil
 	}
 
 	// 获取价格
@@ -225,7 +225,7 @@ func (s *ApiServer) ClaimGemItem(ctx context.Context, in *game.ClaimGemItemReque
 
 	response := &game.ClaimGemItemResponse{
 		Code:     0,
-		Msg:      "领取成功",
+		Msg:      "Success",
 		Reward:   reward,
 		ShopItem: shopGemItem,
 	}

@@ -16,7 +16,7 @@ func (s *ApiServer) RefineCrystalEquipment(ctx context.Context, in *game.RefineC
 	if equipmentID == "" {
 		return &game.RefineCrystalEquipmentResponse{
 			Code: 1,
-			Msg:  "装备ID不能为空",
+			Msg:  "Equipment ID cannot be empty",
 		}, nil
 	}
 
@@ -25,25 +25,25 @@ func (s *ApiServer) RefineCrystalEquipment(ctx context.Context, in *game.RefineC
 		s.logger.Error("加载水晶装备数据失败", zap.Error(err), zap.String("user_id", userID.String()))
 		return &game.RefineCrystalEquipmentResponse{
 			Code: 2,
-			Msg:  "加载数据失败",
+			Msg:  "Failed to load data",
 		}, nil
 	}
 
 	equipment, exists := crystalEquipmentsData.Equipments[equipmentID]
 	if !exists {
-		s.logger.Warn("装备不存在", zap.String("equipment_id", equipmentID), zap.String("user_id", userID.String()))
+		s.logger.Warn("Equipment not found", zap.String("equipment_id", equipmentID), zap.String("user_id", userID.String()))
 		return &game.RefineCrystalEquipmentResponse{
 			Code: 3,
-			Msg:  "装备不存在",
+			Msg:  "Equipment not found",
 		}, nil
 	}
 
 	tplEquip, found := s.templateManager.GetTplCrystalEquipment().FindByKey(equipment.TplId)
 	if !found {
-		s.logger.Error("装备模板不存在", zap.String("tpl_id", equipment.TplId))
+		s.logger.Error("Equipment template not found", zap.String("tpl_id", equipment.TplId))
 		return &game.RefineCrystalEquipmentResponse{
 			Code: 4,
-			Msg:  "装备模板不存在",
+			Msg:  "Equipment template not found",
 		}, nil
 	}
 
@@ -52,10 +52,10 @@ func (s *ApiServer) RefineCrystalEquipment(ctx context.Context, in *game.RefineC
 	})
 
 	if refinementConfigs.Len() == 0 {
-		s.logger.Warn("未找到词条配置", zap.Int32("quality", tplEquip.Quality))
+		s.logger.Warn("Affix config not found", zap.Int32("quality", tplEquip.Quality))
 		return &game.RefineCrystalEquipmentResponse{
 			Code: 5,
-			Msg:  "未找到词条配置",
+			Msg:  "Affix config not found",
 		}, nil
 	}
 
@@ -94,10 +94,10 @@ func (s *ApiServer) RefineCrystalEquipment(ctx context.Context, in *game.RefineC
 	case 2:
 		costItemInfo = refinementConfig.Lock2CostItemInfo
 	default:
-		s.logger.Warn("锁定词条数量超过上限", zap.Int("locked_count", lockedCount))
+		s.logger.Warn("Locked affix count exceeds limit", zap.Int("locked_count", lockedCount))
 		return &game.RefineCrystalEquipmentResponse{
 			Code: 7,
-			Msg:  "锁定词条数量超过上限",
+			Msg:  "Locked affix count exceeds limit",
 		}, nil
 	}
 
@@ -118,7 +118,7 @@ func (s *ApiServer) RefineCrystalEquipment(ctx context.Context, in *game.RefineC
 			s.logger.Error("消耗洗炼材料失败", zap.Error(err))
 			return &game.RefineCrystalEquipmentResponse{
 				Code: 8,
-				Msg:  "材料不足或消耗失败",
+				Msg:  "Insufficient materials or consumption failed",
 			}, nil
 		}
 		walletUpdateResult = walletResult
@@ -159,7 +159,7 @@ func (s *ApiServer) RefineCrystalEquipment(ctx context.Context, in *game.RefineC
 		s.logger.Error("保存水晶装备数据失败", zap.Error(err))
 		return &game.RefineCrystalEquipmentResponse{
 			Code: 6,
-			Msg:  "保存数据失败",
+			Msg:  "Failed to save data",
 		}, nil
 	}
 
@@ -196,7 +196,7 @@ func (s *ApiServer) LockCrystalAffix(ctx context.Context, in *game.LockCrystalAf
 	if equipmentID == "" || affixID == "" {
 		return &game.LockCrystalAffixResponse{
 			Code: 1,
-			Msg:  "装备ID或词条ID不能为空",
+			Msg:  "Equipment ID or affix ID cannot be empty",
 		}, nil
 	}
 
@@ -205,16 +205,16 @@ func (s *ApiServer) LockCrystalAffix(ctx context.Context, in *game.LockCrystalAf
 		s.logger.Error("加载水晶装备数据失败", zap.Error(err), zap.String("user_id", userID.String()))
 		return &game.LockCrystalAffixResponse{
 			Code: 2,
-			Msg:  "加载数据失败",
+			Msg:  "Failed to load data",
 		}, nil
 	}
 
 	equipment, exists := crystalEquipmentsData.Equipments[equipmentID]
 	if !exists {
-		s.logger.Warn("装备不存在", zap.String("equipment_id", equipmentID), zap.String("user_id", userID.String()))
+		s.logger.Warn("Equipment not found", zap.String("equipment_id", equipmentID), zap.String("user_id", userID.String()))
 		return &game.LockCrystalAffixResponse{
 			Code: 3,
-			Msg:  "装备不存在",
+			Msg:  "Equipment not found",
 		}, nil
 	}
 
@@ -237,14 +237,14 @@ func (s *ApiServer) LockCrystalAffix(ctx context.Context, in *game.LockCrystalAf
 	if !affixExists {
 		return &game.LockCrystalAffixResponse{
 			Code: 4,
-			Msg:  "词条不存在",
+			Msg:  "Affix not found",
 		}, nil
 	}
 
 	if !isRare {
 		return &game.LockCrystalAffixResponse{
 			Code: 7,
-			Msg:  "只能锁定稀有词条",
+			Msg:  "Only rare affixes can be locked",
 		}, nil
 	}
 
@@ -260,7 +260,7 @@ func (s *ApiServer) LockCrystalAffix(ctx context.Context, in *game.LockCrystalAf
 		if isLocked {
 			return &game.LockCrystalAffixResponse{
 				Code: 5,
-				Msg:  "词条已锁定",
+				Msg:  "Affix already locked",
 			}, nil
 		}
 		equipment.LockedAffixIds = append(equipment.LockedAffixIds, affixID)
@@ -268,7 +268,7 @@ func (s *ApiServer) LockCrystalAffix(ctx context.Context, in *game.LockCrystalAf
 		if !isLocked {
 			return &game.LockCrystalAffixResponse{
 				Code: 5,
-				Msg:  "词条未锁定",
+				Msg:  "Affix not locked",
 			}, nil
 		}
 		equipment.LockedAffixIds = removeStringFromSlice(equipment.LockedAffixIds, affixID)
@@ -278,7 +278,7 @@ func (s *ApiServer) LockCrystalAffix(ctx context.Context, in *game.LockCrystalAf
 		s.logger.Error("保存水晶装备数据失败", zap.Error(err))
 		return &game.LockCrystalAffixResponse{
 			Code: 6,
-			Msg:  "保存数据失败",
+			Msg:  "Failed to save data",
 		}, nil
 	}
 
@@ -306,7 +306,7 @@ func (s *ApiServer) ActivatePendingAffixes(ctx context.Context, in *game.Activat
 	if equipmentID == "" {
 		return &game.ActivatePendingAffixesResponse{
 			Code: 1,
-			Msg:  "装备ID不能为空",
+			Msg:  "Equipment ID cannot be empty",
 		}, nil
 	}
 
@@ -315,23 +315,23 @@ func (s *ApiServer) ActivatePendingAffixes(ctx context.Context, in *game.Activat
 		s.logger.Error("加载水晶装备数据失败", zap.Error(err), zap.String("user_id", userID.String()))
 		return &game.ActivatePendingAffixesResponse{
 			Code: 2,
-			Msg:  "加载数据失败",
+			Msg:  "Failed to load data",
 		}, nil
 	}
 
 	equipment, exists := crystalEquipmentsData.Equipments[equipmentID]
 	if !exists {
-		s.logger.Warn("装备不存在", zap.String("equipment_id", equipmentID), zap.String("user_id", userID.String()))
+		s.logger.Warn("Equipment not found", zap.String("equipment_id", equipmentID), zap.String("user_id", userID.String()))
 		return &game.ActivatePendingAffixesResponse{
 			Code: 3,
-			Msg:  "装备不存在",
+			Msg:  "Equipment not found",
 		}, nil
 	}
 
 	if len(equipment.PendingAffixes) == 0 {
 		return &game.ActivatePendingAffixesResponse{
 			Code: 4,
-			Msg:  "没有待激活的词条",
+			Msg:  "No pending affixes to activate",
 		}, nil
 	}
 
@@ -342,7 +342,7 @@ func (s *ApiServer) ActivatePendingAffixes(ctx context.Context, in *game.Activat
 		s.logger.Error("保存水晶装备数据失败", zap.Error(err))
 		return &game.ActivatePendingAffixesResponse{
 			Code: 5,
-			Msg:  "保存数据失败",
+			Msg:  "Failed to save data",
 		}, nil
 	}
 
@@ -366,7 +366,7 @@ func (s *ApiServer) GetCrystalEquipments(ctx context.Context, in *game.GetCrysta
 		s.logger.Error("加载水晶装备数据失败", zap.Error(err), zap.String("user_id", userID.String()))
 		return &game.GetCrystalEquipmentsResponse{
 			Code: 1,
-			Msg:  "加载数据失败",
+			Msg:  "Failed to load data",
 		}, nil
 	}
 
@@ -375,7 +375,7 @@ func (s *ApiServer) GetCrystalEquipments(ctx context.Context, in *game.GetCrysta
 			s.logger.Error("保存初始化的水晶装备数据失败", zap.Error(err))
 			return &game.GetCrystalEquipmentsResponse{
 				Code: 2,
-				Msg:  "保存数据失败",
+				Msg:  "Failed to save data",
 			}, nil
 		}
 	}
@@ -402,7 +402,7 @@ func (s *ApiServer) SalvageCrystalEquipment(ctx context.Context, in *game.Salvag
 	if len(equipmentIDs) == 0 {
 		return &game.SalvageCrystalEquipmentResponse{
 			Code: 1,
-			Msg:  "装备ID不能为空",
+			Msg:  "Equipment ID cannot be empty",
 		}, nil
 	}
 
@@ -411,7 +411,7 @@ func (s *ApiServer) SalvageCrystalEquipment(ctx context.Context, in *game.Salvag
 		s.logger.Error("加载水晶装备数据失败", zap.Error(err), zap.String("user_id", userID.String()))
 		return &game.SalvageCrystalEquipmentResponse{
 			Code: 2,
-			Msg:  "加载数据失败",
+			Msg:  "Failed to load data",
 		}, nil
 	}
 
@@ -425,13 +425,13 @@ func (s *ApiServer) SalvageCrystalEquipment(ctx context.Context, in *game.Salvag
 
 		equipment, exists := crystalEquipmentsData.Equipments[equipmentID]
 		if !exists {
-			s.logger.Warn("装备不存在", zap.String("equipment_id", equipmentID), zap.String("user_id", userID.String()))
+			s.logger.Warn("Equipment not found", zap.String("equipment_id", equipmentID), zap.String("user_id", userID.String()))
 			continue
 		}
 
 		tplEquip, found := s.templateManager.GetTplCrystalEquipment().FindByKey(equipment.TplId)
 		if !found {
-			s.logger.Error("装备模板不存在", zap.String("tpl_id", equipment.TplId), zap.String("equipment_id", equipmentID))
+			s.logger.Error("Equipment template not found", zap.String("tpl_id", equipment.TplId), zap.String("equipment_id", equipmentID))
 			continue
 		}
 
@@ -455,7 +455,7 @@ func (s *ApiServer) SalvageCrystalEquipment(ctx context.Context, in *game.Salvag
 	if len(validEquipmentIDs) == 0 {
 		return &game.SalvageCrystalEquipmentResponse{
 			Code: 3,
-			Msg:  "没有可分解的装备",
+			Msg:  "No equipment to dismantle",
 		}, nil
 	}
 
@@ -463,7 +463,7 @@ func (s *ApiServer) SalvageCrystalEquipment(ctx context.Context, in *game.Salvag
 	if mergedReward == nil {
 		return &game.SalvageCrystalEquipmentResponse{
 			Code: 6,
-			Msg:  "分解物品配置错误",
+			Msg:  "Invalid dismantle item config",
 		}, nil
 	}
 
@@ -475,7 +475,7 @@ func (s *ApiServer) SalvageCrystalEquipment(ctx context.Context, in *game.Salvag
 		s.logger.Error("发放分解奖励失败", zap.Error(err))
 		return &game.SalvageCrystalEquipmentResponse{
 			Code: 7,
-			Msg:  "发放奖励失败",
+			Msg:  "Failed to grant reward",
 		}, nil
 	}
 
@@ -487,7 +487,7 @@ func (s *ApiServer) SalvageCrystalEquipment(ctx context.Context, in *game.Salvag
 		s.logger.Error("保存水晶装备数据失败", zap.Error(err))
 		return &game.SalvageCrystalEquipmentResponse{
 			Code: 8,
-			Msg:  "保存数据失败",
+			Msg:  "Failed to save data",
 		}, nil
 	}
 

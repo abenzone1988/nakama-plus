@@ -606,7 +606,7 @@ func (s *ApiServer) sendPurchaseNotification(ctx context.Context, userID uuid.UU
 	// 创建通知
 	notification := &api.Notification{
 		Id:         uuid.Must(uuid.NewV4()).String(),
-		Subject:    "购买成功",
+		Subject:    "Success",
 		Content:    string(contentBytes),
 		Code:       NotificationSystemNotice,
 		SenderId:   uuid.Nil.String(),

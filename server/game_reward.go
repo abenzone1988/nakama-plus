@@ -67,34 +67,34 @@ func (s *ApiServer) OperateWallet(ctx context.Context, in *game.OperateWalletReq
 		coinChange, gemChange, adChange = -coin, -gem, -ad
 	default:
 		s.logger.Warn("钱包操作类型未指定", zap.String("user_id", userID.String()))
-		return &game.OperateWalletResponse{Code: 4, Msg: "操作类型未指定"}, nil
+		return &game.OperateWalletResponse{Code: 4, Msg: "Operation type not specified"}, nil
 	}
 
 	// 1. 参数校验
 	if in.GetSignature() == "" {
 		s.logger.Warn("钱包操作缺少签名", zap.String("user_id", userID.String()), zap.String("username", username))
-		return &game.OperateWalletResponse{Code: 1, Msg: "缺少签名"}, nil
+		return &game.OperateWalletResponse{Code: 1, Msg: "Missing signature"}, nil
 	}
 	if in.GetCoin() < 0 || in.GetGem() < 0 || in.GetAd() < 0 {
 		s.logger.Warn("钱包操作参数非法", zap.String("user_id", userID.String()), zap.Int32("coin", in.GetCoin()), zap.Int32("gem", in.GetGem()), zap.Int32("ad", in.GetAd()))
-		return &game.OperateWalletResponse{Code: 2, Msg: "负数-钱包操作参数非法"}, nil
+		return &game.OperateWalletResponse{Code: 2, Msg: "Invalid wallet operation: negative amount"}, nil
 	}
 
 	if in.GetCoin() == 0 && in.GetGem() == 0 && in.GetAd() == 0 {
 		s.logger.Warn("钱包操作参数非法", zap.String("user_id", userID.String()), zap.Int32("coin", in.GetCoin()), zap.Int32("gem", in.GetGem()), zap.Int32("ad", in.GetAd()))
-		return &game.OperateWalletResponse{Code: 2, Msg: "全0-钱包操作参数非法"}, nil
+		return &game.OperateWalletResponse{Code: 2, Msg: "Invalid wallet operation: all amounts are zero"}, nil
 	}
 
 	// 验证walletID是否为有效的UUID
 	walletId, err := uuid.FromString(in.GetId())
 	if err != nil {
-		return &game.OperateWalletResponse{Code: 6, Msg: "id错误"}, nil
+		return &game.OperateWalletResponse{Code: 6, Msg: "Invalid wallet ID"}, nil
 	}
 
 	// 3. 签名校验
 	if !VerifyWalletSignatureV2(op.String(), coin, gem, ad, reason, in.GetSignature(), userID.String(), in.GetId()) {
 		s.logger.Error("钱包操作签名验证失败", zap.String("user_id", userID.String()), zap.String("username", username), zap.Int64("coin", coin), zap.Int64("gem", gem), zap.Int64("ad", ad), zap.String("reason", reason), zap.String("signature", in.GetSignature()), zap.String("wallet_id", in.GetId()))
-		return &game.OperateWalletResponse{Code: 5, Msg: "签名验证失败"}, nil
+		return &game.OperateWalletResponse{Code: 5, Msg: "Invalid operation"}, nil
 	}
 
 	// 4. 钱包变更
@@ -104,10 +104,10 @@ func (s *ApiServer) OperateWallet(ctx context.Context, in *game.OperateWalletReq
 		var walletErr *runtime.WalletNegativeError
 		if errors.As(err, &walletErr) {
 			s.logger.Warn("钱包余额不足", zap.String("user_id", userID.String()), zap.String("原因", reason), zap.Int64("金币", coinChange), zap.Int64("钻石", gemChange), zap.Int64("广告券", adChange))
-			return &game.OperateWalletResponse{Code: 6, Msg: "余额不足"}, nil
+			return &game.OperateWalletResponse{Code: 6, Msg: "Lack of balance"}, nil
 		}
 		s.logger.Error("钱包更新失败", zap.Error(err), zap.String("user_id", userID.String()), zap.String("record", record))
-		return &game.OperateWalletResponse{Code: 7, Msg: "钱包更新失败"}, nil
+		return &game.OperateWalletResponse{Code: 7, Msg: "Wallet update failed"}, nil
 	}
 	if len(results) == 0 {
 		s.logger.Error("未找到钱包更新结果",
@@ -121,7 +121,7 @@ func (s *ApiServer) OperateWallet(ctx context.Context, in *game.OperateWalletReq
 			zap.String("reason", reason),
 			zap.String("operation", op.String()),
 			zap.String("signature", in.GetSignature()))
-		return &game.OperateWalletResponse{Code: 8, Msg: "未找到钱包更新结果"}, nil
+		return &game.OperateWalletResponse{Code: 8, Msg: "No wallet update results found"}, nil
 	}
 
 	result := results[0]
@@ -133,7 +133,7 @@ func (s *ApiServer) OperateWallet(ctx context.Context, in *game.OperateWalletReq
 
 	return &game.OperateWalletResponse{
 		Code:          0,
-		Msg:           "操作成功",
+		Msg:           "Success",
 		WalletUpdated: updatedWallet,
 	}, nil
 }

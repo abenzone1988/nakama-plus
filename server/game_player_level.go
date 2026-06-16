@@ -58,7 +58,7 @@ func (s *ApiServer) UpgradePlayerLevel(ctx context.Context, in *game.UpgradePlay
 		s.logger.Error("加载玩家等级数据失败", zap.Error(err))
 		return &game.UpgradePlayerLevelResponse{
 			Code: 1,
-			Msg:  "加载数据失败",
+			Msg:  "Failed to load data",
 		}, nil
 	}
 
@@ -97,13 +97,13 @@ func (s *ApiServer) UpgradePlayerLevel(ctx context.Context, in *game.UpgradePlay
 		if !exist {
 			return &game.UpgradePlayerLevelResponse{
 				Code: 2,
-				Msg:  "已达到最高等级",
+				Msg:  "Already at max level",
 			}, nil
 		}
 
 		return &game.UpgradePlayerLevelResponse{
 			Code:             3,
-			Msg:              "经验值不足，需要 " + strconv.FormatInt(int64(levelInfo.ExpRequire-totalExp), 10) + " 点经验值",
+			Msg:              "Insufficient EXP, need " + strconv.FormatInt(int64(levelInfo.ExpRequire-totalExp), 10) + " more EXP",
 			TotalExp:         playerLevelData.TotalExp,
 			Level:            playerLevelData.Level,
 			Reward:           nil,
@@ -131,7 +131,7 @@ func (s *ApiServer) UpgradePlayerLevel(ctx context.Context, in *game.UpgradePlay
 		s.logger.Error("保存玩家等级数据失败", zap.Error(err))
 		return &game.UpgradePlayerLevelResponse{
 			Code: 4,
-			Msg:  "保存数据失败",
+			Msg:  "Failed to save data",
 		}, nil
 	}
 
@@ -151,7 +151,7 @@ func (s *ApiServer) UpgradePlayerLevel(ctx context.Context, in *game.UpgradePlay
 
 	return &game.UpgradePlayerLevelResponse{
 		Code:             0,
-		Msg:              "升级成功",
+		Msg:              "Success",
 		Level:            currentLevel,
 		TotalExp:         playerLevelData.TotalExp,
 		Reward:           mergedReward,

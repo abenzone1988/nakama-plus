@@ -61,7 +61,7 @@ func (s *ApiServer) StartBattle(ctx context.Context, in *game.StartBattleRequest
 	// 保存战斗信息，用于后续再次领取奖励
 	battleData := &BattleData{}
 	if err := LoadUserData(ctx, s.logger, s.db, battleData); err != nil {
-		s.logger.Error("加载战斗数据失败", zap.Error(err))
+		s.logger.Error("Failed to load battle data", zap.Error(err))
 	}
 
 	battleData.CurLevelId = in.GetLevelId()
@@ -77,7 +77,7 @@ func (s *ApiServer) StartBattle(ctx context.Context, in *game.StartBattleRequest
 		if !exist {
 			return &game.StartBattleResponse{
 				Code: 2,
-				Msg:  "关卡不存在",
+				Msg:  "Level not found",
 			}, nil
 		}
 		staminaCost = levelInfo.Cost
@@ -93,7 +93,7 @@ func (s *ApiServer) StartBattle(ctx context.Context, in *game.StartBattleRequest
 		if !exist {
 			return &game.StartBattleResponse{
 				Code: 2,
-				Msg:  "关卡不存在",
+				Msg:  "Level not found",
 			}, nil
 		}
 		staminaCost = activityInfo.Stamina
@@ -102,7 +102,7 @@ func (s *ApiServer) StartBattle(ctx context.Context, in *game.StartBattleRequest
 		if !exist {
 			return &game.StartBattleResponse{
 				Code: 2,
-				Msg:  "关卡不存在",
+				Msg:  "Level not found",
 			}, nil
 		}
 		staminaCost = eliteInfo.Cost
@@ -110,7 +110,7 @@ func (s *ApiServer) StartBattle(ctx context.Context, in *game.StartBattleRequest
 	default:
 		return &game.StartBattleResponse{
 			Code: 2,
-			Msg:  "无效的战斗类型",
+			Msg:  "Invalid battle type",
 		}, nil
 	}
 
@@ -120,7 +120,7 @@ func (s *ApiServer) StartBattle(ctx context.Context, in *game.StartBattleRequest
 	if err != nil {
 		return &game.StartBattleResponse{
 			Code:    3,
-			Msg:     "体力扣除失败: " + err.Error(),
+			Msg:     "Failed to deduct stamina: " + err.Error(),
 			Stamina: stamina,
 		}, nil
 	}
@@ -130,7 +130,7 @@ func (s *ApiServer) StartBattle(ctx context.Context, in *game.StartBattleRequest
 	}
 	return &game.StartBattleResponse{
 		Code:    0,
-		Msg:     "开始成功",
+		Msg:     "Success",
 		Stamina: stamina,
 	}, nil
 }
@@ -142,17 +142,17 @@ func (s *ApiServer) EndBattle(ctx context.Context, in *game.EndBattleRequest) (*
 	if progress > 100 || progress < 0 {
 		return &game.EndBattleResponse{
 			Code: 1,
-			Msg:  "进度错误",
+			Msg:  "Invalid progress",
 		}, nil
 	}
 
 	// 从开始战斗时保存的数据中获取关卡ID
 	battleData := &BattleData{}
 	if err := LoadUserData(ctx, s.logger, s.db, battleData); err != nil {
-		s.logger.Error("加载战斗数据失败", zap.Error(err))
+		s.logger.Error("Failed to load battle data", zap.Error(err))
 		return &game.EndBattleResponse{
 			Code: 2,
-			Msg:  "加载战斗数据失败",
+			Msg:  "Failed to load battle data",
 		}, nil
 	}
 
@@ -160,7 +160,7 @@ func (s *ApiServer) EndBattle(ctx context.Context, in *game.EndBattleRequest) (*
 	if battleData.CurLevelId == "" {
 		return &game.EndBattleResponse{
 			Code: 2,
-			Msg:  "未找到战斗记录，请先开始战斗",
+			Msg:  "Battle record not found, start battle first",
 		}, nil
 	}
 
@@ -168,7 +168,7 @@ func (s *ApiServer) EndBattle(ctx context.Context, in *game.EndBattleRequest) (*
 	if battleData.BattleEnded {
 		return &game.EndBattleResponse{
 			Code: 5,
-			Msg:  "战斗已结束，无法重复领取奖励",
+			Msg:  "Battle ended, cannot claim reward again",
 		}, nil
 	}
 
@@ -185,7 +185,7 @@ func (s *ApiServer) EndBattle(ctx context.Context, in *game.EndBattleRequest) (*
 
 		return &game.EndBattleResponse{
 			Code:      0,
-			Msg:       "通过成功",
+			Msg:       "Success",
 			ExpGained: expGained,
 		}, nil
 	}
@@ -200,7 +200,7 @@ func (s *ApiServer) EndBattle(ctx context.Context, in *game.EndBattleRequest) (*
 		if !exist {
 			return &game.EndBattleResponse{
 				Code: 2,
-				Msg:  "关卡不存在",
+				Msg:  "Level not found",
 			}, nil
 		}
 		rewardId = levelInfo.WinRewards
@@ -212,7 +212,7 @@ func (s *ApiServer) EndBattle(ctx context.Context, in *game.EndBattleRequest) (*
 		if !exist {
 			return &game.EndBattleResponse{
 				Code: 2,
-				Msg:  "关卡不存在",
+				Msg:  "Level not found",
 			}, nil
 		}
 		rewardId = activityInfo.RewardID
@@ -223,7 +223,7 @@ func (s *ApiServer) EndBattle(ctx context.Context, in *game.EndBattleRequest) (*
 		if !exist {
 			return &game.EndBattleResponse{
 				Code: 2,
-				Msg:  "关卡不存在",
+				Msg:  "Level not found",
 			}, nil
 		}
 		rewardId = eliteInfo.WinRewards
@@ -365,10 +365,10 @@ func (s *ApiServer) EndBattle(ctx context.Context, in *game.EndBattleRequest) (*
 		rewards, source,
 	)
 	if err != nil {
-		s.logger.Error("发放奖励失败", zap.Error(err))
+		s.logger.Error("Failed to grant reward", zap.Error(err))
 		return &game.EndBattleResponse{
 			Code: 4,
-			Msg:  "奖励发放失败: " + err.Error(),
+			Msg:  "Failed to grant reward: " + err.Error(),
 		}, nil
 	}
 
@@ -405,7 +405,7 @@ func (s *ApiServer) EndBattle(ctx context.Context, in *game.EndBattleRequest) (*
 
 	return &game.EndBattleResponse{
 		Code:             0,
-		Msg:              "通过成功",
+		Msg:              "Success",
 		Reward:           mergedReward,
 		WalletUpdated:    walletUpdated,
 		InventoryUpdated: inventoryUpdated,
@@ -429,7 +429,7 @@ func (s *ApiServer) QuickBattle(ctx context.Context, in *game.QuickBattleRequest
 		if !exist {
 			return &game.QuickBattleResponse{
 				Code: 2,
-				Msg:  "关卡不存在",
+				Msg:  "Level not found",
 			}, nil
 		}
 		staminaCost = levelInfo.Cost
@@ -441,7 +441,7 @@ func (s *ApiServer) QuickBattle(ctx context.Context, in *game.QuickBattleRequest
 		if !exist {
 			return &game.QuickBattleResponse{
 				Code: 2,
-				Msg:  "关卡不存在",
+				Msg:  "Level not found",
 			}, nil
 		}
 		staminaCost = activityInfo.Stamina
@@ -453,7 +453,7 @@ func (s *ApiServer) QuickBattle(ctx context.Context, in *game.QuickBattleRequest
 		if !exist {
 			return &game.QuickBattleResponse{
 				Code: 2,
-				Msg:  "关卡不存在",
+				Msg:  "Level not found",
 			}, nil
 		}
 		staminaCost = eliteInfo.Cost
@@ -463,7 +463,7 @@ func (s *ApiServer) QuickBattle(ctx context.Context, in *game.QuickBattleRequest
 	default:
 		return &game.QuickBattleResponse{
 			Code: 2,
-			Msg:  "无效的战斗类型",
+			Msg:  "Invalid battle type",
 		}, nil
 	}
 
@@ -472,7 +472,7 @@ func (s *ApiServer) QuickBattle(ctx context.Context, in *game.QuickBattleRequest
 	if err != nil {
 		return &game.QuickBattleResponse{
 			Code:    3,
-			Msg:     "体力扣除失败: " + err.Error(),
+			Msg:     "Failed to deduct stamina: " + err.Error(),
 			Stamina: stamina,
 		}, nil
 	}
@@ -482,7 +482,7 @@ func (s *ApiServer) QuickBattle(ctx context.Context, in *game.QuickBattleRequest
 	// 加载战斗数据以检查关卡是否已通关
 	battleData := &BattleData{}
 	if err := LoadUserData(ctx, s.logger, s.db, battleData); err != nil {
-		s.logger.Error("加载战斗数据失败", zap.Error(err))
+		s.logger.Error("Failed to load battle data", zap.Error(err))
 	}
 
 	// 检查关卡是否已经通关过（只能快速通过未通关的关卡）
@@ -505,7 +505,7 @@ func (s *ApiServer) QuickBattle(ctx context.Context, in *game.QuickBattleRequest
 	if !alreadyCleared {
 		return &game.QuickBattleResponse{
 			Code: 5,
-			Msg:  "该关卡未通关，不能快速通过",
+			Msg:  "Level not cleared, quick clear unavailable",
 		}, nil
 	}
 
@@ -519,7 +519,7 @@ func (s *ApiServer) QuickBattle(ctx context.Context, in *game.QuickBattleRequest
 	if mainReward == nil {
 		return &game.QuickBattleResponse{
 			Code: 6,
-			Msg:  "奖励配置不存在",
+			Msg:  "Reward config not found",
 		}, nil
 	}
 
@@ -529,10 +529,10 @@ func (s *ApiServer) QuickBattle(ctx context.Context, in *game.QuickBattleRequest
 		mainReward, source,
 	)
 	if err != nil {
-		s.logger.Error("发放奖励失败", zap.Error(err))
+		s.logger.Error("Failed to grant reward", zap.Error(err))
 		return &game.QuickBattleResponse{
 			Code: 4,
-			Msg:  "奖励发放失败: " + err.Error(),
+			Msg:  "Failed to grant reward: " + err.Error(),
 		}, nil
 	}
 
@@ -548,7 +548,7 @@ func (s *ApiServer) QuickBattle(ctx context.Context, in *game.QuickBattleRequest
 
 	return &game.QuickBattleResponse{
 		Code:             0,
-		Msg:              "快速通过成功",
+		Msg:              "Success",
 		Reward:           mainReward,
 		Stamina:          stamina,
 		WalletUpdated:    walletUpdated,
@@ -562,10 +562,10 @@ func (s *ApiServer) ClaimBattleRewardByShare(ctx context.Context, in *game.Claim
 	// 加载战斗数据
 	battleData := &BattleData{}
 	if err := LoadUserData(ctx, s.logger, s.db, battleData); err != nil {
-		s.logger.Error("加载战斗数据失败", zap.Error(err))
+		s.logger.Error("Failed to load battle data", zap.Error(err))
 		return &game.ClaimBattleRewardByShareResponse{
 			Code: 1,
-			Msg:  "加载数据失败",
+			Msg:  "Failed to load data",
 		}, nil
 	}
 
@@ -573,7 +573,7 @@ func (s *ApiServer) ClaimBattleRewardByShare(ctx context.Context, in *game.Claim
 	if battleData.CurLevelId == "" {
 		return &game.ClaimBattleRewardByShareResponse{
 			Code: 2,
-			Msg:  "未完成战斗",
+			Msg:  "Battle not completed",
 		}, nil
 	}
 
@@ -581,7 +581,7 @@ func (s *ApiServer) ClaimBattleRewardByShare(ctx context.Context, in *game.Claim
 	if !battleData.BattleEnded {
 		return &game.ClaimBattleRewardByShareResponse{
 			Code: 6,
-			Msg:  "战斗尚未结束，无法领取分享奖励",
+			Msg:  "Battle not ended, cannot claim share reward",
 		}, nil
 	}
 
@@ -589,7 +589,7 @@ func (s *ApiServer) ClaimBattleRewardByShare(ctx context.Context, in *game.Claim
 	if battleData.ShareRewardClaimed {
 		return &game.ClaimBattleRewardByShareResponse{
 			Code: 3,
-			Msg:  "奖励已领取",
+			Msg:  "Reward already claimed",
 		}, nil
 	}
 
@@ -597,7 +597,7 @@ func (s *ApiServer) ClaimBattleRewardByShare(ctx context.Context, in *game.Claim
 	if battleData.RewardJSON == "" {
 		return &game.ClaimBattleRewardByShareResponse{
 			Code: 4,
-			Msg:  "未找到保存的奖励数据",
+			Msg:  "Saved reward data not found",
 		}, nil
 	}
 
@@ -607,7 +607,7 @@ func (s *ApiServer) ClaimBattleRewardByShare(ctx context.Context, in *game.Claim
 		s.logger.Error("反序列化奖励失败", zap.Error(err))
 		return &game.ClaimBattleRewardByShareResponse{
 			Code: 4,
-			Msg:  "奖励数据错误",
+			Msg:  "Invalid reward data",
 		}, nil
 	}
 
@@ -623,7 +623,7 @@ func (s *ApiServer) ClaimBattleRewardByShare(ctx context.Context, in *game.Claim
 	default:
 		return &game.ClaimBattleRewardByShareResponse{
 			Code: 4,
-			Msg:  "无效的战斗类型",
+			Msg:  "Invalid battle type",
 		}, nil
 	}
 
@@ -633,7 +633,7 @@ func (s *ApiServer) ClaimBattleRewardByShare(ctx context.Context, in *game.Claim
 		s.logger.Error("奖励发放失败", zap.Error(err))
 		return &game.ClaimBattleRewardByShareResponse{
 			Code: 5,
-			Msg:  "奖励发放失败: " + err.Error(),
+			Msg:  "Failed to grant reward: " + err.Error(),
 		}, nil
 	}
 
@@ -656,7 +656,7 @@ func (s *ApiServer) ClaimBattleRewardByShare(ctx context.Context, in *game.Claim
 
 	return &game.ClaimBattleRewardByShareResponse{
 		Code:             0,
-		Msg:              "领取成功",
+		Msg:              "Success",
 		Reward:           reward,
 		WalletUpdated:    walletUpdated,
 		InventoryUpdated: inventoryUpdated,

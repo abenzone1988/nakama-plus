@@ -30,7 +30,7 @@ func GetCurrentStamina(ctx context.Context, logger *zap.Logger, db *sql.DB, stat
 	// 从钱包读取体力值
 	wallet, exists, err := GetWallet(ctx, logger, db, userID)
 	if err != nil {
-		logger.Error("读取钱包数据失败", zap.Error(err))
+		logger.Error("Failed to read wallet data", zap.Error(err))
 		return nil, err
 	}
 	if !exists {
@@ -40,7 +40,7 @@ func GetCurrentStamina(ctx context.Context, logger *zap.Logger, db *sql.DB, stat
 	// 从 UserMeta 读取刷新时间
 	userMeta, _, err := LoadUserMeta(ctx, logger, db, statusRegistry, userID)
 	if err != nil {
-		logger.Error("读取 UserMeta 失败", zap.Error(err))
+		logger.Error("Failed to load UserMeta", zap.Error(err))
 		return nil, err
 	}
 
@@ -62,14 +62,14 @@ func GetCurrentStamina(ctx context.Context, logger *zap.Logger, db *sql.DB, stat
 			Metadata:  string(metadata),
 		}}
 		if _, err := UpdateWallets(ctx, logger, db, walletUpdates, true); err != nil {
-			logger.Error("初始化钱包体力失败", zap.Error(err))
+			logger.Error("Failed to initialize wallet stamina", zap.Error(err))
 			return nil, err
 		}
 
 		// 初始化 UserMeta 刷新时间
 		userMeta.StaminaLastRefreshTime = lastRefreshTime
 		if err := SaveUserMeta(ctx, logger, db, userID, userMeta); err != nil {
-			logger.Error("保存初始化的刷新时间失败", zap.Error(err))
+			logger.Error("Failed to save initialized refresh time", zap.Error(err))
 			return nil, err
 		}
 
@@ -95,14 +95,14 @@ func GetCurrentStamina(ctx context.Context, logger *zap.Logger, db *sql.DB, stat
 			Metadata:  string(metadata),
 		}}
 		if _, err := UpdateWallets(ctx, logger, db, walletUpdates, true); err != nil {
-			logger.Error("更新恢复后的体力失败", zap.Error(err))
+			logger.Error("Failed to update stamina after recovery", zap.Error(err))
 			return nil, err
 		}
 
 		// 更新 UserMeta 刷新时间
 		userMeta.StaminaLastRefreshTime = newRefreshTime
 		if err := SaveUserMeta(ctx, logger, db, userID, userMeta); err != nil {
-			logger.Error("保存恢复后的刷新时间失败", zap.Error(err))
+			logger.Error("Failed to save refresh time after recovery", zap.Error(err))
 			return nil, err
 		}
 
@@ -151,7 +151,7 @@ func ConsumeStamina(ctx context.Context, logger *zap.Logger, db *sql.DB, statusR
 		Metadata:  string(metadata),
 	}}
 	if _, err := UpdateWallets(ctx, logger, db, walletUpdates, true); err != nil {
-		logger.Error("扣除体力失败", zap.Error(err))
+		logger.Error("Failed to consume stamina", zap.Error(err))
 		return nil, err
 	}
 
@@ -188,7 +188,7 @@ func RefillStamina(ctx context.Context, logger *zap.Logger, db *sql.DB, statusRe
 		Metadata:  string(metadata),
 	}}
 	if _, err := UpdateWallets(ctx, logger, db, walletUpdates, true); err != nil {
-		logger.Error("补充体力失败", zap.Error(err))
+		logger.Error("Failed to refill stamina", zap.Error(err))
 		return nil, err
 	}
 
@@ -206,7 +206,7 @@ func ResetStamina(ctx context.Context, logger *zap.Logger, db *sql.DB, statusReg
 	// 从钱包读取当前体力值
 	wallet, exists, err := GetWallet(ctx, logger, db, userID)
 	if err != nil {
-		logger.Error("读取钱包数据失败", zap.Error(err))
+		logger.Error("Failed to read wallet data", zap.Error(err))
 		return nil, err
 	}
 	if !exists {
@@ -226,20 +226,20 @@ func ResetStamina(ctx context.Context, logger *zap.Logger, db *sql.DB, statusReg
 		Metadata:  string(metadata),
 	}}
 	if _, err := UpdateWallets(ctx, logger, db, walletUpdates, true); err != nil {
-		logger.Error("重置体力失败", zap.Error(err))
+		logger.Error("Failed to reset stamina", zap.Error(err))
 		return nil, err
 	}
 
 	// 更新 UserMeta 刷新时间
 	userMeta, _, err := LoadUserMeta(ctx, logger, db, statusRegistry, userID)
 	if err != nil {
-		logger.Error("读取 UserMeta 失败", zap.Error(err))
+		logger.Error("Failed to load UserMeta", zap.Error(err))
 		return nil, err
 	}
 	lastRefreshTime := time.Now().UTC()
 	userMeta.StaminaLastRefreshTime = lastRefreshTime
 	if err := SaveUserMeta(ctx, logger, db, userID, userMeta); err != nil {
-		logger.Error("保存重置后的刷新时间失败", zap.Error(err))
+		logger.Error("Failed to save refresh time after reset", zap.Error(err))
 		return nil, err
 	}
 

@@ -81,7 +81,7 @@ func (s *ApiServer) ClaimSevenDayReward(ctx context.Context, in *game.ClaimSeven
 	if len(in.Days) == 0 {
 		return &game.ClaimSevenDayRewardResponse{
 			Code: 1,
-			Msg:  "天数参数不能为空",
+			Msg:  "Day parameter cannot be empty",
 		}, nil
 	}
 
@@ -92,7 +92,7 @@ func (s *ApiServer) ClaimSevenDayReward(ctx context.Context, in *game.ClaimSeven
 		if day < 0 || day > 7 {
 			return &game.ClaimSevenDayRewardResponse{
 				Code: 1,
-				Msg:  fmt.Sprintf("无效的天数参数: %d（有效范围：0-7）", day),
+				Msg:  fmt.Sprintf("Invalid day parameter: %d (valid range: 0-7)", day),
 			}, nil
 		}
 		if _, exists := daySet[day]; !exists {
@@ -112,7 +112,7 @@ func (s *ApiServer) ClaimSevenDayReward(ctx context.Context, in *game.ClaimSeven
 	if sevenDayData.LastPurchaseTime == "" {
 		return &game.ClaimSevenDayRewardResponse{
 			Code: 2,
-			Msg:  "尚未购买七日奖励",
+			Msg:  "Seven-day reward not purchased",
 		}, nil
 	}
 
@@ -121,7 +121,7 @@ func (s *ApiServer) ClaimSevenDayReward(ctx context.Context, in *game.ClaimSeven
 	} else if handled {
 		return &game.ClaimSevenDayRewardResponse{
 			Code: 4,
-			Msg:  "购买周期已过期，奖励已通过邮件补发",
+			Msg:  "Purchase period expired, rewards sent via mail",
 		}, nil
 	}
 
@@ -131,7 +131,7 @@ func (s *ApiServer) ClaimSevenDayReward(ctx context.Context, in *game.ClaimSeven
 		s.logger.Error("解析购买时间失败", zap.Error(err))
 		return &game.ClaimSevenDayRewardResponse{
 			Code: 3,
-			Msg:  "购买数据异常",
+			Msg:  "Invalid purchase data",
 		}, nil
 	}
 
@@ -163,7 +163,7 @@ func (s *ApiServer) ClaimSevenDayReward(ctx context.Context, in *game.ClaimSeven
 		if day > 0 && day > availableDays {
 			return &game.ClaimSevenDayRewardResponse{
 				Code: 6,
-				Msg:  fmt.Sprintf("第%d天的奖励尚未解锁，当前只能领取第%d天及之前的奖励", day, availableDays),
+				Msg:  fmt.Sprintf("Day %d reward not unlocked yet, only day %d and earlier are available", day, availableDays),
 			}, nil
 		}
 
@@ -174,7 +174,7 @@ func (s *ApiServer) ClaimSevenDayReward(ctx context.Context, in *game.ClaimSeven
 	if len(toClaimDays) == 0 {
 		return &game.ClaimSevenDayRewardResponse{
 			Code: 5,
-			Msg:  fmt.Sprintf("这些奖励已领取: %v", alreadyClaimedDays),
+			Msg:  fmt.Sprintf("These rewards already claimed: %v", alreadyClaimedDays),
 		}, nil
 	}
 
@@ -186,7 +186,7 @@ func (s *ApiServer) ClaimSevenDayReward(ctx context.Context, in *game.ClaimSeven
 			s.logger.Error("获取七日奖励配置失败", zap.Error(err), zap.Int32("day", day))
 			return &game.ClaimSevenDayRewardResponse{
 				Code: 7,
-				Msg:  fmt.Sprintf("第%d天的奖励配置不存在", day),
+				Msg:  fmt.Sprintf("Day %d reward config not found", day),
 			}, nil
 		}
 		allRewards = append(allRewards, reward)
@@ -207,7 +207,7 @@ func (s *ApiServer) ClaimSevenDayReward(ctx context.Context, in *game.ClaimSeven
 				s.logger.Error("发放七日奖励失败", zap.Error(err), zap.Int32s("days", toClaimDays))
 				return &game.ClaimSevenDayRewardResponse{
 					Code: 8,
-					Msg:  "发放奖励失败",
+					Msg:  "Failed to grant reward",
 				}, nil
 			}
 			walletUpdateResult = wResult
@@ -221,7 +221,7 @@ func (s *ApiServer) ClaimSevenDayReward(ctx context.Context, in *game.ClaimSeven
 		s.logger.Error("保存七日购买数据失败", zap.Error(err))
 		return &game.ClaimSevenDayRewardResponse{
 			Code: 9,
-			Msg:  "更新数据失败",
+			Msg:  "Failed to update data",
 		}, nil
 	}
 
@@ -367,7 +367,7 @@ func (s *ApiServer) sendSevenDayExpiredRewardMail(ctx context.Context, userID uu
 	}
 
 	content := &console.NoticeContent{
-		Description: fmt.Sprintf("您还有%d天的七日奖励未领取，系统已通过邮件补发，请注意查收。", len(pendingDays)),
+		Description: fmt.Sprintf("You have %d days of seven-day rewards unclaimed. They have been sent via mail. Please check your inbox.", len(pendingDays)),
 		Rewards:     rewards,
 	}
 	contentBytes, err := json.Marshal(content)
@@ -377,7 +377,7 @@ func (s *ApiServer) sendSevenDayExpiredRewardMail(ctx context.Context, userID uu
 
 	notification := &api.Notification{
 		Id:         uuid.Must(uuid.NewV4()).String(),
-		Subject:    "七日奖励补发",
+		Subject:    "Seven-Day Reward Compensation",
 		Content:    string(contentBytes),
 		Code:       NotificationSystemNotice,
 		SenderId:   uuid.Nil.String(),

@@ -17,16 +17,16 @@ func (s *ApiServer) UnlockCrystalSkin(ctx context.Context, in *game.UnlockCrysta
 	if skinID == "" {
 		return &game.UnlockCrystalSkinResponse{
 			Code: 1,
-			Msg:  "皮肤ID不能为空",
+			Msg:  "Skin ID cannot be empty",
 		}, nil
 	}
 
 	tplSkin, found := s.templateManager.GetTplCrystalSkin().FindByKey(skinID)
 	if !found {
-		s.logger.Warn("皮肤模板不存在", zap.String("skin_id", skinID), zap.String("user_id", userID.String()))
+		s.logger.Warn("Skin template not found", zap.String("skin_id", skinID), zap.String("user_id", userID.String()))
 		return &game.UnlockCrystalSkinResponse{
 			Code: 2,
-			Msg:  "皮肤模板不存在",
+			Msg:  "Skin template not found",
 		}, nil
 	}
 
@@ -35,15 +35,15 @@ func (s *ApiServer) UnlockCrystalSkin(ctx context.Context, in *game.UnlockCrysta
 		s.logger.Error("加载水晶皮肤数据失败", zap.Error(err), zap.String("user_id", userID.String()))
 		return &game.UnlockCrystalSkinResponse{
 			Code: 3,
-			Msg:  "加载数据失败",
+			Msg:  "Failed to load data",
 		}, nil
 	}
 
 	if _, exists := crystalSkinData.Skins[skinID]; exists {
-		s.logger.Warn("皮肤已解锁", zap.String("skin_id", skinID), zap.String("user_id", userID.String()))
+		s.logger.Warn("Skin already unlocked", zap.String("skin_id", skinID), zap.String("user_id", userID.String()))
 		return &game.UnlockCrystalSkinResponse{
 			Code: 4,
-			Msg:  "皮肤已解锁",
+			Msg:  "Skin already unlocked",
 		}, nil
 	}
 
@@ -54,7 +54,7 @@ func (s *ApiServer) UnlockCrystalSkin(ctx context.Context, in *game.UnlockCrysta
 			s.logger.Error("消耗解锁材料失败", zap.Error(err))
 			return &game.UnlockCrystalSkinResponse{
 				Code: 5,
-				Msg:  "材料不足或消耗失败",
+				Msg:  "Insufficient materials or consumption failed",
 			}, nil
 		}
 
@@ -63,7 +63,7 @@ func (s *ApiServer) UnlockCrystalSkin(ctx context.Context, in *game.UnlockCrysta
 			s.logger.Error("生成皮肤UUID失败", zap.Error(err))
 			return &game.UnlockCrystalSkinResponse{
 				Code: 6,
-				Msg:  "生成ID失败",
+				Msg:  "Failed to generate ID",
 			}, nil
 		}
 
@@ -77,7 +77,7 @@ func (s *ApiServer) UnlockCrystalSkin(ctx context.Context, in *game.UnlockCrysta
 			s.logger.Error("保存水晶皮肤数据失败", zap.Error(err))
 			return &game.UnlockCrystalSkinResponse{
 				Code: 7,
-				Msg:  "保存数据失败",
+				Msg:  "Failed to save data",
 			}, nil
 		}
 
@@ -113,7 +113,7 @@ func (s *ApiServer) UnlockCrystalSkin(ctx context.Context, in *game.UnlockCrysta
 		s.logger.Error("保存水晶皮肤数据失败", zap.Error(err))
 		return &game.UnlockCrystalSkinResponse{
 			Code: 7,
-			Msg:  "保存数据失败",
+			Msg:  "Failed to save data",
 		}, nil
 	}
 
@@ -138,7 +138,7 @@ func (s *ApiServer) UpgradeCrystalSkin(ctx context.Context, in *game.UpgradeCrys
 	if skinID == "" {
 		return &game.UpgradeCrystalSkinResponse{
 			Code: 1,
-			Msg:  "皮肤ID不能为空",
+			Msg:  "Skin ID cannot be empty",
 		}, nil
 	}
 
@@ -147,16 +147,16 @@ func (s *ApiServer) UpgradeCrystalSkin(ctx context.Context, in *game.UpgradeCrys
 		s.logger.Error("加载水晶皮肤数据失败", zap.Error(err), zap.String("user_id", userID.String()))
 		return &game.UpgradeCrystalSkinResponse{
 			Code: 2,
-			Msg:  "加载数据失败",
+			Msg:  "Failed to load data",
 		}, nil
 	}
 
 	skin, exists := crystalSkinData.Skins[skinID]
 	if !exists {
-		s.logger.Warn("皮肤未解锁", zap.String("skin_id", skinID), zap.String("user_id", userID.String()))
+		s.logger.Warn("Skin not unlocked", zap.String("skin_id", skinID), zap.String("user_id", userID.String()))
 		return &game.UpgradeCrystalSkinResponse{
 			Code: 3,
-			Msg:  "皮肤未解锁",
+			Msg:  "Skin not unlocked",
 		}, nil
 	}
 
@@ -166,19 +166,19 @@ func (s *ApiServer) UpgradeCrystalSkin(ctx context.Context, in *game.UpgradeCrys
 	})
 
 	if upgradeConfigs.Len() == 0 {
-		s.logger.Warn("已达到最高等级", zap.String("skin_id", skinID), zap.Int32("current_level", skin.StarLevel))
+		s.logger.Warn("Already at max level", zap.String("skin_id", skinID), zap.Int32("current_level", skin.StarLevel))
 		return &game.UpgradeCrystalSkinResponse{
 			Code: 4,
-			Msg:  "已达到最高等级",
+			Msg:  "Already at max level",
 		}, nil
 	}
 
 	upgradeConfig := upgradeConfigs.Get(0)
 	if upgradeConfig.CostItemInfo == "" || upgradeConfig.CostItemInfo == "0" {
-		s.logger.Warn("升级配置错误", zap.String("skin_id", skinID), zap.Int32("next_level", nextStarLevel))
+		s.logger.Warn("Invalid upgrade config", zap.String("skin_id", skinID), zap.Int32("next_level", nextStarLevel))
 		return &game.UpgradeCrystalSkinResponse{
 			Code: 5,
-			Msg:  "升级配置错误",
+			Msg:  "Invalid upgrade config",
 		}, nil
 	}
 
@@ -188,7 +188,7 @@ func (s *ApiServer) UpgradeCrystalSkin(ctx context.Context, in *game.UpgradeCrys
 		s.logger.Error("消耗升级材料失败", zap.Error(err))
 		return &game.UpgradeCrystalSkinResponse{
 			Code: 6,
-			Msg:  "材料不足或消耗失败",
+			Msg:  "Insufficient materials or consumption failed",
 		}, nil
 	}
 
@@ -198,7 +198,7 @@ func (s *ApiServer) UpgradeCrystalSkin(ctx context.Context, in *game.UpgradeCrys
 		s.logger.Error("保存水晶皮肤数据失败", zap.Error(err))
 		return &game.UpgradeCrystalSkinResponse{
 			Code: 7,
-			Msg:  "保存数据失败",
+			Msg:  "Failed to save data",
 		}, nil
 	}
 
@@ -234,7 +234,7 @@ func (s *ApiServer) GetCrystalSkins(ctx context.Context, in *game.GetCrystalSkin
 		s.logger.Error("加载水晶皮肤数据失败", zap.Error(err), zap.String("user_id", userID.String()))
 		return &game.GetCrystalSkinsResponse{
 			Code: 1,
-			Msg:  "加载数据失败",
+			Msg:  "Failed to load data",
 		}, nil
 	}
 

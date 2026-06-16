@@ -32,7 +32,7 @@ func (s *ApiServer) ClaimMoppingReward(ctx context.Context, in *game.ClaimMoppin
 	if !exist {
 		return &game.ClaimMoppingRewardResponse{
 			Code: 1,
-			Msg:  "关卡不存在",
+			Msg:  "Level not found",
 		}, nil
 	}
 
@@ -40,7 +40,7 @@ func (s *ApiServer) ClaimMoppingReward(ctx context.Context, in *game.ClaimMoppin
 	if levelInfo.MoppingReward == "" {
 		return &game.ClaimMoppingRewardResponse{
 			Code: 2,
-			Msg:  "该关卡没有扫荡奖励",
+			Msg:  "No sweep rewards for this level",
 		}, nil
 	}
 
@@ -50,7 +50,7 @@ func (s *ApiServer) ClaimMoppingReward(ctx context.Context, in *game.ClaimMoppin
 		s.logger.Error("检查每日重置失败", zap.Error(err))
 		return &game.ClaimMoppingRewardResponse{
 			Code: 4,
-			Msg:  "检查每日重置失败: " + err.Error(),
+			Msg:  "Failed to check daily reset: " + err.Error(),
 		}, nil
 	}
 
@@ -78,7 +78,7 @@ func (s *ApiServer) ClaimMoppingReward(ctx context.Context, in *game.ClaimMoppin
 		// 已达到每日上限
 		return &game.ClaimMoppingRewardResponse{
 			Code: 6,
-			Msg:  "今日扫荡次数已用完",
+			Msg:  "Daily sweep limit reached",
 		}, nil
 	}
 
@@ -87,7 +87,7 @@ func (s *ApiServer) ClaimMoppingReward(ctx context.Context, in *game.ClaimMoppin
 	if err != nil {
 		return &game.ClaimMoppingRewardResponse{
 			Code:    7,
-			Msg:     "体力不足: " + err.Error(),
+			Msg:     "Insufficient stamina: " + err.Error(),
 			Stamina: stamina,
 		}, nil
 	}
@@ -119,7 +119,7 @@ func (s *ApiServer) ClaimMoppingReward(ctx context.Context, in *game.ClaimMoppin
 		if err != nil {
 			return &game.ClaimMoppingRewardResponse{
 				Code: 8,
-				Msg:  "广告券不足，请观看广告或购买广告券",
+				Msg:  "Insufficient ad tickets, watch ads or purchase more",
 			}, nil
 		}
 
@@ -183,7 +183,7 @@ func (s *ApiServer) ClaimMoppingReward(ctx context.Context, in *game.ClaimMoppin
 		if err != nil {
 			return &game.ClaimMoppingRewardResponse{
 				Code: 9,
-				Msg:  "奖励发放失败: " + err.Error(),
+				Msg:  "Failed to grant reward: " + err.Error(),
 			}, nil
 		}
 
@@ -215,7 +215,7 @@ func (s *ApiServer) ClaimMoppingReward(ctx context.Context, in *game.ClaimMoppin
 		s.logger.Error("更新扫荡次数失败", zap.Error(err))
 		return &game.ClaimMoppingRewardResponse{
 			Code: 10,
-			Msg:  "更新扫荡次数失败: " + err.Error(),
+			Msg:  "Failed to update sweep count: " + err.Error(),
 		}, nil
 	}
 
@@ -233,7 +233,7 @@ func (s *ApiServer) ClaimMoppingReward(ctx context.Context, in *game.ClaimMoppin
 
 	return &game.ClaimMoppingRewardResponse{
 		Code:                  0,
-		Msg:                   "扫荡成功",
+		Msg:                   "Success",
 		Reward:                reward,
 		WalletUpdated:         walletUpdated,
 		InventoryUpdated:      inventoryUpdated,
@@ -300,7 +300,7 @@ func (s *ApiServer) ClaimOnHookReward(ctx context.Context, in *game.ClaimOnHookR
 	if !exist {
 		return &game.ClaimOnHookRewardResponse{
 			Code: 3,
-			Msg:  "关卡不存在",
+			Msg:  "Level not found",
 		}, nil
 	}
 
@@ -308,7 +308,7 @@ func (s *ApiServer) ClaimOnHookReward(ctx context.Context, in *game.ClaimOnHookR
 	if levelInfo.OnHookRewardID == "" {
 		return &game.ClaimOnHookRewardResponse{
 			Code: 4,
-			Msg:  "当前关卡没有挂机奖励",
+			Msg:  "No idle rewards for current level",
 		}, nil
 	}
 
@@ -327,10 +327,10 @@ func (s *ApiServer) ClaimOnHookReward(ctx context.Context, in *game.ClaimOnHookR
 		// 非首次领取，计算经过的时间
 		lastGetTime, err := time.Parse(time.RFC3339, battleData.LastGetOnHookTimestamp)
 		if err != nil {
-			s.logger.Error("解析上次领取时间失败", zap.Error(err), zap.String("timestamp", battleData.LastGetOnHookTimestamp))
+			s.logger.Error("Failed to parse last claim time", zap.Error(err), zap.String("timestamp", battleData.LastGetOnHookTimestamp))
 			return &game.ClaimOnHookRewardResponse{
 				Code: 7,
-				Msg:  "解析上次领取时间失败",
+				Msg:  "Failed to parse last claim time",
 			}, nil
 		}
 
@@ -346,7 +346,7 @@ func (s *ApiServer) ClaimOnHookReward(ctx context.Context, in *game.ClaimOnHookR
 			remainingMinutes := 60 - (totalMinutes % 60)
 			return &game.ClaimOnHookRewardResponse{
 				Code: 8,
-				Msg:  "挂机时间不足1小时，还需" + strconv.Itoa(remainingMinutes) + "分钟",
+				Msg:  "Idle time less than 1 hour, " + strconv.Itoa(remainingMinutes) + " minutes remaining",
 			}, nil
 		}
 
@@ -413,7 +413,7 @@ func (s *ApiServer) ClaimOnHookReward(ctx context.Context, in *game.ClaimOnHookR
 		s.logger.Error("更新挂机时间失败", zap.Error(err))
 		return &game.ClaimOnHookRewardResponse{
 			Code: 10,
-			Msg:  "更新挂机时间失败: " + err.Error(),
+			Msg:  "Failed to update idle time: " + err.Error(),
 		}, nil
 	}
 
@@ -431,7 +431,7 @@ func (s *ApiServer) ClaimOnHookReward(ctx context.Context, in *game.ClaimOnHookR
 
 	return &game.ClaimOnHookRewardResponse{
 		Code:             0,
-		Msg:              "领取成功",
+		Msg:              "Success",
 		Hours:            int32(hours),
 		Reward:           reward,
 		WalletUpdated:    walletUpdated,

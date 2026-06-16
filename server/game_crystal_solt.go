@@ -13,7 +13,7 @@ func (s *ApiServer) UpgradeCrystalSlot(ctx context.Context, in *game.UpgradeCrys
 	if in.EquipType != 1 && in.EquipType != 2 && in.EquipType != 4 && in.EquipType != 8 {
 		return &game.UpgradeCrystalSlotResponse{
 			Code: 1,
-			Msg:  "无效的装备类型",
+			Msg:  "Invalid equipment type",
 		}, nil
 	}
 
@@ -22,7 +22,7 @@ func (s *ApiServer) UpgradeCrystalSlot(ctx context.Context, in *game.UpgradeCrys
 		s.logger.Error("加载装备数据失败", zap.Error(err))
 		return &game.UpgradeCrystalSlotResponse{
 			Code: 2,
-			Msg:  "加载数据失败",
+			Msg:  "Failed to load data",
 		}, nil
 	}
 
@@ -44,7 +44,7 @@ func (s *ApiServer) UpgradeCrystalSlot(ctx context.Context, in *game.UpgradeCrys
 	if nextLevelConfig == nil || nextLevelConfig.Len() == 0 {
 		return &game.UpgradeCrystalSlotResponse{
 			Code: 3,
-			Msg:  "已达到最高等级",
+			Msg:  "Already at max level",
 		}, nil
 	}
 
@@ -52,7 +52,7 @@ func (s *ApiServer) UpgradeCrystalSlot(ctx context.Context, in *game.UpgradeCrys
 	if config.CostItem == "" {
 		return &game.UpgradeCrystalSlotResponse{
 			Code: 4,
-			Msg:  "配置错误",
+			Msg:  "Config error",
 		}, nil
 	}
 
@@ -62,7 +62,7 @@ func (s *ApiServer) UpgradeCrystalSlot(ctx context.Context, in *game.UpgradeCrys
 		s.logger.Warn("消耗道具失败", zap.Int32("equip_type", in.EquipType), zap.Error(err))
 		return &game.UpgradeCrystalSlotResponse{
 			Code: 6,
-			Msg:  "材料不足",
+			Msg:  "Insufficient materials",
 		}, nil
 	}
 
@@ -72,7 +72,7 @@ func (s *ApiServer) UpgradeCrystalSlot(ctx context.Context, in *game.UpgradeCrys
 		s.logger.Error("保存装备数据失败", zap.Error(err))
 		return &game.UpgradeCrystalSlotResponse{
 			Code: 7,
-			Msg:  "保存数据失败",
+			Msg:  "Failed to save data",
 		}, nil
 	}
 
