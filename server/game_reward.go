@@ -125,11 +125,7 @@ func (s *ApiServer) OperateWallet(ctx context.Context, in *game.OperateWalletReq
 	}
 
 	result := results[0]
-	updatedWallet := &game.Wallet{
-		Coin: int32(result.Updated["coin"]),
-		Gem:  int32(result.Updated["gem"]),
-		Ad:   int32(result.Updated["ad"]),
-	}
+	updatedWallet := convertMapInt64ToWallet(result.Updated)
 
 	return &game.OperateWalletResponse{
 		Code:          0,
