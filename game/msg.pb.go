@@ -433,11 +433,14 @@ func (x *ValidatePurchaseAppleV2Request) GetEnvironment() string {
 }
 
 type RedeemGiftResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Code          int32                  `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
-	Msg           string                 `protobuf:"bytes,2,opt,name=msg,proto3" json:"msg,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Code             int32                  `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
+	Msg              string                 `protobuf:"bytes,2,opt,name=msg,proto3" json:"msg,omitempty"`
+	Reward           *Reward                `protobuf:"bytes,3,opt,name=reward,proto3" json:"reward,omitempty"`
+	WalletUpdated    *Wallet                `protobuf:"bytes,4,opt,name=wallet_updated,json=walletUpdated,proto3" json:"wallet_updated,omitempty"`
+	InventoryUpdated []*Item                `protobuf:"bytes,5,rep,name=inventory_updated,json=inventoryUpdated,proto3" json:"inventory_updated,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *RedeemGiftResponse) Reset() {
@@ -482,6 +485,27 @@ func (x *RedeemGiftResponse) GetMsg() string {
 		return x.Msg
 	}
 	return ""
+}
+
+func (x *RedeemGiftResponse) GetReward() *Reward {
+	if x != nil {
+		return x.Reward
+	}
+	return nil
+}
+
+func (x *RedeemGiftResponse) GetWalletUpdated() *Wallet {
+	if x != nil {
+		return x.WalletUpdated
+	}
+	return nil
+}
+
+func (x *RedeemGiftResponse) GetInventoryUpdated() []*Item {
+	if x != nil {
+		return x.InventoryUpdated
+	}
+	return nil
 }
 
 type FeedbackRequest struct {
@@ -11197,10 +11221,14 @@ const file_msg_proto_rawDesc = "" +
 	"\n" +
 	"product_id\x18\x02 \x01(\tR\tproductId\x124\n" +
 	"\apersist\x18\x03 \x01(\v2\x1a.google.protobuf.BoolValueR\apersist\x12 \n" +
-	"\venvironment\x18\x04 \x01(\tR\venvironment\":\n" +
+	"\venvironment\x18\x04 \x01(\tR\venvironment\"\xce\x01\n" +
 	"\x12RedeemGiftResponse\x12\x12\n" +
 	"\x04code\x18\x01 \x01(\x05R\x04code\x12\x10\n" +
-	"\x03msg\x18\x02 \x01(\tR\x03msg\"K\n" +
+	"\x03msg\x18\x02 \x01(\tR\x03msg\x12$\n" +
+	"\x06reward\x18\x03 \x01(\v2\f.game.RewardR\x06reward\x123\n" +
+	"\x0ewallet_updated\x18\x04 \x01(\v2\f.game.WalletR\rwalletUpdated\x127\n" +
+	"\x11inventory_updated\x18\x05 \x03(\v2\n" +
+	".game.ItemR\x10inventoryUpdated\"K\n" +
 	"\x0fFeedbackRequest\x12\x16\n" +
 	"\x06issues\x18\x01 \x01(\x05R\x06issues\x12 \n" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\"/\n" +
@@ -12279,194 +12307,197 @@ var file_msg_proto_goTypes = []any{
 }
 var file_msg_proto_depIdxs = []int32{
 	183, // 0: game.ValidatePurchaseAppleV2Request.persist:type_name -> google.protobuf.BoolValue
-	32,  // 1: game.ClaimInviteRewardResponse.reward:type_name -> game.Reward
-	30,  // 2: game.ClaimInviteRewardResponse.wallet_updated:type_name -> game.Wallet
-	31,  // 3: game.ClaimInviteRewardResponse.inventory_updated:type_name -> game.Item
-	177, // 4: game.GetLevelBoxResponse.claimed_boxes:type_name -> game.GetLevelBoxResponse.ClaimedBoxesEntry
-	184, // 5: game.GetGameTimeResponse.game_time:type_name -> google.protobuf.Timestamp
-	184, // 6: game.AnnouncementInfo.create_time:type_name -> google.protobuf.Timestamp
-	184, // 7: game.AnnouncementInfo.update_time:type_name -> google.protobuf.Timestamp
-	21,  // 8: game.ListPublishedAnnouncementsResponse.announcements:type_name -> game.AnnouncementInfo
-	178, // 9: game.EquipData.unlock_equips:type_name -> game.EquipData.UnlockEquipsEntry
-	179, // 10: game.EquipData.crystal_slots:type_name -> game.EquipData.CrystalSlotsEntry
-	30,  // 11: game.Reward.wallet:type_name -> game.Wallet
-	31,  // 12: game.Reward.items:type_name -> game.Item
-	30,  // 13: game.WalletUpdateResult.previous:type_name -> game.Wallet
-	30,  // 14: game.WalletUpdateResult.updated:type_name -> game.Wallet
-	31,  // 15: game.InventoryUpdateResult.previous:type_name -> game.Item
-	31,  // 16: game.InventoryUpdateResult.updated:type_name -> game.Item
-	0,   // 17: game.StartBattleRequest.type:type_name -> game.BattleType
-	23,  // 18: game.StartBattleResponse.stamina:type_name -> game.StaminaData
-	180, // 19: game.EndBattleRequest.monsters:type_name -> game.EndBattleRequest.MonstersEntry
-	32,  // 20: game.EndBattleResponse.reward:type_name -> game.Reward
-	30,  // 21: game.EndBattleResponse.wallet_updated:type_name -> game.Wallet
-	31,  // 22: game.EndBattleResponse.inventory_updated:type_name -> game.Item
-	0,   // 23: game.QuickBattleRequest.type:type_name -> game.BattleType
-	32,  // 24: game.QuickBattleResponse.reward:type_name -> game.Reward
-	23,  // 25: game.QuickBattleResponse.stamina:type_name -> game.StaminaData
-	30,  // 26: game.QuickBattleResponse.wallet_updated:type_name -> game.Wallet
-	31,  // 27: game.QuickBattleResponse.inventory_updated:type_name -> game.Item
-	32,  // 28: game.ClaimBattleRewardByShareResponse.reward:type_name -> game.Reward
-	30,  // 29: game.ClaimBattleRewardByShareResponse.wallet_updated:type_name -> game.Wallet
-	31,  // 30: game.ClaimBattleRewardByShareResponse.inventory_updated:type_name -> game.Item
-	32,  // 31: game.ClaimMoppingRewardResponse.reward:type_name -> game.Reward
-	30,  // 32: game.ClaimMoppingRewardResponse.wallet_updated:type_name -> game.Wallet
-	31,  // 33: game.ClaimMoppingRewardResponse.inventory_updated:type_name -> game.Item
-	23,  // 34: game.ClaimMoppingRewardResponse.stamina:type_name -> game.StaminaData
-	32,  // 35: game.ClaimOnHookRewardResponse.reward:type_name -> game.Reward
-	30,  // 36: game.ClaimOnHookRewardResponse.wallet_updated:type_name -> game.Wallet
-	31,  // 37: game.ClaimOnHookRewardResponse.inventory_updated:type_name -> game.Item
-	32,  // 38: game.ClaimLevelBoxResponse.rewards:type_name -> game.Reward
-	30,  // 39: game.ClaimLevelBoxResponse.wallet_updated:type_name -> game.Wallet
-	31,  // 40: game.ClaimLevelBoxResponse.inventory_updated:type_name -> game.Item
-	32,  // 41: game.ClaimTaskRewardResponse.reward:type_name -> game.Reward
-	30,  // 42: game.ClaimTaskRewardResponse.wallet_updated:type_name -> game.Wallet
-	31,  // 43: game.ClaimTaskRewardResponse.inventory_updated:type_name -> game.Item
-	32,  // 44: game.ClaimLivenessRewardResponse.reward:type_name -> game.Reward
-	30,  // 45: game.ClaimLivenessRewardResponse.wallet_updated:type_name -> game.Wallet
-	31,  // 46: game.ClaimLivenessRewardResponse.inventory_updated:type_name -> game.Item
-	32,  // 47: game.ClaimFirstChargeRewardResponse.reward:type_name -> game.Reward
-	30,  // 48: game.ClaimFirstChargeRewardResponse.wallet_updated:type_name -> game.Wallet
-	31,  // 49: game.ClaimFirstChargeRewardResponse.inventory_updated:type_name -> game.Item
-	32,  // 50: game.ClaimSevenDayRewardResponse.reward:type_name -> game.Reward
-	30,  // 51: game.ClaimSevenDayRewardResponse.wallet_updated:type_name -> game.Wallet
-	31,  // 52: game.ClaimSevenDayRewardResponse.inventory_updated:type_name -> game.Item
-	32,  // 53: game.ClaimVipRewardResponse.reward:type_name -> game.Reward
-	30,  // 54: game.ClaimVipRewardResponse.wallet_updated:type_name -> game.Wallet
-	31,  // 55: game.ClaimVipRewardResponse.inventory_updated:type_name -> game.Item
-	32,  // 56: game.ExchangeEquipResponse.reward:type_name -> game.Reward
-	30,  // 57: game.ExchangeEquipResponse.wallet_updated:type_name -> game.Wallet
-	31,  // 58: game.ExchangeEquipResponse.inventory_updated:type_name -> game.Item
-	181, // 59: game.GetEquipExchangeResponse.exchange_infos:type_name -> game.GetEquipExchangeResponse.ExchangeInfosEntry
-	32,  // 60: game.ClaimMonthlyCardRewardResponse.reward:type_name -> game.Reward
-	30,  // 61: game.ClaimMonthlyCardRewardResponse.wallet_updated:type_name -> game.Wallet
-	31,  // 62: game.ClaimMonthlyCardRewardResponse.inventory_updated:type_name -> game.Item
-	32,  // 63: game.ClaimSignInRewardResponse.reward:type_name -> game.Reward
-	30,  // 64: game.ClaimSignInRewardResponse.wallet_updated:type_name -> game.Wallet
-	31,  // 65: game.ClaimSignInRewardResponse.inventory_updated:type_name -> game.Item
-	32,  // 66: game.ClaimSevenDaySignInResponse.reward:type_name -> game.Reward
-	30,  // 67: game.ClaimSevenDaySignInResponse.wallet_updated:type_name -> game.Wallet
-	31,  // 68: game.ClaimSevenDaySignInResponse.inventory_updated:type_name -> game.Item
-	32,  // 69: game.ClaimByteRewardResponse.reward:type_name -> game.Reward
-	30,  // 70: game.ClaimByteRewardResponse.wallet_updated:type_name -> game.Wallet
-	31,  // 71: game.ClaimByteRewardResponse.inventory_updated:type_name -> game.Item
-	4,   // 72: game.OperateWalletRequest.option:type_name -> game.OperateWalletRequest.Option
-	30,  // 73: game.OperateWalletResponse.wallet_updated:type_name -> game.Wallet
-	5,   // 74: game.OperateInventoryRequest.option:type_name -> game.OperateInventoryRequest.Option
-	31,  // 75: game.OperateInventoryRequest.items:type_name -> game.Item
-	31,  // 76: game.OperateInventoryResponse.inventory_updated:type_name -> game.Item
-	30,  // 77: game.GetWalletDataResponse.wallet:type_name -> game.Wallet
-	31,  // 78: game.GetInventoryDataResponse.items:type_name -> game.Item
-	30,  // 79: game.UpgradeEquipResponse.wallet_updated:type_name -> game.Wallet
-	31,  // 80: game.UpgradeEquipResponse.inventory_updated:type_name -> game.Item
-	30,  // 81: game.UpgradeCrystalSlotResponse.wallet_updated:type_name -> game.Wallet
-	31,  // 82: game.UpgradeCrystalSlotResponse.inventory_updated:type_name -> game.Item
-	30,  // 83: game.UpgradeCrystalTechResponse.wallet_updated:type_name -> game.Wallet
-	31,  // 84: game.UpgradeCrystalTechResponse.inventory_updated:type_name -> game.Item
-	1,   // 85: game.ShopItem.pay_type:type_name -> game.PayType
-	2,   // 86: game.SingleShopData.shop_type:type_name -> game.ShopType
-	99,  // 87: game.SingleShopData.items:type_name -> game.ShopItem
-	102, // 88: game.ShopData.shops:type_name -> game.SingleShopData
-	2,   // 89: game.BuyShopItemRequest.shop_type:type_name -> game.ShopType
-	32,  // 90: game.BuyShopItemResponse.reward:type_name -> game.Reward
-	30,  // 91: game.BuyShopItemResponse.wallet_updated:type_name -> game.Wallet
-	31,  // 92: game.BuyShopItemResponse.inventory_updated:type_name -> game.Item
-	99,  // 93: game.BuyShopItemResponse.shop_item:type_name -> game.ShopItem
-	2,   // 94: game.RefreshShopRequest.shop_type:type_name -> game.ShopType
-	102, // 95: game.RefreshShopResponse.shop_data:type_name -> game.SingleShopData
-	30,  // 96: game.RefreshShopResponse.wallet_updated:type_name -> game.Wallet
-	32,  // 97: game.BuyBoxItemResponse.reward:type_name -> game.Reward
-	30,  // 98: game.BuyBoxItemResponse.wallet_updated:type_name -> game.Wallet
-	31,  // 99: game.BuyBoxItemResponse.inventory_updated:type_name -> game.Item
-	108, // 100: game.BuyBoxItemResponse.box_shop_data:type_name -> game.BoxShopData
-	100, // 101: game.ChapterShopData.items:type_name -> game.ShopChapterItem
-	32,  // 102: game.ClaimChapterItemResponse.reward:type_name -> game.Reward
-	30,  // 103: game.ClaimChapterItemResponse.wallet_updated:type_name -> game.Wallet
-	31,  // 104: game.ClaimChapterItemResponse.inventory_updated:type_name -> game.Item
-	100, // 105: game.ClaimChapterItemResponse.shop_item:type_name -> game.ShopChapterItem
-	101, // 106: game.GemShopData.items:type_name -> game.ShopGemItem
-	32,  // 107: game.ClaimGemItemResponse.reward:type_name -> game.Reward
-	30,  // 108: game.ClaimGemItemResponse.wallet_updated:type_name -> game.Wallet
-	31,  // 109: game.ClaimGemItemResponse.inventory_updated:type_name -> game.Item
-	101, // 110: game.ClaimGemItemResponse.shop_item:type_name -> game.ShopGemItem
-	32,  // 111: game.ClaimNotificationAttachmentsResponse.reward:type_name -> game.Reward
-	30,  // 112: game.ClaimNotificationAttachmentsResponse.wallet_updated:type_name -> game.Wallet
-	31,  // 113: game.ClaimNotificationAttachmentsResponse.inventory_updated:type_name -> game.Item
-	25,  // 114: game.GetPlayerLevelDataResponse.data:type_name -> game.PlayerLevelData
-	32,  // 115: game.UpgradePlayerLevelResponse.reward:type_name -> game.Reward
-	30,  // 116: game.UpgradePlayerLevelResponse.wallet_updated:type_name -> game.Wallet
-	31,  // 117: game.UpgradePlayerLevelResponse.inventory_updated:type_name -> game.Item
-	129, // 118: game.GetMineDataResponse.data:type_name -> game.MineData
-	32,  // 119: game.DoMineResponse.reward:type_name -> game.Reward
-	30,  // 120: game.DoMineResponse.wallet_updated:type_name -> game.Wallet
-	31,  // 121: game.DoMineResponse.inventory_updated:type_name -> game.Item
-	30,  // 122: game.BuyMineCountResponse.wallet_updated:type_name -> game.Wallet
-	136, // 123: game.GetRestStationResponse.data:type_name -> game.RestStationData
-	136, // 124: game.ClaimRestStationStaminaResponse.rest_station:type_name -> game.RestStationData
-	23,  // 125: game.ClaimRestStationStaminaResponse.stamina:type_name -> game.StaminaData
-	32,  // 126: game.TestGrantRewardResponse.reward:type_name -> game.Reward
-	30,  // 127: game.TestGrantRewardResponse.wallet_updated:type_name -> game.Wallet
-	31,  // 128: game.TestGrantRewardResponse.inventory_updated:type_name -> game.Item
-	143, // 129: game.CrystalEquipmentInfo.active_affixes:type_name -> game.CrystalEquipmentAffix
-	143, // 130: game.CrystalEquipmentInfo.pending_affixes:type_name -> game.CrystalEquipmentAffix
-	144, // 131: game.RefineCrystalEquipmentResponse.equipment:type_name -> game.CrystalEquipmentInfo
-	30,  // 132: game.RefineCrystalEquipmentResponse.wallet_updated:type_name -> game.Wallet
-	31,  // 133: game.RefineCrystalEquipmentResponse.inventory_updated:type_name -> game.Item
-	144, // 134: game.LockCrystalAffixResponse.equipment:type_name -> game.CrystalEquipmentInfo
-	144, // 135: game.ActivatePendingAffixesResponse.equipment:type_name -> game.CrystalEquipmentInfo
-	144, // 136: game.GetCrystalEquipmentsResponse.equipments:type_name -> game.CrystalEquipmentInfo
-	32,  // 137: game.SalvageCrystalEquipmentResponse.reward:type_name -> game.Reward
-	30,  // 138: game.SalvageCrystalEquipmentResponse.wallet_updated:type_name -> game.Wallet
-	31,  // 139: game.SalvageCrystalEquipmentResponse.inventory_updated:type_name -> game.Item
-	157, // 140: game.GetCrystalSkinsResponse.skins:type_name -> game.CrystalSkinInfo
-	157, // 141: game.UnlockCrystalSkinResponse.skin:type_name -> game.CrystalSkinInfo
-	30,  // 142: game.UnlockCrystalSkinResponse.wallet_updated:type_name -> game.Wallet
-	31,  // 143: game.UnlockCrystalSkinResponse.inventory_updated:type_name -> game.Item
-	157, // 144: game.UpgradeCrystalSkinResponse.skin:type_name -> game.CrystalSkinInfo
-	30,  // 145: game.UpgradeCrystalSkinResponse.wallet_updated:type_name -> game.Wallet
-	31,  // 146: game.UpgradeCrystalSkinResponse.inventory_updated:type_name -> game.Item
-	184, // 147: game.Challenge.open:type_name -> google.protobuf.Timestamp
-	184, // 148: game.Challenge.close:type_name -> google.protobuf.Timestamp
-	184, // 149: game.Challenge.end:type_name -> google.protobuf.Timestamp
-	184, // 150: game.Challenge.over:type_name -> google.protobuf.Timestamp
-	184, // 151: game.JoinChallengeStatus.joined:type_name -> google.protobuf.Timestamp
-	184, // 152: game.JoinChallengeStatus.over:type_name -> google.protobuf.Timestamp
-	184, // 153: game.JoinChallengeStatus.open:type_name -> google.protobuf.Timestamp
-	184, // 154: game.JoinChallengeStatus.close:type_name -> google.protobuf.Timestamp
-	184, // 155: game.JoinChallengeStatus.end:type_name -> google.protobuf.Timestamp
-	162, // 156: game.GetChallengeResponse.challenges:type_name -> game.Challenge
-	163, // 157: game.GetChallengeResponse.joined:type_name -> game.JoinChallengeStatus
-	162, // 158: game.JoinChallengeResponse.challenge:type_name -> game.Challenge
-	32,  // 159: game.GainChallengeRewardResponse.reward:type_name -> game.Reward
-	30,  // 160: game.GainChallengeRewardResponse.wallet_updated:type_name -> game.Wallet
-	31,  // 161: game.GainChallengeRewardResponse.inventory_updated:type_name -> game.Item
-	169, // 162: game.GetChallengeTopStatsResponse.stats:type_name -> game.TopThreeStats
-	3,   // 163: game.BuyChallengeBattleTimesRequest.type:type_name -> game.BuyChallengeBattleTimesType
-	30,  // 164: game.BuyChallengeBattleTimesResponse.wallet_updated:type_name -> game.Wallet
-	175, // 165: game.GetLaunchBootstrapDataResponse.account:type_name -> game.BootstrapAccount
-	23,  // 166: game.GetLaunchBootstrapDataResponse.stamina:type_name -> game.StaminaData
-	182, // 167: game.GetLaunchBootstrapDataResponse.storage:type_name -> game.GetLaunchBootstrapDataResponse.StorageEntry
-	24,  // 168: game.GetLaunchBootstrapDataResponse.equip:type_name -> game.EquipData
-	152, // 169: game.GetLaunchBootstrapDataResponse.crystal_equipments:type_name -> game.GetCrystalEquipmentsResponse
-	156, // 170: game.GetLaunchBootstrapDataResponse.crystal_skins:type_name -> game.GetCrystalSkinsResponse
-	25,  // 171: game.GetLaunchBootstrapDataResponse.player_level:type_name -> game.PlayerLevelData
-	103, // 172: game.GetLaunchBootstrapDataResponse.normal_shop:type_name -> game.ShopData
-	108, // 173: game.GetLaunchBootstrapDataResponse.box_shop:type_name -> game.BoxShopData
-	111, // 174: game.GetLaunchBootstrapDataResponse.chapter_shop:type_name -> game.ChapterShopData
-	114, // 175: game.GetLaunchBootstrapDataResponse.gem_shop:type_name -> game.GemShopData
-	78,  // 176: game.GetLaunchBootstrapDataResponse.sign_in_daily:type_name -> game.GetSignInRewardResponse
-	80,  // 177: game.GetLaunchBootstrapDataResponse.sign_in_seven_day:type_name -> game.GetSevenDaySignInResponse
-	35,  // 178: game.GetLaunchBootstrapDataResponse.vip:type_name -> game.CheckVipStatusResponse
-	67,  // 179: game.GetLaunchBootstrapDataResponse.monthly_pass:type_name -> game.GetMonthlyCardStatusResponse
-	61,  // 180: game.GetLaunchBootstrapDataResponse.seven_day_card:type_name -> game.GetSevenDayStatusResponse
-	57,  // 181: game.GetLaunchBootstrapDataResponse.first_charge:type_name -> game.GetFirstChargeStatusResponse
-	16,  // 182: game.GetLevelBoxResponse.ClaimedBoxesEntry.value:type_name -> game.LevelBoxInfo
-	71,  // 183: game.GetEquipExchangeResponse.ExchangeInfosEntry.value:type_name -> game.EquipExchangeInfo
-	184, // [184:184] is the sub-list for method output_type
-	184, // [184:184] is the sub-list for method input_type
-	184, // [184:184] is the sub-list for extension type_name
-	184, // [184:184] is the sub-list for extension extendee
-	0,   // [0:184] is the sub-list for field type_name
+	32,  // 1: game.RedeemGiftResponse.reward:type_name -> game.Reward
+	30,  // 2: game.RedeemGiftResponse.wallet_updated:type_name -> game.Wallet
+	31,  // 3: game.RedeemGiftResponse.inventory_updated:type_name -> game.Item
+	32,  // 4: game.ClaimInviteRewardResponse.reward:type_name -> game.Reward
+	30,  // 5: game.ClaimInviteRewardResponse.wallet_updated:type_name -> game.Wallet
+	31,  // 6: game.ClaimInviteRewardResponse.inventory_updated:type_name -> game.Item
+	177, // 7: game.GetLevelBoxResponse.claimed_boxes:type_name -> game.GetLevelBoxResponse.ClaimedBoxesEntry
+	184, // 8: game.GetGameTimeResponse.game_time:type_name -> google.protobuf.Timestamp
+	184, // 9: game.AnnouncementInfo.create_time:type_name -> google.protobuf.Timestamp
+	184, // 10: game.AnnouncementInfo.update_time:type_name -> google.protobuf.Timestamp
+	21,  // 11: game.ListPublishedAnnouncementsResponse.announcements:type_name -> game.AnnouncementInfo
+	178, // 12: game.EquipData.unlock_equips:type_name -> game.EquipData.UnlockEquipsEntry
+	179, // 13: game.EquipData.crystal_slots:type_name -> game.EquipData.CrystalSlotsEntry
+	30,  // 14: game.Reward.wallet:type_name -> game.Wallet
+	31,  // 15: game.Reward.items:type_name -> game.Item
+	30,  // 16: game.WalletUpdateResult.previous:type_name -> game.Wallet
+	30,  // 17: game.WalletUpdateResult.updated:type_name -> game.Wallet
+	31,  // 18: game.InventoryUpdateResult.previous:type_name -> game.Item
+	31,  // 19: game.InventoryUpdateResult.updated:type_name -> game.Item
+	0,   // 20: game.StartBattleRequest.type:type_name -> game.BattleType
+	23,  // 21: game.StartBattleResponse.stamina:type_name -> game.StaminaData
+	180, // 22: game.EndBattleRequest.monsters:type_name -> game.EndBattleRequest.MonstersEntry
+	32,  // 23: game.EndBattleResponse.reward:type_name -> game.Reward
+	30,  // 24: game.EndBattleResponse.wallet_updated:type_name -> game.Wallet
+	31,  // 25: game.EndBattleResponse.inventory_updated:type_name -> game.Item
+	0,   // 26: game.QuickBattleRequest.type:type_name -> game.BattleType
+	32,  // 27: game.QuickBattleResponse.reward:type_name -> game.Reward
+	23,  // 28: game.QuickBattleResponse.stamina:type_name -> game.StaminaData
+	30,  // 29: game.QuickBattleResponse.wallet_updated:type_name -> game.Wallet
+	31,  // 30: game.QuickBattleResponse.inventory_updated:type_name -> game.Item
+	32,  // 31: game.ClaimBattleRewardByShareResponse.reward:type_name -> game.Reward
+	30,  // 32: game.ClaimBattleRewardByShareResponse.wallet_updated:type_name -> game.Wallet
+	31,  // 33: game.ClaimBattleRewardByShareResponse.inventory_updated:type_name -> game.Item
+	32,  // 34: game.ClaimMoppingRewardResponse.reward:type_name -> game.Reward
+	30,  // 35: game.ClaimMoppingRewardResponse.wallet_updated:type_name -> game.Wallet
+	31,  // 36: game.ClaimMoppingRewardResponse.inventory_updated:type_name -> game.Item
+	23,  // 37: game.ClaimMoppingRewardResponse.stamina:type_name -> game.StaminaData
+	32,  // 38: game.ClaimOnHookRewardResponse.reward:type_name -> game.Reward
+	30,  // 39: game.ClaimOnHookRewardResponse.wallet_updated:type_name -> game.Wallet
+	31,  // 40: game.ClaimOnHookRewardResponse.inventory_updated:type_name -> game.Item
+	32,  // 41: game.ClaimLevelBoxResponse.rewards:type_name -> game.Reward
+	30,  // 42: game.ClaimLevelBoxResponse.wallet_updated:type_name -> game.Wallet
+	31,  // 43: game.ClaimLevelBoxResponse.inventory_updated:type_name -> game.Item
+	32,  // 44: game.ClaimTaskRewardResponse.reward:type_name -> game.Reward
+	30,  // 45: game.ClaimTaskRewardResponse.wallet_updated:type_name -> game.Wallet
+	31,  // 46: game.ClaimTaskRewardResponse.inventory_updated:type_name -> game.Item
+	32,  // 47: game.ClaimLivenessRewardResponse.reward:type_name -> game.Reward
+	30,  // 48: game.ClaimLivenessRewardResponse.wallet_updated:type_name -> game.Wallet
+	31,  // 49: game.ClaimLivenessRewardResponse.inventory_updated:type_name -> game.Item
+	32,  // 50: game.ClaimFirstChargeRewardResponse.reward:type_name -> game.Reward
+	30,  // 51: game.ClaimFirstChargeRewardResponse.wallet_updated:type_name -> game.Wallet
+	31,  // 52: game.ClaimFirstChargeRewardResponse.inventory_updated:type_name -> game.Item
+	32,  // 53: game.ClaimSevenDayRewardResponse.reward:type_name -> game.Reward
+	30,  // 54: game.ClaimSevenDayRewardResponse.wallet_updated:type_name -> game.Wallet
+	31,  // 55: game.ClaimSevenDayRewardResponse.inventory_updated:type_name -> game.Item
+	32,  // 56: game.ClaimVipRewardResponse.reward:type_name -> game.Reward
+	30,  // 57: game.ClaimVipRewardResponse.wallet_updated:type_name -> game.Wallet
+	31,  // 58: game.ClaimVipRewardResponse.inventory_updated:type_name -> game.Item
+	32,  // 59: game.ExchangeEquipResponse.reward:type_name -> game.Reward
+	30,  // 60: game.ExchangeEquipResponse.wallet_updated:type_name -> game.Wallet
+	31,  // 61: game.ExchangeEquipResponse.inventory_updated:type_name -> game.Item
+	181, // 62: game.GetEquipExchangeResponse.exchange_infos:type_name -> game.GetEquipExchangeResponse.ExchangeInfosEntry
+	32,  // 63: game.ClaimMonthlyCardRewardResponse.reward:type_name -> game.Reward
+	30,  // 64: game.ClaimMonthlyCardRewardResponse.wallet_updated:type_name -> game.Wallet
+	31,  // 65: game.ClaimMonthlyCardRewardResponse.inventory_updated:type_name -> game.Item
+	32,  // 66: game.ClaimSignInRewardResponse.reward:type_name -> game.Reward
+	30,  // 67: game.ClaimSignInRewardResponse.wallet_updated:type_name -> game.Wallet
+	31,  // 68: game.ClaimSignInRewardResponse.inventory_updated:type_name -> game.Item
+	32,  // 69: game.ClaimSevenDaySignInResponse.reward:type_name -> game.Reward
+	30,  // 70: game.ClaimSevenDaySignInResponse.wallet_updated:type_name -> game.Wallet
+	31,  // 71: game.ClaimSevenDaySignInResponse.inventory_updated:type_name -> game.Item
+	32,  // 72: game.ClaimByteRewardResponse.reward:type_name -> game.Reward
+	30,  // 73: game.ClaimByteRewardResponse.wallet_updated:type_name -> game.Wallet
+	31,  // 74: game.ClaimByteRewardResponse.inventory_updated:type_name -> game.Item
+	4,   // 75: game.OperateWalletRequest.option:type_name -> game.OperateWalletRequest.Option
+	30,  // 76: game.OperateWalletResponse.wallet_updated:type_name -> game.Wallet
+	5,   // 77: game.OperateInventoryRequest.option:type_name -> game.OperateInventoryRequest.Option
+	31,  // 78: game.OperateInventoryRequest.items:type_name -> game.Item
+	31,  // 79: game.OperateInventoryResponse.inventory_updated:type_name -> game.Item
+	30,  // 80: game.GetWalletDataResponse.wallet:type_name -> game.Wallet
+	31,  // 81: game.GetInventoryDataResponse.items:type_name -> game.Item
+	30,  // 82: game.UpgradeEquipResponse.wallet_updated:type_name -> game.Wallet
+	31,  // 83: game.UpgradeEquipResponse.inventory_updated:type_name -> game.Item
+	30,  // 84: game.UpgradeCrystalSlotResponse.wallet_updated:type_name -> game.Wallet
+	31,  // 85: game.UpgradeCrystalSlotResponse.inventory_updated:type_name -> game.Item
+	30,  // 86: game.UpgradeCrystalTechResponse.wallet_updated:type_name -> game.Wallet
+	31,  // 87: game.UpgradeCrystalTechResponse.inventory_updated:type_name -> game.Item
+	1,   // 88: game.ShopItem.pay_type:type_name -> game.PayType
+	2,   // 89: game.SingleShopData.shop_type:type_name -> game.ShopType
+	99,  // 90: game.SingleShopData.items:type_name -> game.ShopItem
+	102, // 91: game.ShopData.shops:type_name -> game.SingleShopData
+	2,   // 92: game.BuyShopItemRequest.shop_type:type_name -> game.ShopType
+	32,  // 93: game.BuyShopItemResponse.reward:type_name -> game.Reward
+	30,  // 94: game.BuyShopItemResponse.wallet_updated:type_name -> game.Wallet
+	31,  // 95: game.BuyShopItemResponse.inventory_updated:type_name -> game.Item
+	99,  // 96: game.BuyShopItemResponse.shop_item:type_name -> game.ShopItem
+	2,   // 97: game.RefreshShopRequest.shop_type:type_name -> game.ShopType
+	102, // 98: game.RefreshShopResponse.shop_data:type_name -> game.SingleShopData
+	30,  // 99: game.RefreshShopResponse.wallet_updated:type_name -> game.Wallet
+	32,  // 100: game.BuyBoxItemResponse.reward:type_name -> game.Reward
+	30,  // 101: game.BuyBoxItemResponse.wallet_updated:type_name -> game.Wallet
+	31,  // 102: game.BuyBoxItemResponse.inventory_updated:type_name -> game.Item
+	108, // 103: game.BuyBoxItemResponse.box_shop_data:type_name -> game.BoxShopData
+	100, // 104: game.ChapterShopData.items:type_name -> game.ShopChapterItem
+	32,  // 105: game.ClaimChapterItemResponse.reward:type_name -> game.Reward
+	30,  // 106: game.ClaimChapterItemResponse.wallet_updated:type_name -> game.Wallet
+	31,  // 107: game.ClaimChapterItemResponse.inventory_updated:type_name -> game.Item
+	100, // 108: game.ClaimChapterItemResponse.shop_item:type_name -> game.ShopChapterItem
+	101, // 109: game.GemShopData.items:type_name -> game.ShopGemItem
+	32,  // 110: game.ClaimGemItemResponse.reward:type_name -> game.Reward
+	30,  // 111: game.ClaimGemItemResponse.wallet_updated:type_name -> game.Wallet
+	31,  // 112: game.ClaimGemItemResponse.inventory_updated:type_name -> game.Item
+	101, // 113: game.ClaimGemItemResponse.shop_item:type_name -> game.ShopGemItem
+	32,  // 114: game.ClaimNotificationAttachmentsResponse.reward:type_name -> game.Reward
+	30,  // 115: game.ClaimNotificationAttachmentsResponse.wallet_updated:type_name -> game.Wallet
+	31,  // 116: game.ClaimNotificationAttachmentsResponse.inventory_updated:type_name -> game.Item
+	25,  // 117: game.GetPlayerLevelDataResponse.data:type_name -> game.PlayerLevelData
+	32,  // 118: game.UpgradePlayerLevelResponse.reward:type_name -> game.Reward
+	30,  // 119: game.UpgradePlayerLevelResponse.wallet_updated:type_name -> game.Wallet
+	31,  // 120: game.UpgradePlayerLevelResponse.inventory_updated:type_name -> game.Item
+	129, // 121: game.GetMineDataResponse.data:type_name -> game.MineData
+	32,  // 122: game.DoMineResponse.reward:type_name -> game.Reward
+	30,  // 123: game.DoMineResponse.wallet_updated:type_name -> game.Wallet
+	31,  // 124: game.DoMineResponse.inventory_updated:type_name -> game.Item
+	30,  // 125: game.BuyMineCountResponse.wallet_updated:type_name -> game.Wallet
+	136, // 126: game.GetRestStationResponse.data:type_name -> game.RestStationData
+	136, // 127: game.ClaimRestStationStaminaResponse.rest_station:type_name -> game.RestStationData
+	23,  // 128: game.ClaimRestStationStaminaResponse.stamina:type_name -> game.StaminaData
+	32,  // 129: game.TestGrantRewardResponse.reward:type_name -> game.Reward
+	30,  // 130: game.TestGrantRewardResponse.wallet_updated:type_name -> game.Wallet
+	31,  // 131: game.TestGrantRewardResponse.inventory_updated:type_name -> game.Item
+	143, // 132: game.CrystalEquipmentInfo.active_affixes:type_name -> game.CrystalEquipmentAffix
+	143, // 133: game.CrystalEquipmentInfo.pending_affixes:type_name -> game.CrystalEquipmentAffix
+	144, // 134: game.RefineCrystalEquipmentResponse.equipment:type_name -> game.CrystalEquipmentInfo
+	30,  // 135: game.RefineCrystalEquipmentResponse.wallet_updated:type_name -> game.Wallet
+	31,  // 136: game.RefineCrystalEquipmentResponse.inventory_updated:type_name -> game.Item
+	144, // 137: game.LockCrystalAffixResponse.equipment:type_name -> game.CrystalEquipmentInfo
+	144, // 138: game.ActivatePendingAffixesResponse.equipment:type_name -> game.CrystalEquipmentInfo
+	144, // 139: game.GetCrystalEquipmentsResponse.equipments:type_name -> game.CrystalEquipmentInfo
+	32,  // 140: game.SalvageCrystalEquipmentResponse.reward:type_name -> game.Reward
+	30,  // 141: game.SalvageCrystalEquipmentResponse.wallet_updated:type_name -> game.Wallet
+	31,  // 142: game.SalvageCrystalEquipmentResponse.inventory_updated:type_name -> game.Item
+	157, // 143: game.GetCrystalSkinsResponse.skins:type_name -> game.CrystalSkinInfo
+	157, // 144: game.UnlockCrystalSkinResponse.skin:type_name -> game.CrystalSkinInfo
+	30,  // 145: game.UnlockCrystalSkinResponse.wallet_updated:type_name -> game.Wallet
+	31,  // 146: game.UnlockCrystalSkinResponse.inventory_updated:type_name -> game.Item
+	157, // 147: game.UpgradeCrystalSkinResponse.skin:type_name -> game.CrystalSkinInfo
+	30,  // 148: game.UpgradeCrystalSkinResponse.wallet_updated:type_name -> game.Wallet
+	31,  // 149: game.UpgradeCrystalSkinResponse.inventory_updated:type_name -> game.Item
+	184, // 150: game.Challenge.open:type_name -> google.protobuf.Timestamp
+	184, // 151: game.Challenge.close:type_name -> google.protobuf.Timestamp
+	184, // 152: game.Challenge.end:type_name -> google.protobuf.Timestamp
+	184, // 153: game.Challenge.over:type_name -> google.protobuf.Timestamp
+	184, // 154: game.JoinChallengeStatus.joined:type_name -> google.protobuf.Timestamp
+	184, // 155: game.JoinChallengeStatus.over:type_name -> google.protobuf.Timestamp
+	184, // 156: game.JoinChallengeStatus.open:type_name -> google.protobuf.Timestamp
+	184, // 157: game.JoinChallengeStatus.close:type_name -> google.protobuf.Timestamp
+	184, // 158: game.JoinChallengeStatus.end:type_name -> google.protobuf.Timestamp
+	162, // 159: game.GetChallengeResponse.challenges:type_name -> game.Challenge
+	163, // 160: game.GetChallengeResponse.joined:type_name -> game.JoinChallengeStatus
+	162, // 161: game.JoinChallengeResponse.challenge:type_name -> game.Challenge
+	32,  // 162: game.GainChallengeRewardResponse.reward:type_name -> game.Reward
+	30,  // 163: game.GainChallengeRewardResponse.wallet_updated:type_name -> game.Wallet
+	31,  // 164: game.GainChallengeRewardResponse.inventory_updated:type_name -> game.Item
+	169, // 165: game.GetChallengeTopStatsResponse.stats:type_name -> game.TopThreeStats
+	3,   // 166: game.BuyChallengeBattleTimesRequest.type:type_name -> game.BuyChallengeBattleTimesType
+	30,  // 167: game.BuyChallengeBattleTimesResponse.wallet_updated:type_name -> game.Wallet
+	175, // 168: game.GetLaunchBootstrapDataResponse.account:type_name -> game.BootstrapAccount
+	23,  // 169: game.GetLaunchBootstrapDataResponse.stamina:type_name -> game.StaminaData
+	182, // 170: game.GetLaunchBootstrapDataResponse.storage:type_name -> game.GetLaunchBootstrapDataResponse.StorageEntry
+	24,  // 171: game.GetLaunchBootstrapDataResponse.equip:type_name -> game.EquipData
+	152, // 172: game.GetLaunchBootstrapDataResponse.crystal_equipments:type_name -> game.GetCrystalEquipmentsResponse
+	156, // 173: game.GetLaunchBootstrapDataResponse.crystal_skins:type_name -> game.GetCrystalSkinsResponse
+	25,  // 174: game.GetLaunchBootstrapDataResponse.player_level:type_name -> game.PlayerLevelData
+	103, // 175: game.GetLaunchBootstrapDataResponse.normal_shop:type_name -> game.ShopData
+	108, // 176: game.GetLaunchBootstrapDataResponse.box_shop:type_name -> game.BoxShopData
+	111, // 177: game.GetLaunchBootstrapDataResponse.chapter_shop:type_name -> game.ChapterShopData
+	114, // 178: game.GetLaunchBootstrapDataResponse.gem_shop:type_name -> game.GemShopData
+	78,  // 179: game.GetLaunchBootstrapDataResponse.sign_in_daily:type_name -> game.GetSignInRewardResponse
+	80,  // 180: game.GetLaunchBootstrapDataResponse.sign_in_seven_day:type_name -> game.GetSevenDaySignInResponse
+	35,  // 181: game.GetLaunchBootstrapDataResponse.vip:type_name -> game.CheckVipStatusResponse
+	67,  // 182: game.GetLaunchBootstrapDataResponse.monthly_pass:type_name -> game.GetMonthlyCardStatusResponse
+	61,  // 183: game.GetLaunchBootstrapDataResponse.seven_day_card:type_name -> game.GetSevenDayStatusResponse
+	57,  // 184: game.GetLaunchBootstrapDataResponse.first_charge:type_name -> game.GetFirstChargeStatusResponse
+	16,  // 185: game.GetLevelBoxResponse.ClaimedBoxesEntry.value:type_name -> game.LevelBoxInfo
+	71,  // 186: game.GetEquipExchangeResponse.ExchangeInfosEntry.value:type_name -> game.EquipExchangeInfo
+	187, // [187:187] is the sub-list for method output_type
+	187, // [187:187] is the sub-list for method input_type
+	187, // [187:187] is the sub-list for extension type_name
+	187, // [187:187] is the sub-list for extension extendee
+	0,   // [0:187] is the sub-list for field type_name
 }
 
 func init() { file_msg_proto_init() }

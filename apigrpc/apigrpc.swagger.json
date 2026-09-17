@@ -10647,6 +10647,19 @@
         },
         "msg": {
           "type": "string"
+        },
+        "reward": {
+          "$ref": "#/definitions/gameReward"
+        },
+        "walletUpdated": {
+          "$ref": "#/definitions/gameWallet"
+        },
+        "inventoryUpdated": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/gameItem"
+          }
         }
       }
     },

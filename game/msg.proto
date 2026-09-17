@@ -34,6 +34,9 @@ message ValidatePurchaseAppleV2Request {
 message RedeemGiftResponse{
   int32 code = 1;
   string msg = 2;
+  Reward reward = 3;
+  Wallet wallet_updated = 4;
+  repeated Item inventory_updated = 5;
 }
 
 message FeedbackRequest {

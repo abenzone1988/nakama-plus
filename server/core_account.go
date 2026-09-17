@@ -494,11 +494,32 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $
 				var pgErr *pgconn.PgError
 				if errors.As(err, &pgErr) && pgErr.Code == dbErrorUniqueViolation {
 					if strings.Contains(pgErr.Message, "users_pkey") {
-						logger.Warn("User already exists, only importing storage")
-						userExisted = true
 						tx.ExecContext(ctx, "ROLLBACK TO SAVEPOINT import_user")
+						// The user id already exists. Look up the existing account so we can
+						// log which account is occupying this id (its username/display_name are
+						// NOT changed by this import, only storage objects are replaced).
+						var existingUsername, existingDisplayName sql.NullString
+						_ = tx.QueryRowContext(ctx, "SELECT username, display_name FROM users WHERE id = $1", data.Account.User.Id).
+							Scan(&existingUsername, &existingDisplayName)
+						logger.Warn("User id already exists, only importing storage (existing account username/display_name are kept unchanged)",
+							zap.String("import_user_id", data.Account.User.Id),
+							zap.String("import_username", data.Account.User.Username),
+							zap.String("import_display_name", data.Account.User.DisplayName),
+							zap.String("existing_username", existingUsername.String),
+							zap.String("existing_display_name", existingDisplayName.String))
+						userExisted = true
 						err = nil
 					} else if strings.Contains(pgErr.Message, "users_username_key") {
+						tx.ExecContext(ctx, "ROLLBACK TO SAVEPOINT import_user")
+						// The username is already taken by a different account id.
+						var conflictUserID, conflictDisplayName sql.NullString
+						_ = tx.QueryRowContext(ctx, "SELECT id, display_name FROM users WHERE username = $1", data.Account.User.Username).
+							Scan(&conflictUserID, &conflictDisplayName)
+						logger.Warn("Username already in use by another account",
+							zap.String("import_user_id", data.Account.User.Id),
+							zap.String("import_username", data.Account.User.Username),
+							zap.String("conflict_user_id", conflictUserID.String),
+							zap.String("conflict_display_name", conflictDisplayName.String))
 						return errors.New("Username already in use.")
 					} else {
 						logger.Warn("Unique constraint violation, retrying import with cleared external IDs", zap.String("constraint", pgErr.Message))

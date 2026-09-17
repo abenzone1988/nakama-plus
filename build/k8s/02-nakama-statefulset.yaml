@@ -26,10 +26,10 @@ spec:
       terminationGracePeriodSeconds: 60
       initContainers:
         - name: nakama-migration
-          image: 746669197317.dkr.ecr.us-east-1.amazonaws.com/starhold-us/nakama-plus:1.3.5
+          image: 746669197317.dkr.ecr.us-east-1.amazonaws.com/starhold-us/nakama-plus:1.11.1
           command: ["/bin/sh", "-c"]
           args:
-            - |           
+            - |
               DB_URL="postgres://${PGUSER}:${PGPASSWORD}@${PGHOST}:${PGPORT}/${PGDATABASE}?sslmode=require"
               /nakama/nakama migrate up --config /nakama/data/config.yaml --database.address "$DB_URL"
           env:
@@ -64,13 +64,13 @@ spec:
               subPath: nakama.yaml
       containers:
         - name: nakama
-          image: 746669197317.dkr.ecr.us-east-1.amazonaws.com/starhold-us/nakama-plus:1.3.5
+          image: 746669197317.dkr.ecr.us-east-1.amazonaws.com/starhold-us/nakama-plus:1.11.1
           imagePullPolicy: Always
           command: ["/bin/sh", "-c"]
           args:
             - |
               DB_URL="postgres://${PGUSER}:${PGPASSWORD}@${PGHOST}:${PGPORT}/${PGDATABASE}?sslmode=require"
-              export NAKAMA_CLUSTER_GOSSIP_ADVERTISE_ADDR="${MY_POD_NAME}.nakama-headless.starhold.svc.cluster.local:7335"              
+              export NAKAMA_CLUSTER_GOSSIP_ADVERTISE_ADDR="${MY_POD_NAME}.nakama-headless.starhold.svc.cluster.local:7335"
               exec /nakama/nakama --name "${MY_POD_NAME}" --config /nakama/data/config.yaml --database.address "$DB_URL"
           env:
             - name: PGHOST
@@ -169,6 +169,16 @@ spec:
         resources:
           requests:
             storage: 5Gi
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -25,9 +25,11 @@ func (e bootstrapStorageEntry) MapKey() string {
 	return e.Collection + "/" + e.RecordKey
 }
 
-// bootstrapStorageKeys 列出 GetLaunchBootstrapData 需要读取的 14 个 storage keys。
+// bootstrapStorageKeys 列出 GetLaunchBootstrapData 需要读取的 12 个 storage keys。
 // 使用有序 slice（非 map）以保证 objectIDs / mapKeys / 返回值 三者顺序一致。
-// 关键路径 7 个 + 延迟路径 7 个。缺失的 key 不返回，客户端走 CreateModel 兜底。
+// 关键路径 7 个 + 延迟路径 5 个。缺失的 key 不返回，客户端走 CreateModel 兜底。
+// 条目与客户端 NetSystem_InitSystem.cs 的 GetStorageEntry 调用逐字对应，改动前先核对客户端；
+// docs/优化登录请求.md 里列的 14 个裸名 key（含 SubGame / ByteGame）是旧稿，客户端不读。
 var bootstrapStorageKeys = []bootstrapStorageEntry{
 	// 关键路径
 	{Collection: "Home", RecordKey: "EquipGroupData"},
@@ -155,6 +157,11 @@ func (s *ApiServer) GetLaunchBootstrapData(ctx context.Context, in *emptypb.Empt
 		resp.CrystalEquipments = &game.GetCrystalEquipmentsResponse{Code: 1, Msg: err.Error()}
 		resp.Partial = true
 	} else {
+		if crystalEquipmentsData.GetVersion() == "" {
+			if err := SaveUserData(ctx, s.logger, s.db, s.metrics, s.storageIndex, crystalEquipmentsData); err != nil {
+				s.logger.Error("bootstrap: 保存初始化的水晶装备数据失败", zap.Error(err))
+			}
+		}
 		equipments := make([]*game.CrystalEquipmentInfo, 0, len(crystalEquipmentsData.Equipments))
 		for _, eq := range crystalEquipmentsData.Equipments {
 			equipments = append(equipments, convertToProtoEquipment(eq))

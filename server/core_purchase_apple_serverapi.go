@@ -134,6 +134,11 @@ func ValidatePurchaseAppleServerAPI(ctx context.Context, logger *zap.Logger, db 
 		return nil, status.Error(codes.FailedPrecondition, "Apple transaction payload missing productId.")
 	}
 	if expectedProductID != "" && expectedProductID != payload.ProductId {
+		logger.Warn("Apple transaction productId mismatch",
+			zap.String("expected_product_id", expectedProductID),
+			zap.String("actual_product_id", payload.ProductId),
+			zap.String("transaction_id", payload.TransactionId),
+		)
 		return nil, status.Error(codes.FailedPrecondition, "Apple transaction productId mismatch.")
 	}
 	if payload.BundleId != "" && payload.BundleId != cfg.ServerAPIBundleID {

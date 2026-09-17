@@ -718,3 +718,9 @@ MigrationBackup/
 
 config.yml
 !vendor/**/coverage.go
+
+# 结尾带点的名字：Win32 会把路径末段结尾的点全部吃掉，
+# 所以 server/... 实际被解析成 server，git 递归进去后会把 server 下
+# 所有已跟踪文件看成未跟踪的 server/.../*，git add -A 时重复入库。
+# 这类目录通常是把 Go 的包通配符 ... 当成文件系统路径传给 mkdir/cp 之类命令产生的。
+...

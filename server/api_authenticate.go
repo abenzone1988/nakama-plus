@@ -15,8 +15,13 @@
 package server
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
+	"io"
 	"math/rand"
+	"net/http"
 	"regexp"
 	"strings"
 	"time"
@@ -112,6 +117,10 @@ func (s *ApiServer) AuthenticateApple(ctx context.Context, in *api.AuthenticateA
 		return nil, err
 	}
 
+	if created {
+		s.notifyNewUserToFeishu()
+	}
+
 	uid := uuid.Must(uuid.FromString(dbUserID))
 	if s.config.GetSession().SingleSession {
 		s.sessionCache.RemoveAll(uid)
@@ -187,6 +196,10 @@ func (s *ApiServer) AuthenticateCustom(ctx context.Context, in *api.Authenticate
 		return nil, err
 	}
 
+	if created {
+		s.notifyNewUserToFeishu()
+	}
+
 	if s.config.GetSession().SingleSession {
 		s.sessionCache.RemoveAll(uuid.Must(uuid.FromString(dbUserID)))
 	}
@@ -260,6 +273,10 @@ func (s *ApiServer) AuthenticateDevice(ctx context.Context, in *api.Authenticate
 	dbUserID, dbUsername, created, err := AuthenticateDevice(ctx, logger, s.db, in.Account.Id, username, create)
 	if err != nil {
 		return nil, err
+	}
+
+	if created {
+		s.notifyNewUserToFeishu()
 	}
 
 	if s.config.GetSession().SingleSession {
@@ -367,6 +384,10 @@ func (s *ApiServer) AuthenticateEmail(ctx context.Context, in *api.AuthenticateE
 		return nil, err
 	}
 
+	if created {
+		s.notifyNewUserToFeishu()
+	}
+
 	if s.config.GetSession().SingleSession {
 		s.sessionCache.RemoveAll(uuid.Must(uuid.FromString(dbUserID)))
 	}
@@ -436,6 +457,10 @@ func (s *ApiServer) AuthenticateFacebook(ctx context.Context, in *api.Authentica
 	dbUserID, dbUsername, created, err := AuthenticateFacebook(ctx, logger, s.db, s.socialClient, s.config.GetSocial().FacebookLimitedLogin.AppId, in.Account.Token, username, create)
 	if err != nil {
 		return nil, err
+	}
+
+	if created {
+		s.notifyNewUserToFeishu()
 	}
 
 	// Import friends if requested.
@@ -512,6 +537,10 @@ func (s *ApiServer) AuthenticateFacebookInstantGame(ctx context.Context, in *api
 	dbUserID, dbUsername, created, err := AuthenticateFacebookInstantGame(ctx, logger, s.db, s.socialClient, s.config.GetSocial().FacebookInstantGame.AppSecret, in.Account.SignedPlayerInfo, username, create)
 	if err != nil {
 		return nil, err
+	}
+
+	if created {
+		s.notifyNewUserToFeishu()
 	}
 
 	if s.config.GetSession().SingleSession {
@@ -597,6 +626,10 @@ func (s *ApiServer) AuthenticateGameCenter(ctx context.Context, in *api.Authenti
 		return nil, err
 	}
 
+	if created {
+		s.notifyNewUserToFeishu()
+	}
+
 	if s.config.GetSession().SingleSession {
 		s.sessionCache.RemoveAll(uuid.Must(uuid.FromString(dbUserID)))
 	}
@@ -666,6 +699,10 @@ func (s *ApiServer) AuthenticateGoogle(ctx context.Context, in *api.Authenticate
 	dbUserID, dbUsername, created, err := AuthenticateGoogle(ctx, logger, s.db, s.socialClient, in.Account.Token, username, create)
 	if err != nil {
 		return nil, err
+	}
+
+	if created {
+		s.notifyNewUserToFeishu()
 	}
 
 	if s.config.GetSession().SingleSession {
@@ -743,6 +780,10 @@ func (s *ApiServer) AuthenticateSteam(ctx context.Context, in *api.AuthenticateS
 		return nil, err
 	}
 
+	if created {
+		s.notifyNewUserToFeishu()
+	}
+
 	// Import friends if requested.
 	if in.Sync != nil && in.Sync.Value {
 		_ = importSteamFriends(ctx, logger, s.db, s.tracker, s.router, s.socialClient, uuid.FromStringOrNil(dbUserID), dbUsername, s.config.GetSocial().Steam.PublisherKey, steamID, false)
@@ -804,4 +845,60 @@ func generateUsername() string {
 		b[i] = usernameAlphabet[rand.Intn(len(usernameAlphabet))]
 	}
 	return string(b)
+}
+
+// feishuNewUserWebhook 飞书机器人 Webhook，用于新用户注册通知。
+const feishuNewUserWebhook = "https://open.feishu.cn/open-apis/bot/v2/hook/2809f437-edc7-4382-a6af-7b06897a34e0"
+
+// notifyNewUserToFeishu 创建新账号时，异步统计当前用户总数并通知飞书机器人。
+// 用户数单调递增、每个值只出现一次，因此「当前用户数恰好为 10 的倍数」时通知一次即可，
+// 无需记录任何状态；多节点读同一数据库，count 全局一致。
+// 统计与发送均为异步执行，不阻塞登录流程；失败仅记录日志。
+func (s *ApiServer) notifyNewUserToFeishu() {
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		var count int64
+		if err := s.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM users").Scan(&count); err != nil {
+			s.logger.Warn("Feishu notification: failed to count users.", zap.Error(err))
+			return
+		}
+
+		// 仅当用户数恰好为 10 的倍数（如 1110、1120）时通知。
+		if count%10 != 0 {
+			return
+		}
+
+		text := fmt.Sprintf("🎉 新用户注册！当前用户总数：%d", count)
+		body, err := json.Marshal(map[string]interface{}{
+			"msg_type": "text",
+			"content":  map[string]interface{}{"text": text},
+		})
+		if err != nil {
+			s.logger.Warn("Feishu notification: failed to marshal payload.", zap.Error(err))
+			return
+		}
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, feishuNewUserWebhook, bytes.NewReader(body))
+		if err != nil {
+			s.logger.Warn("Feishu notification: failed to create request.", zap.Error(err))
+			return
+		}
+		req.Header.Set("Content-Type", "application/json")
+
+		client := &http.Client{Timeout: 5 * time.Second}
+		resp, err := client.Do(req)
+		if err != nil {
+			s.logger.Warn("Feishu notification: request failed.", zap.Error(err))
+			return
+		}
+		defer func() { _ = resp.Body.Close() }()
+		_, _ = io.Copy(io.Discard, resp.Body)
+
+		if resp.StatusCode != http.StatusOK {
+			s.logger.Warn("Feishu notification: non-200 response.", zap.Int("status", resp.StatusCode))
+			return
+		}
+	}()
 }

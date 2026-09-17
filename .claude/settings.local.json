@@ -7,7 +7,9 @@
       "Bash(cmd.exe *)",
       "Bash(cat -A \"D:\\\\\\\\GameServer\\\\\\\\nakama-cluster\\\\\\\\nakama-plus\\\\\\\\console\\\\\\\\ui\\\\\\\\src\\\\\\\\app\\\\\\\\account\\\\\\\\account.component.html\")",
       "Bash(go build *)",
-      "PowerShell(.\\\\generate-proto.bat)"
+      "PowerShell(.\\\\generate-proto.bat)",
+      "PowerShell(cmd /c dir /a /l \"D:\\\\GameServer\\\\nakama-cluster\\\\nakama-plus\\\\server\")",
+      "PowerShell(Get-ChildItem *)"
     ]
   }
 }
